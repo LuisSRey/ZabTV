@@ -17,6 +17,8 @@ tools/fixtures/
 
 # Scratch workspace (SDD)
 .superpowers/
+.agents/
+skills-lock.json
 
 # Release artifacts
 app/release/
