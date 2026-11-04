@@ -1,0 +1,27 @@
+# Gradle
+.gradle/
+build/
+*.class
+
+# IDE
+.idea/
+*.iml
+captures/
+
+# Local env
+local.properties
+tools/gradle/
+tools/jdk*/
+tools/*.zip
+tools/fixtures/
+
+# Scratch workspace (SDD)
+.superpowers/
+
+# Release artifacts
+app/release/
+*.keystore.jks
+
+# OS
+.DS_Store
+Thumbs.db
