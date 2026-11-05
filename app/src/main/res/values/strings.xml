@@ -15,6 +15,9 @@
     <string name="player_now_approx">Ahora (aprox.): %1$s</string>
     <string name="player_zap_prev">Canal anterior</string>
     <string name="player_zap_next">Canal siguiente</string>
+    <string name="player_seek_back">Retroceder 10 segundos</string>
+    <string name="player_seek_fwd">Avanzar 10 segundos</string>
+    <string name="player_toggle">Reproducir / Pausar</string>
     <string name="player_zapping_hint">↑/↓ cambiar canal</string>
     <string name="player_zapping_hint_tv">D-pad arriba/abajo para cambiar de canal · BACK para salir</string>
     <string name="error_network">Sin conexión o el servidor no responde</string>

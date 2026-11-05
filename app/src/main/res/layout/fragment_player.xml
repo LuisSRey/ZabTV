@@ -71,14 +71,36 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
+            android:gravity="center_vertical"
             android:orientation="horizontal">
 
+            <!-- Transporte: -10 s / play-pausa / +10 s -->
             <ImageView
-                android:id="@+id/player_zap_down"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:contentDescription="@string/player_zap_prev"
-                android:src="@drawable/ic_chevron_up" />
+                android:id="@+id/player_rew"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:contentDescription="@string/player_seek_back"
+                android:padding="8dp"
+                android:src="@drawable/ic_rew" />
+
+            <ImageView
+                android:id="@+id/player_playpause"
+                android:layout_width="52dp"
+                android:layout_height="52dp"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp"
+                android:background="@drawable/tile_focus_bg"
+                android:contentDescription="@string/player_toggle"
+                android:padding="10dp"
+                android:src="@drawable/ic_pause" />
+
+            <ImageView
+                android:id="@+id/player_ff"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:contentDescription="@string/player_seek_fwd"
+                android:padding="8dp"
+                android:src="@drawable/ic_ff" />
 
             <TextView
                 android:layout_width="0dp"
@@ -88,6 +110,13 @@
                 android:text="@string/player_zapping_hint"
                 android:textColor="@color/tp_text_secondary"
                 android:textSize="13sp" />
+
+            <ImageView
+                android:id="@+id/player_zap_down"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:contentDescription="@string/player_zap_prev"
+                android:src="@drawable/ic_chevron_up" />
 
             <ImageView
                 android:id="@+id/player_zap_up"

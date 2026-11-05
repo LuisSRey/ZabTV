@@ -81,6 +81,16 @@ class PlayerFragment : Fragment() {
         view.findViewById<View>(R.id.player_zap_down)?.setOnClickListener {
             lifecycleScope.launch { zap(-1) }
         }
+        // Transporte ±10 s y play/pausa (móvil táctil + TV con D-pad).
+        val rew = view.findViewById<ImageView>(R.id.player_rew)
+        val playPause = view.findViewById<ImageView>(R.id.player_playpause)
+        val ff = view.findViewById<ImageView>(R.id.player_ff)
+        rew?.setOnClickListener { if (ready()) engine.seekBy(-10_000) }
+        ff?.setOnClickListener { if (ready()) engine.seekBy(10_000) }
+        playPause?.setOnClickListener { togglePlay() }
+        if (isTv) {
+            listOfNotNull(rew, playPause, ff).forEach { FocusScaleHelper.attach(it) }
+        }
         logo = view.findViewById(R.id.player_logo)
         title = view.findViewById(R.id.player_title)
         nowText = view.findViewById(R.id.player_now)
@@ -111,6 +121,9 @@ class PlayerFragment : Fragment() {
 
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 engine.state.collect { state ->
+                    view.findViewById<ImageView>(R.id.player_playpause)?.setImageResource(
+                        if (state == PlayerState.Playing) R.drawable.ic_pause else R.drawable.ic_play,
+                    )
                     when (state) {
                         is PlayerState.Error -> {
                             progress.visibility = View.GONE
