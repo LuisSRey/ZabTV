@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Variante TV del spec §3/§5: safe area 5% (≈56dp en 1080p), tipografía mayor, focus D-pad. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="56dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/app_name"
+        android:textColor="@color/tp_accent"
+        android:textSize="34sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/home_disclaimer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="@string/home_no_content"
+        android:textColor="@color/tp_text_secondary"
+        android:textSize="18sp" />
+
+    <TextView
+        android:id="@+id/home_add_list"
+        android:layout_width="320dp"
+        android:layout_height="64dp"
+        android:layout_marginTop="32dp"
+        android:background="@drawable/tile_focus_bg"
+        android:contentDescription="@string/home_add_list"
+        android:gravity="center_vertical"
+        android:paddingStart="24dp"
+        android:paddingEnd="24dp"
+        android:text="@string/home_add_list"
+        android:textColor="@color/tp_text"
+        android:textSize="18sp" />
+
+</LinearLayout>
