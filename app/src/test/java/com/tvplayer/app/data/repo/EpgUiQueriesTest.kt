@@ -78,6 +78,31 @@ class EpgUiQueriesTest {
     }
 
     @Test
+    fun `fallback tolera prefijos tipo proveedor`() = runTest {
+        db.epgDao().insertChannels(
+            listOf(EpgChannelEntity(tvgId = "xml.9", displayName = "ES | Telecinco HD")),
+        )
+        db.epgDao().insertBatch(
+            listOf(EpgProgramEntity(tvgId = "xml.9", startMillis = now - h, endMillis = now + h, title = "Ahora")),
+        )
+        val match = matcher.match(channel(null, "Telecinco"))
+        assertEquals("xml.9", match!!.tvgId)
+        assertTrue(match.approximate)
+    }
+
+    @Test
+    fun `nombre corto generico no hace match por subcadena`() = runTest {
+        db.epgDao().insertChannels(
+            listOf(EpgChannelEntity(tvgId = "xml.2", displayName = "Canal 2")),
+        )
+        db.epgDao().insertBatch(
+            listOf(EpgProgramEntity(tvgId = "xml.2", startMillis = now - h, endMillis = now + h, title = "Ahora")),
+        )
+        // "Canal" solo no basta para colgarse de "Canal 2": evita falsos positivos.
+        assertNull(matcher.match(channel(null, "Canal")))
+    }
+
+    @Test
     fun `sin programas en ningún lado devuelve null`() = runTest {
         assertNull(matcher.match(channel("c9", "Nadie")))
         assertNull(matcher.match(channel(null, "Tampoco")))

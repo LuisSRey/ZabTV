@@ -26,51 +26,60 @@
         android:textColor="@color/tp_text_secondary"
         android:textSize="13sp" />
 
-    <LinearLayout
+    <!-- Scroll horizontal: en móvil estrecho caben 2 botones; el resto se desliza. -->
+    <HorizontalScrollView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:orientation="horizontal">
+        android:clipToPadding="false"
+        android:scrollbars="none">
 
-        <Button
-            android:id="@+id/list_refresh"
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:background="@drawable/btn_ghost"
-            android:text="@string/lists_refresh"
-            android:textColor="@color/tp_text"
-            android:textSize="13sp" />
+            android:orientation="horizontal">
 
-        <Button
-            android:id="@+id/list_delete"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:background="@drawable/btn_ghost"
-            android:text="@string/lists_delete"
-            android:textColor="@color/tp_text"
-            android:textSize="13sp" />
+            <Button
+                android:id="@+id/list_refresh"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/btn_ghost"
+                android:text="@string/lists_refresh"
+                android:textColor="@color/tp_text"
+                android:textSize="13sp" />
 
-        <Button
-            android:id="@+id/list_activate"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:background="@drawable/btn_ghost"
-            android:text="@string/lists_activate"
-            android:textColor="@color/tp_text"
-            android:textSize="13sp" />
+            <Button
+                android:id="@+id/list_delete"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:background="@drawable/btn_ghost"
+                android:text="@string/lists_delete"
+                android:textColor="@color/tp_text"
+                android:textSize="13sp" />
 
-        <Button
-            android:id="@+id/list_edit"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:background="@drawable/btn_ghost"
-            android:text="@string/lists_edit"
-            android:textColor="@color/tp_text"
-            android:textSize="13sp" />
+            <Button
+                android:id="@+id/list_activate"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:background="@drawable/btn_ghost"
+                android:text="@string/lists_activate"
+                android:textColor="@color/tp_text"
+                android:textSize="13sp" />
 
-    </LinearLayout>
+            <Button
+                android:id="@+id/list_edit"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:background="@drawable/btn_ghost"
+                android:text="@string/lists_edit"
+                android:textColor="@color/tp_text"
+                android:textSize="13sp" />
+
+        </LinearLayout>
+
+    </HorizontalScrollView>
 
 </LinearLayout>

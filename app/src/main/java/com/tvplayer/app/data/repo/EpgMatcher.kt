@@ -23,8 +23,8 @@ class EpgMatcher(private val epgDao: EpgDao) {
         val candidates = epgDao.allEpgChannels()
         val hit = candidates.firstOrNull { candidate ->
             candidate.tvgId != tvgId &&
-                Normalizer.normName(candidate.displayName.orEmpty()) == norm &&
-                candidate.displayName?.isNotBlank() == true
+                candidate.displayName?.isNotBlank() == true &&
+                fuzzyEquals(norm, Normalizer.normName(candidate.displayName))
         } ?: return null
         if (!epgDao.hasPrograms(hit.tvgId)) return null
         return EpgMatch(hit.tvgId, approximate = true)
@@ -39,3 +39,17 @@ class EpgMatcher(private val epgDao: EpgDao) {
 
 /** Clave EPG resuelta + si es fallback por nombre (etiqueta "aproximado"). */
 data class EpgMatch(val tvgId: String, val approximate: Boolean)
+
+/**
+ * Igualdad exacta o subconjunto de tokens (para prefijos de proveedor tipo
+ * "ES | Telecinco" ↔ "Telecinco"). El lado corto debe tener presencia real
+ * (≥6 letras) para no colgar nombres genéricos ("Canal" → "Canal 2").
+ */
+internal fun fuzzyEquals(a: String, b: String): Boolean {
+    if (a == b) return true
+    val short = if (a.length <= b.length) a else b
+    val long = if (a.length <= b.length) b else a
+    if (short.replace(" ", "").length < 6) return false
+    val longTokens = long.split(' ').toSet()
+    return short.split(' ').all { it in longTokens }
+}

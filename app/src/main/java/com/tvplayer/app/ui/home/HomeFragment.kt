@@ -95,6 +95,56 @@ class HomeFragment : Fragment() {
                 favsSection.visibility = View.VISIBLE
                 favsAdapter.submitData(PagingData.from(favs))
             }
+            // Estantería Mis listas: tarjetas con nombre + nº canales → browser.
+            val listsSection = view.findViewById<LinearLayout>(R.id.home_lists_section)
+            val listsRail = view.findViewById<RecyclerView>(R.id.home_lists_rail)
+            val lists = db.listDao().all()
+            if (lists.isNotEmpty()) {
+                listsSection.visibility = View.VISIBLE
+                listsRail.layoutManager =
+                    LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
+                listsRail.adapter = ListsShelfAdapter(
+                    lists.map { entity ->
+                        ListsShelfAdapter.Row(entity.id, entity.name)
+                    },
+                ) { row ->
+                    (activity as? TvNavigator.NavHost)?.openBrowser(row.id)
+                }
+            }
+        }
+    }
+
+    /** Tarjetas compactas de lista para la estantería de Home. */
+    private class ListsShelfAdapter(
+        private val rows: List<Row>,
+        private val onOpen: (Row) -> Unit,
+    ) : RecyclerView.Adapter<ListsShelfAdapter.Holder>() {
+
+        data class Row(val id: Long, val name: String)
+
+        class Holder(root: View) : RecyclerView.ViewHolder(root) {
+            val label: TextView = root.findViewById(R.id.group_label)
+            val count: TextView = root.findViewById(R.id.group_count)
+        }
+
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): Holder {
+            val v = LayoutInflater.from(parent.context).inflate(R.layout.item_group, parent, false)
+            FocusScaleHelper.attach(v)
+            // Tarjeta ancha fija para la estantería (el chip se auto-ajusta).
+            v.layoutParams = RecyclerView.LayoutParams(
+                (200 * parent.resources.displayMetrics.density).toInt(),
+                RecyclerView.LayoutParams.MATCH_PARENT,
+            )
+            v.findViewById<View>(R.id.group_count).visibility = View.GONE
+            return Holder(v)
+        }
+
+        override fun getItemCount(): Int = rows.size
+
+        override fun onBindViewHolder(holder: Holder, position: Int) {
+            val row = rows[position]
+            holder.label.text = row.name
+            holder.itemView.setOnClickListener { onOpen(row) }
         }
     }
 }

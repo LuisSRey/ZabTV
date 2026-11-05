@@ -88,9 +88,9 @@ class PlayerFragment : Fragment() {
 
         val listId = arguments?.getLong(ARG_LIST_ID, -1L) ?: -1L
         val position = arguments?.getInt(ARG_POSITION, 0) ?: 0
-        // UN SOLO launch secuencial (fix crash UninitializedPropertyAccessException):
+        // UN SOLO launch secuencial ligado a la VISTA (fix crash + leak al volver atrás):
         // engine → canal → prepare → y SOLO DESPUÉS el collect del estado.
-        lifecycleScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             // Engine con el buffer configurado (DAO) — se crea aquí porque load es suspend.
             engine = Media3Engine(requireContext(), container.okHttp, com.tvplayer.app.data.BufferConfig.load(container.db))
             engine.bind(surface)

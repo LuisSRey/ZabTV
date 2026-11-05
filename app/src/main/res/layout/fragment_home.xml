@@ -96,5 +96,28 @@
                 android:clipToPadding="false" />
         </LinearLayout>
 
+        <!-- Estantería Mis listas: acceso directo al browser de cada lista. -->
+        <LinearLayout
+            android:id="@+id/home_lists_section"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/lists_title"
+                android:textAppearance="@style/TextAppearance_TVPlayer_SectionTitle" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/home_lists_rail"
+                android:layout_width="match_parent"
+                android:layout_height="120dp"
+                android:layout_marginTop="12dp"
+                android:clipToPadding="false" />
+        </LinearLayout>
+
     </LinearLayout>
 </ScrollView>
