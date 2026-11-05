@@ -22,4 +22,7 @@
     <string name="fav_title">Favourites</string>
     <string name="fav_added">Added to favourites</string>
     <string name="fav_removed">Removed from favourites</string>
+    <string name="search_title">Search</string>
+    <string name="search_hint">Type to search channels</string>
+    <string name="search_empty">No results</string>
 </resources>

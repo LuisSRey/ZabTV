@@ -22,4 +22,7 @@
     <string name="fav_title">Favoritos</string>
     <string name="fav_added">Añadido a favoritos</string>
     <string name="fav_removed">Eliminado de favoritos</string>
+    <string name="search_title">Buscar</string>
+    <string name="search_hint">Escribe para buscar canales</string>
+    <string name="search_empty">Sin resultados</string>
 </resources>
