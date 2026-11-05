@@ -3,6 +3,17 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
 
+    <!-- Visibilidad de paquetes (Android 11+): sin esto la app no ve ni puede
+         abrir AceStream, y el auto-arranque del motor falla en silencio. -->
+    <queries>
+        <package android:name="org.acestream.media" />
+        <package android:name="org.acestream.engine" />
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="acestream" />
+        </intent>
+    </queries>
+
     <uses-feature android:name="android.software.leanback" android:required="false" />
     <uses-feature android:name="android.hardware.touchscreen" android:required="false" />
 
