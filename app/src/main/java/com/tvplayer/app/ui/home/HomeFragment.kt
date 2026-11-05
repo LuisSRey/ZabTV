@@ -63,10 +63,10 @@ class HomeFragment : Fragment() {
 
         val favsSection = view.findViewById<LinearLayout>(R.id.home_favs_section)
         val favsRail = view.findViewById<RecyclerView>(R.id.home_favs_rail)
-        val favsAdapter = ChannelGridAdapter { channel ->
+        val favsAdapter = ChannelGridAdapter(onClick = { channel ->
             val listId = channel.listId
             (activity as? TvNavigator.NavHost)?.openPlayer(listId, channel.position)
-        }
+        })
         favsRail.layoutManager =
             LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
         favsRail.adapter = favsAdapter

@@ -140,6 +140,16 @@ interface EpgDao {
 
     @Query("DELETE FROM epg_programs")
     suspend fun clearAll()
+
+    /** Catálogo XMLTV para el fallback por nombre (Task 14). */
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertChannels(channels: List<EpgChannelEntity>)
+
+    @Query("SELECT * FROM epg_channels")
+    suspend fun allEpgChannels(): List<EpgChannelEntity>
+
+    @Query("SELECT EXISTS(SELECT 1 FROM epg_programs WHERE tvgId = :tvgId LIMIT 1)")
+    suspend fun hasPrograms(tvgId: String): Boolean
 }
 
 @Dao

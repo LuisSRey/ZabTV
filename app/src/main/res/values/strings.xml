@@ -9,7 +9,9 @@
     <string name="browser_channel_logo">Logotipo del canal</string>
     <string name="player_coming">Reproductor disponible en la próxima versión</string>
     <string name="player_logo">Logotipo del canal</string>
-    <string name="player_now_placeholder">Ahora (próxima versión con EPG)</string>
+    <string name="player_now_placeholder">Sin guía para este canal</string>
+    <string name="player_now">Ahora: %1$s</string>
+    <string name="player_now_approx">Ahora (aprox.): %1$s</string>
     <string name="player_zap_prev">Canal anterior</string>
     <string name="player_zap_next">Canal siguiente</string>
     <string name="player_zapping_hint">↑/↓ cambiar canal</string>
@@ -59,4 +61,8 @@
     <string name="settings_wipe_all">Borrar todo</string>
     <string name="settings_wiped">Limpieza completada</string>
     <string name="settings_about_title">Acerca de</string>
+    <string name="sheet_play">Ver</string>
+    <string name="sheet_fav">★ Favorito</string>
+    <string name="sheet_unfav">Quitar favorito</string>
+    <string name="sheet_approx">Guía aproximada (por nombre)</string>
 </resources>

@@ -63,9 +63,9 @@ class SearchFragment : Fragment() {
         val input = view.findViewById<EditText>(R.id.search_input)
         emptyView = view.findViewById(R.id.search_empty)
         val grid = view.findViewById<RecyclerView>(R.id.search_grid)
-        gridAdapter = ChannelGridAdapter { channel ->
+        gridAdapter = ChannelGridAdapter(onClick = { channel ->
             (activity as? TvNavigator.NavHost)?.openPlayer(channel.listId, channel.position)
-        }
+        })
         grid.layoutManager = GridLayoutManager(requireContext(), if (isTv) 4 else 3)
         grid.adapter = gridAdapter
         emptyView.text = getString(R.string.search_hint)

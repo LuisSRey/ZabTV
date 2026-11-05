@@ -67,6 +67,9 @@ class EpgService(
             val reader = CountingInputStream(body.byteStream())
             val doc = XmltvParser.parse(reader, now)
             coroutineContext.ensureActive()
+            // Catálogo XMLTV para el fallback por nombre (Task 14)
+            val epgChannels = doc.channels.map { com.tvplayer.app.data.db.EpgChannelEntity(it.id, it.displayName) }
+            if (epgChannels.isNotEmpty()) db.epgDao().insertChannels(epgChannels)
             val batch = ArrayList<EpgProgramEntity>(BATCH)
             for (p in doc.programmes) {
                 coroutineContext.ensureActive()

@@ -9,7 +9,9 @@
     <string name="browser_channel_logo">Channel logo</string>
     <string name="player_coming">Player available in the next release</string>
     <string name="player_logo">Channel logo</string>
-    <string name="player_now_placeholder">Now (EPG in the next release)</string>
+    <string name="player_now_placeholder">No guide for this channel</string>
+    <string name="player_now">Now: %1$s</string>
+    <string name="player_now_approx">Now (approx.): %1$s</string>
     <string name="player_zap_prev">Previous channel</string>
     <string name="player_zap_next">Next channel</string>
     <string name="player_zapping_hint">Up/Down to change channel</string>
@@ -59,4 +61,8 @@
     <string name="settings_wipe_all">Clear everything</string>
     <string name="settings_wiped">Cleanup done</string>
     <string name="settings_about_title">About</string>
+    <string name="sheet_play">Watch</string>
+    <string name="sheet_fav">★ Favourite</string>
+    <string name="sheet_unfav">Remove favourite</string>
+    <string name="sheet_approx">Approximate guide (by name)</string>
 </resources>

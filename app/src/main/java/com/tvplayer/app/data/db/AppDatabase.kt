@@ -2,6 +2,21 @@ package com.tvplayer.app.data.db
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
+
+/**
+ * Migración 1→2 (Task 14): añade el catálogo `epg_channels` para el fallback
+ * por nombre. Sin pérdida de datos (las demás tablas no se tocan).
+ */
+val MIGRATION_1_2 = object : Migration(1, 2) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            "CREATE TABLE IF NOT EXISTS `epg_channels` " +
+                "(`tvgId` TEXT NOT NULL, `displayName` TEXT, PRIMARY KEY(`tvgId`))",
+        )
+    }
+}
 
 @Database(
     entities = [
@@ -9,9 +24,10 @@ import androidx.room.RoomDatabase
         ChannelEntity::class,
         FavouriteEntity::class,
         EpgProgramEntity::class,
+        EpgChannelEntity::class,
         SettingEntity::class,
     ],
-    version = 1,
+    version = 2,
     exportSchema = true,
 )
 abstract class AppDatabase : RoomDatabase() {

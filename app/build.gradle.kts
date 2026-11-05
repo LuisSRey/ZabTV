@@ -29,6 +29,7 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+        isCoreLibraryDesugaringEnabled = true
     }
     kotlin {
         compilerOptions {
@@ -76,4 +77,5 @@ dependencies {
     testImplementation(libs.mockwebserver)
     testImplementation(libs.paging.testing)
     testImplementation("androidx.test:core-ktx:1.7.0")
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
 }

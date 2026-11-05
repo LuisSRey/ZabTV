@@ -20,7 +20,7 @@
         android:id="@+id/channel_name"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
+        android:layout_marginBottom="2dp"
         android:ellipsize="end"
         android:gravity="center"
         android:lines="2"
@@ -28,5 +28,20 @@
         android:paddingEnd="6dp"
         android:textColor="@color/tp_text"
         android:textSize="15sp" />
+
+    <!-- Tira Ahora/Siguiente (Task 14): GONE sin guía para el canal. -->
+    <TextView
+        android:id="@+id/channel_epg"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:ellipsize="end"
+        android:gravity="center"
+        android:maxLines="2"
+        android:paddingStart="6dp"
+        android:paddingEnd="6dp"
+        android:textColor="@color/tp_accent"
+        android:textSize="13sp"
+        android:visibility="gone" />
 
 </LinearLayout>

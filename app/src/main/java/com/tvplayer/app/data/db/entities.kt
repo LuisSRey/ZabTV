@@ -67,6 +67,16 @@ data class EpgProgramEntity(
     val description: String? = null,
 )
 
+/**
+ * Catálogo de canales XMLTV (id + display-name) para el fallback por nombre
+ * del matcher (Task 14). Se rellena en cada ingesta EPG.
+ */
+@Entity(tableName = "epg_channels")
+data class EpgChannelEntity(
+    @PrimaryKey val tvgId: String,
+    val displayName: String? = null,
+)
+
 @Entity(tableName = "settings")
 data class SettingEntity(
     @PrimaryKey val key: String,

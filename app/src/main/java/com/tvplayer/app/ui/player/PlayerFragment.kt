@@ -87,7 +87,7 @@ class PlayerFragment : Fragment() {
             }
             title.text = current!!.displayName
             current!!.logoUrl?.let { logo.load(it) }
-            nowText.text = getString(R.string.player_now_placeholder)
+            updateNowLine(current!!)
             showOverlay()
             engine.prepare(PlaybackSource.Progressive(current!!.url))
         }
@@ -188,10 +188,27 @@ class PlayerFragment : Fragment() {
         current = channel
         title.text = channel.displayName
         channel.logoUrl?.let { logo.load(it) }
-        nowText.text = getString(R.string.player_now_placeholder)
+        updateNowLine(channel)
         hideOverlay()
         showOverlay()
         engine.prepare(PlaybackSource.Progressive(channel.url))
+    }
+
+    /** Línea "ahora" del overlay (Task 14): exacta o aproximada, o placeholder sin guía. */
+    private suspend fun updateNowLine(channel: ChannelEntity) {
+        val db = container.db
+        val match = com.tvplayer.app.data.repo.EpgMatcher(db.epgDao()).match(channel)
+        if (match == null) {
+            nowText.text = getString(R.string.player_now_placeholder)
+            return
+        }
+        val nn = db.epgDao().nowNext(listOf(match.tvgId), System.currentTimeMillis())
+        val nowTitle = nn[match.tvgId]?.first?.title
+        nowText.text = when {
+            nowTitle != null && match.approximate -> getString(R.string.player_now_approx, nowTitle)
+            nowTitle != null -> getString(R.string.player_now, nowTitle)
+            else -> getString(R.string.player_now_placeholder)
+        }
     }
 
     private fun close() {

@@ -18,6 +18,7 @@ import com.tvplayer.app.TpApp
 import com.tvplayer.app.TvNavigator
 import com.tvplayer.app.data.db.ChannelEntity
 import com.tvplayer.app.engine.PlaybackSource
+import com.tvplayer.app.ui.channel_dialog.ChannelSheetFragment
 import com.tvplayer.app.ui.common.FocusScaleHelper
 import com.tvplayer.app.ui.home.HomeFragment
 import kotlinx.coroutines.launch
@@ -59,9 +60,43 @@ class ChannelBrowserFragment : Fragment() {
         viewModel = ChannelBrowserViewModel(container.db.channelDao(), listId)
 
         val grid = view.findViewById<RecyclerView>(R.id.channel_grid)
-        val gridAdapter = ChannelGridAdapter(::onChannelClick)
+        val gridAdapter = ChannelGridAdapter(
+            onClick = ::onChannelClick,
+            onLongClick = { channel ->
+                ChannelSheetFragment.newInstance(channel.listId, channel.stableKey)
+                    .show(parentFragmentManager, ChannelSheetFragment.TAG)
+            },
+        )
         grid.layoutManager = GridLayoutManager(requireContext(), if (isTv) 4 else 3)
         grid.adapter = gridAdapter
+
+        // Tira Ahora/Siguiente (Task 14): un batch nowNext por pausa de scroll.
+        grid.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
+                if (newState != RecyclerView.SCROLL_STATE_IDLE) return
+                val layout = recyclerView.layoutManager as? GridLayoutManager ?: return
+                val first = layout.findFirstVisibleItemPosition()
+                val last = layout.findLastVisibleItemPosition()
+                if (first < 0 || last < first) return
+                val ids = (first..last).mapNotNull { gridAdapter.peek(it)?.tvgId?.takeIf { t -> t.isNotBlank() } }
+                    .distinct()
+                lifecycleScope.launch {
+                    val nn = container.db.epgDao().nowNext(ids, System.currentTimeMillis())
+                    val lines = mutableMapOf<String, String>()
+                    for (pos in first..last) {
+                        val ch = gridAdapter.peek(pos) ?: continue
+                        val tvgId = ch.tvgId?.takeIf { it.isNotBlank() } ?: continue
+                        val (nowP, nextP) = nn[tvgId] ?: continue
+                        val line = listOfNotNull(
+                            nowP?.title?.let { "▶ $it" },
+                            nextP?.title?.let { "· $it" },
+                        ).joinToString(" ").takeIf { it.isNotBlank() } ?: continue
+                        lines[ch.stableKey] = line
+                    }
+                    if (lines.isNotEmpty()) gridAdapter.submitEpg(lines)
+                }
+            }
+        })
 
         val rail = view.findViewById<RecyclerView>(R.id.group_rail)
         lateinit var railAdapter: ChannelRailAdapter
