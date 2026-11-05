@@ -71,6 +71,9 @@ class PlayerFragment : Fragment() {
         // PlayerView 1.11 expone la surface como View (soporta surface/texture).
         surface = requireNotNull(playerView.videoSurfaceView as? SurfaceView) { "PlayerView sin surface" }
         overlay = view.findViewById(R.id.player_overlay)
+        // Tap en el vídeo ↔ overlay (imprescindible en táctil: el overlay se auto-oculta).
+        // El long-press sigue en la raíz y burbujea desde el tap-catcher (no es long-clickable).
+        view.findViewById<View>(R.id.player_tap).setOnClickListener { toggleOverlay() }
         // Flechas táctiles (móvil; en TV no existen → null seguro)
         view.findViewById<View>(R.id.player_zap_up)?.setOnClickListener {
             lifecycleScope.launch { zap(1) }
@@ -91,6 +94,7 @@ class PlayerFragment : Fragment() {
             // Engine con el buffer configurado (DAO) — se crea aquí porque load es suspend.
             engine = Media3Engine(requireContext(), container.okHttp, com.tvplayer.app.data.BufferConfig.load(container.db))
             engine.bind(surface)
+            playerView.player = engine.exoPlayer
             current = container.db.channelDao().channelAtPosition(listId, position)
             if (current == null) {
                 close()

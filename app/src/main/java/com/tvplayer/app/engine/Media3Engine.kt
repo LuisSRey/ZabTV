@@ -91,6 +91,9 @@ class Media3Engine(
     override fun play() = player.play()
     override fun pause() = player.pause()
 
+    /** ExoPlayer subyacente: PlayerFragment lo asigna al PlayerView para aspecto correcto. */
+    val exoPlayer: ExoPlayer get() = player
+
     /** Salto relativo (mando Fire TV: FF/REW ±30 s). Clamp a [0, duración]. */
     override fun seekBy(millis: Long) {
         val duration = player.duration.takeIf { it > 0 } ?: return

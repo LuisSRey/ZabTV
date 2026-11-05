@@ -14,6 +14,14 @@
         app:use_controller="false"
         app:resize_mode="fit" />
 
+    <!-- Atrapa-taps transparente: tocar el vídeo muestra/oculta el overlay. -->
+    <View
+        android:id="@+id/player_tap"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clickable="true"
+        android:focusable="false" />
+
     <ProgressBar
         android:id="@+id/player_progress"
         android:layout_width="64dp"
