@@ -19,5 +19,7 @@ class TpApp : Application() {
         CoroutineScope(Dispatchers.IO).launch {
             runCatching { container.refreshCleartextPolicy() }
         }
+        // EPG periódica cada 6 h (Task 13; KEEP para no duplicar)
+        runCatching { com.tvplayer.app.data.work.EpgWorker.schedule(this) }
     }
 }
