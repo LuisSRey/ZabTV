@@ -40,6 +40,14 @@
     <string name="lists_max">Máximo 10 listas</string>
     <string name="lists_refreshing">Actualizando…</string>
     <string name="lists_refresh_file">Esta lista es de archivo: vuelve a importarla desde el archivo</string>
+    <string name="lists_mode_url">URL</string>
+    <string name="lists_mode_portal">Portal</string>
+    <string name="lists_host">Host del portal (ej. example.com:8080)</string>
+    <string name="lists_user">Usuario</string>
+    <string name="lists_pass">Contraseña</string>
+    <string name="portal_invalid">Credenciales inválidas o portal inaccesible</string>
+    <string name="portal_invalid_host">Host de portal inválido</string>
+    <string name="portal_import_error">Error al importar. Revisa el host y las credenciales.</string>
     <string name="settings_title">Ajustes</string>
     <string name="settings_http">Permitir HTTP sin cifrar</string>
     <string name="settings_http_warn">Las listas http:// viajan sin cifrar y cualquiera en la red puede verlas. Solo para redes de confianza.</string>

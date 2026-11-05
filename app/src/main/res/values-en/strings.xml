@@ -40,6 +40,14 @@
     <string name="lists_max">Maximum 10 playlists</string>
     <string name="lists_refreshing">Refreshing…</string>
     <string name="lists_refresh_file">This playlist is from a file: re-import it from the file</string>
+    <string name="lists_mode_url">URL</string>
+    <string name="lists_mode_portal">Portal</string>
+    <string name="lists_host">Portal host (e.g. example.com:8080)</string>
+    <string name="lists_user">Username</string>
+    <string name="lists_pass">Password</string>
+    <string name="portal_invalid">Invalid credentials or unreachable portal</string>
+    <string name="portal_invalid_host">Invalid portal host</string>
+    <string name="portal_import_error">Import error. Check the host and credentials.</string>
     <string name="settings_title">Settings</string>
     <string name="settings_http">Allow unencrypted HTTP</string>
     <string name="settings_http_warn">http:// playlists travel unencrypted and anyone on the network can see them. Trusted networks only.</string>

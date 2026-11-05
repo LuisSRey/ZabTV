@@ -17,6 +17,8 @@ import com.tvplayer.app.R
 import com.tvplayer.app.TpApp
 import com.tvplayer.app.TvNavigator
 import com.tvplayer.app.data.db.ListEntity
+import com.tvplayer.app.data.portal.SecureCredentials
+import com.tvplayer.app.data.portal.XtreamLogin
 import com.tvplayer.app.data.repo.ImportService
 import com.tvplayer.app.data.repo.ImportSource
 import com.tvplayer.app.ui.common.FocusScaleHelper
@@ -64,7 +66,7 @@ class ListsFragment : Fragment() {
         list.adapter = adapter
 
         addUrl.setOnClickListener {
-            AddListDialog { name, url, userAgent -> addFromUrl(name, url, userAgent) }
+            AddListDialog { input -> onAddInput(input) }
                 .show(parentFragmentManager, "add_list")
         }
         addFile.setOnClickListener { pickFile.launch("*/*") }
@@ -86,6 +88,13 @@ class ListsFragment : Fragment() {
                     ListsAdapter.Row(entity.id, entity.name, sub)
                 },
             )
+        }
+    }
+
+    private fun onAddInput(input: AddListInput) {
+        when (input) {
+            is AddListInput.Url -> addFromUrl(input.name, input.url, input.userAgent)
+            is AddListInput.Portal -> addFromPortal(input.name, input.host, input.username, input.password)
         }
     }
 
@@ -127,6 +136,59 @@ class ListsFragment : Fragment() {
             reload()
         }
     }
+
+    /** Portal Xtream (Task 12): single request; 401 → mensaje específico; creds a Keystore. */
+    private fun addFromPortal(name: String, host: String, username: String, password: String) {
+        lifecycleScope.launch {
+            val db = container().db
+            if (db.listDao().all().size >= MAX_LISTS) {
+                Toast.makeText(requireContext(), R.string.lists_max, Toast.LENGTH_LONG).show()
+                return@launch
+            }
+            val playlistUrl: String
+            val epgUrl: String?
+            try {
+                playlistUrl = XtreamLogin.playlistUrl(host, username, password)
+                epgUrl = XtreamLogin.epgUrl(host, username, password)
+            } catch (_: IllegalArgumentException) {
+                Toast.makeText(requireContext(), R.string.portal_invalid_host, Toast.LENGTH_LONG).show()
+                return@launch
+            }
+            val listId = db.listDao().upsert(
+                ListEntity(
+                    name = name.ifBlank { host },
+                    sourceUrl = "",
+                    epgUrl = epgUrl,
+                    portalHost = host,
+                    status = "importing",
+                ),
+            )
+            // Credenciales cifradas ANTES de cualquier red (nunca a logs ni Toasts)
+            SecureCredentials.createEncrypted(requireContext().applicationContext).save(listId, username, password)
+            reload()
+            val result = ImportService(
+                requireContext().applicationContext, db, container().okHttp,
+            ).import(listId, ImportSource.HttpSource(playlistUrl, null))
+            val shown = portalMessage(result.message)
+            Toast.makeText(requireContext(), shown, Toast.LENGTH_LONG).show()
+            reload()
+        }
+    }
+
+    /**
+     * Sanea mensajes que puedan llevar credenciales en la URL y mapea 401 a
+     * mensaje específico. Nunca se muestra una credencial en pantalla.
+     */
+    private fun safeMessage(message: String?): String {
+        if (message == null) return getString(R.string.portal_import_error)
+        if (message.contains("username=") || message.contains("password=")) {
+            return getString(R.string.portal_import_error)
+        }
+        if (message.contains("401")) return getString(R.string.portal_invalid)
+        return message
+    }
+
+    private fun portalMessage(message: String?): String? = safeMessage(message)
 
     private fun refresh(listId: Long) {
         lifecycleScope.launch {
