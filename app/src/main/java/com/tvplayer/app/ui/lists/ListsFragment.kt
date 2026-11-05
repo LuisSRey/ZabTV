@@ -315,12 +315,19 @@ class ListsFragment : Fragment() {
     }
 
     private fun delete(listId: Long) {
-        lifecycleScope.launch {
-            val db = container().db
-            db.channelDao().deleteForList(listId)
-            db.listDao().delete(listId)
-            com.tvplayer.app.data.ActiveList.clearIf(db, listId)
-            reload()
-        }
+        android.app.AlertDialog.Builder(requireContext())
+            .setTitle(R.string.lists_delete)
+            .setMessage(R.string.lists_confirm_delete)
+            .setPositiveButton(R.string.lists_delete) { _, _ ->
+                lifecycleScope.launch {
+                    val db = container().db
+                    db.channelDao().deleteForList(listId)
+                    db.listDao().delete(listId)
+                    com.tvplayer.app.data.ActiveList.clearIf(db, listId)
+                    reload()
+                }
+            }
+            .setNegativeButton(R.string.lists_cancel, null)
+            .show()
     }
 }

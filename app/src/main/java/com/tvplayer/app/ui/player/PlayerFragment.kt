@@ -21,11 +21,13 @@ import com.tvplayer.app.TvNavigator
 import com.tvplayer.app.data.AppContainer
 import com.tvplayer.app.data.db.ChannelEntity
 import com.tvplayer.app.data.repo.FavouritesRepo
+import com.tvplayer.app.engine.AceStreamEngine
 import com.tvplayer.app.engine.Media3Engine
 import com.tvplayer.app.engine.PlaybackSource
 import com.tvplayer.app.engine.PlayerState
 import com.tvplayer.app.ui.common.FocusScaleHelper
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * Player de pantalla completa (Task 8): SurfaceView + overlay de 5 s con logo/nombre
@@ -268,14 +270,35 @@ class PlayerFragment : Fragment() {
     }
 
     /**
+     * Motor AceStream: si no responde en local, intenta lanzar la app del motor;
+     * si ni está instalada, error accionable. Devuelve false si no se puede reproducir.
+     */
+    private suspend fun ensureEngineRunning(): Boolean {
+        val (host, port) = AceStreamEngine.splitHostPort(com.tvplayer.app.data.AppContainer.DEFAULT_ACE_PROXY)
+        val ok = withContext(kotlinx.coroutines.Dispatchers.IO) {
+            AceStreamEngine.isReachable(host, port)
+        }
+        if (ok) return true
+        val intent = AceStreamEngine.launchIntent(requireContext().applicationContext)
+        progress.visibility = View.GONE
+        if (intent != null) {
+            showError(R.string.error_acestream_starting)
+            runCatching { startActivity(intent) }
+        } else {
+            showError(R.string.error_acestream)
+        }
+        return false
+    }
+
+    /**
      * Resuelve la fuente ANTES de tocar el player (spec F8): http con cleartext
      * OFF o esquema no permitido → error visible inmediato, sin pantalla negra.
      */
     private suspend fun prepareCurrent(channel: ChannelEntity) {
-        val proxy = container.db.settingsDao().get(
-            com.tvplayer.app.data.AppContainer.KEY_ACE_PROXY,
-            com.tvplayer.app.data.AppContainer.DEFAULT_ACE_PROXY,
-        )
+        if (channel.url.startsWith("acestream://", ignoreCase = true)) {
+            if (!ensureEngineRunning()) return
+        }
+        val proxy = com.tvplayer.app.data.AppContainer.DEFAULT_ACE_PROXY
         val source = try {
             PlaybackSource.forUrl(channel.url, allowCleartext = container.allowHttp, aceStreamProxy = proxy)
         } catch (e: IllegalArgumentException) {

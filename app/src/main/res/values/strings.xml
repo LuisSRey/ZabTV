@@ -23,8 +23,9 @@
     <string name="error_network">Sin conexión o el servidor no responde</string>
     <string name="error_server">El servidor devolvió un error</string>
     <string name="error_unsupported_format">Formato no soportado</string>
-    <string name="error_cleartext">HTTP sin cifrar bloqueado. Actívalo en Ajustes o usa una lista https://</string>
-    <string name="error_acestream">AceStream no disponible: instala el motor AceStream y revisa el proxy en Ajustes</string>
+    <string name="error_cleartext">HTTP sin cifrar bloqueado. Usa una lista https://</string>
+    <string name="error_acestream">AceStream no disponible: instala la app AceStream y mantenla abierta</string>
+    <string name="error_acestream_starting">Iniciando motor AceStream… vuelve a intentarlo en unos segundos</string>
     <string name="error_generic">Error de reproducción</string>
     <string name="fav_title">Favoritos</string>
     <string name="fav_added">Añadido a favoritos</string>
@@ -78,6 +79,10 @@
     <string name="settings_buffer_hint">Se aplica al próximo canal. En Fire TV Stick con WiFi justo, sube el mínimo.</string>
     <string name="settings_buffer_save">Guardar buffer</string>
     <string name="settings_buffer_saved">Buffer guardado</string>
+    <string name="settings_buffer_what">Mínimo: segundos que guarda antes de empezar. Máximo: tope de memoria. Atrás: cuánto puedes retroceder en directos.</string>
+    <string name="settings_confirm_title">Confirmar borrado</string>
+    <string name="settings_confirm_wipe">¿Borrar %1$s? Esta acción no se puede deshacer.</string>
+    <string name="lists_confirm_delete">¿Borrar esta lista y todos sus canales? No se puede deshacer.</string>
     <string name="settings_ace_title">AceStream: proxy del motor local</string>
     <string name="settings_ace_hint">127.0.0.1:6878</string>
     <string name="settings_ace_warn">Instala la app AceStream y déjala corriendo. Los enlaces acestream:// se reproducen a través de ese proxy.</string>
