@@ -9,7 +9,7 @@ android {
 
     defaultConfig {
         applicationId = "com.tvplayer.app"
-        minSdk = 21
+        minSdk = 23
         targetSdk = 36
         versionCode = 1
         versionName = "0.1.0"
@@ -58,6 +58,11 @@ dependencies {
     implementation(libs.androidx.room.paging)
     implementation(libs.androidx.lifecycle.viewmodel)
     implementation(libs.coil)
+    implementation("androidx.media3:media3-exoplayer:1.11.1")
+    implementation("androidx.media3:media3-exoplayer-hls:1.11.1")
+    implementation("androidx.media3:media3-exoplayer-dash:1.11.1")
+    implementation("androidx.media3:media3-exoplayer-smoothstreaming:1.11.1")
+    implementation("androidx.media3:media3-datasource-okhttp:1.11.1")
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)

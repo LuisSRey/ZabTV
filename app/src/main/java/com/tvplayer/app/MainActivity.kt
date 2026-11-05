@@ -3,6 +3,7 @@ package com.tvplayer.app
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.tvplayer.app.ui.home.HomeFragment
+import com.tvplayer.app.ui.player.PlayerFragment
 
 /**
  * Única Activity de la app (spec §5). Los cambios de pantalla son replacements de Fragment.
@@ -26,8 +27,18 @@ class MainActivity : AppCompatActivity(), TvNavigator.NavHost {
             .replace(R.id.container, fragment, tag)
             .commitAllowingStateLoss()
     }
+
+    override fun openPlayer(listId: Long, position: Int) {
+        supportFragmentManager.beginTransaction()
+            .replace(R.id.container, PlayerFragment.newInstance(listId, position), PlayerFragment.TAG)
+            .addToBackStack(PlayerFragment.TAG)
+            .commitAllowingStateLoss()
+    }
 }
 
 interface TvNavigator {
-    fun interface NavHost { fun open(fragment: androidx.fragment.app.Fragment, tag: String) }
+    interface NavHost {
+        fun open(fragment: androidx.fragment.app.Fragment, tag: String)
+        fun openPlayer(listId: Long, position: Int)
+    }
 }

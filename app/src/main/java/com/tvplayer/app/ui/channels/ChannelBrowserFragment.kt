@@ -17,6 +17,7 @@ import com.tvplayer.app.R
 import com.tvplayer.app.TpApp
 import com.tvplayer.app.TvNavigator
 import com.tvplayer.app.data.db.ChannelEntity
+import com.tvplayer.app.engine.PlaybackSource
 import com.tvplayer.app.ui.common.FocusScaleHelper
 import com.tvplayer.app.ui.home.HomeFragment
 import kotlinx.coroutines.launch
@@ -90,6 +91,7 @@ class ChannelBrowserFragment : Fragment() {
     }
 
     private fun onChannelClick(channel: ChannelEntity) {
-        Toast.makeText(requireContext(), R.string.player_coming, Toast.LENGTH_SHORT).show()
+        val listId = arguments?.getLong(ChannelBrowserFragment.ARG_LIST_ID, -1L) ?: -1L
+        (activity as? TvNavigator.NavHost)?.openPlayer(listId, channel.position)
     }
 }

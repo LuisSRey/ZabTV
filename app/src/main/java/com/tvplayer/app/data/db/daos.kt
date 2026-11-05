@@ -43,6 +43,21 @@ interface ChannelDao {
         "SELECT * FROM channels WHERE listId = :listId AND normName LIKE '%' || :normQuery || '%' ORDER BY normName LIMIT 100",
     )
     suspend fun searchByNorm(listId: Long, normQuery: String): List<ChannelEntity>
+
+    /** Fuente de paginado para el browser (Task 7): int-paginación por posición. */
+    @Query("SELECT * FROM channels WHERE listId = :listId AND (:group IS NULL OR groupName = :group) ORDER BY position")
+    fun pagingForListAndGroup(listId: Long, group: String?): androidx.paging.PagingSource<Int, ChannelEntity>
+
+    /** Canal en una posición exacta (zapping, Task 8). */
+    @Query("SELECT * FROM channels WHERE listId = :listId AND position = :pos LIMIT 1")
+    suspend fun channelAtPosition(listId: Long, pos: Int): ChannelEntity?
+
+    /** Siguiente / previo en el orden de la lista (zapping arriba/abajo, Task 8). */
+    @Query("SELECT * FROM channels WHERE listId = :listId AND position > :pos ORDER BY position ASC LIMIT 1")
+    suspend fun nextInList(listId: Long, pos: Int): ChannelEntity?
+
+    @Query("SELECT * FROM channels WHERE listId = :listId AND position < :pos ORDER BY position DESC LIMIT 1")
+    suspend fun prevInList(listId: Long, pos: Int): ChannelEntity?
 }
 
 data class GroupNameCount(val group: String, val count: Int)
