@@ -2,6 +2,7 @@
 <resources>
     <string name="app_name">TVPlayer</string>
     <string name="home_no_content">This app does not include, host or distribute any content. Add your own playlist to start.</string>
+    <string name="nav_home">Home</string>
     <string name="about_disclaimer_full">TVPlayer is a playlist player for Android TV, Fire TV and Android phones/tablets. It includes, hosts or distributes no content: it plays the channels and videos from the M3U/EPG lists you add (your own provider or playlist).</string>
     <string name="browser_title">Channels</string>
     <string name="browser_groups_all">All</string>
