@@ -1,9 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Foco D-pad: borde acento grueso (spec §3/§5) -->
     <item android:state_focused="true">
         <shape android:shape="rectangle">
             <solid android:color="@color/tp_surface" />
             <stroke android:width="3dp" android:color="@color/tp_accent" />
+            <corners android:radius="14dp" />
+        </shape>
+    </item>
+    <!-- Seleccionado (chips/filas de grupo): borde acento fino -->
+    <item android:state_activated="true">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/tp_surface" />
+            <stroke android:width="2dp" android:color="@color/tp_accent" />
             <corners android:radius="14dp" />
         </shape>
     </item>

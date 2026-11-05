@@ -54,6 +54,10 @@ ksp {
 dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
+    implementation(libs.androidx.paging.runtime)
+    implementation(libs.androidx.room.paging)
+    implementation(libs.androidx.lifecycle.viewmodel)
+    implementation(libs.coil)
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
@@ -63,5 +67,6 @@ dependencies {
     testImplementation(libs.robolectric)
     testImplementation(libs.kotlin.coroutines.test)
     testImplementation(libs.mockwebserver)
+    testImplementation(libs.paging.testing)
     testImplementation("androidx.test:core-ktx:1.7.0")
 }

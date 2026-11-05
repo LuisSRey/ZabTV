@@ -1,9 +1,16 @@
 package com.tvplayer.app
 
 import android.app.Application
+import coil.Coil
 import com.tvplayer.app.data.AppContainer
 
 class TpApp : Application() {
 
     val container: AppContainer by lazy { AppContainer(this) }
+
+    override fun onCreate() {
+        super.onCreate()
+        // Logos SIEMPRE por el único transporte (OkHttp compartido + CleartextGate, spec F8)
+        Coil.setImageLoader(container.imageLoader)
+    }
 }
