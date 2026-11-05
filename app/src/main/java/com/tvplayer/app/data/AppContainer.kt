@@ -57,6 +57,9 @@ class AppContainer(private val appContext: Context) {
 
     companion object {
         const val KEY_ALLOW_HTTP = "allow_http"
+        const val KEY_ACE_PROXY = "acestream_proxy"
+        /** Proxy del motor AceStream (app AceStream en el propio dispositivo). */
+        const val DEFAULT_ACE_PROXY = "127.0.0.1:6878"
     }
 
     /**

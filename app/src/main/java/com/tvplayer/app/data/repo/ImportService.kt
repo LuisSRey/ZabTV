@@ -129,7 +129,10 @@ class ImportService(
         val channels = ArrayList<ChannelEntity>(1024)
         for ((index, ch) in doc.channels.withIndex()) {
             coroutineContext.ensureActive()
-            if (!UrlPolicer.isAllowedHttpUrl(ch.url)) {
+            // Se conserva http(s) y acestream:// (se resuelve al reproducir vía
+            // proxy local); el resto se descarta ANTES de DB/decoder (spec F8).
+            val isAce = ch.url.startsWith("acestream://", ignoreCase = true)
+            if (!isAce && !UrlPolicer.isAllowedHttpUrl(ch.url)) {
                 skipped++
                 if (log.size < MAX_LOG) log.add("skip línea ${index + 1}: URL no permitida (${ch.url.take(50)})")
                 continue

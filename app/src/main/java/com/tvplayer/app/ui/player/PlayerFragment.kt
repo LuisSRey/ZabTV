@@ -272,16 +272,22 @@ class PlayerFragment : Fragment() {
      * OFF o esquema no permitido → error visible inmediato, sin pantalla negra.
      */
     private suspend fun prepareCurrent(channel: ChannelEntity) {
+        val proxy = container.db.settingsDao().get(
+            com.tvplayer.app.data.AppContainer.KEY_ACE_PROXY,
+            com.tvplayer.app.data.AppContainer.DEFAULT_ACE_PROXY,
+        )
         val source = try {
-            PlaybackSource.forUrl(channel.url, allowCleartext = container.allowHttp)
+            PlaybackSource.forUrl(channel.url, allowCleartext = container.allowHttp, aceStreamProxy = proxy)
         } catch (e: IllegalArgumentException) {
             progress.visibility = View.GONE
-            val res = if ((e.message ?: "").contains("Texto plano")) {
-                R.string.error_cleartext
-            } else {
-                R.string.error_unsupported_format
-            }
-            showError(res)
+            val msg = e.message.orEmpty()
+            showError(
+                when {
+                    msg.contains("Texto plano") -> R.string.error_cleartext
+                    msg.contains("AceStream") -> R.string.error_acestream
+                    else -> R.string.error_unsupported_format
+                },
+            )
             return
         }
         engine.prepare(source)

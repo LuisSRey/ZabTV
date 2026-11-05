@@ -25,21 +25,47 @@ sealed interface PlaybackSource {
             url: String?,
             contentType: String? = null,
             allowCleartext: Boolean = false,
+            aceStreamProxy: String? = null,
         ): PlaybackSource {
-            val url = url ?: throw IllegalArgumentException("URL de canal nula")
-            if (!UrlPolicer.isAllowedHttpUrl(url)) {
-                throw IllegalArgumentException("URL de canal no permitida: ${url.take(80)}")
+            val raw = url?.trim() ?: throw IllegalArgumentException("URL de canal nula")
+            if (raw.startsWith("acestream://", ignoreCase = true)) {
+                return aceSource(raw, aceStreamProxy)
             }
-            if (url.startsWith("http://", ignoreCase = true) && !allowCleartext) {
+            val checked = raw
+            if (!UrlPolicer.isAllowedHttpUrl(checked)) {
+                throw IllegalArgumentException("URL de canal no permitida: ${checked.take(80)}")
+            }
+            if (checked.startsWith("http://", ignoreCase = true) && !allowCleartext) {
                 throw IllegalArgumentException(
                     "Texto plano desactivado: active 'Permitir HTTP' en Ajustes o use https://",
                 )
             }
 
             return when {
-                contentType != null -> byContentType(url, contentType)
-                else -> byExtension(url)
+                contentType != null -> byContentType(checked, contentType)
+                else -> byExtension(checked)
             }
+        }
+
+        /**
+         * acestream://<infohash> → proxy HTTP local del motor (app AceStream en
+         * 127.0.0.1:6878 por defecto). Sin proxy configurado se rechaza con
+         * mensaje accionable ANTES de crear el player.
+         */
+        private fun aceSource(raw: String, aceStreamProxy: String?): PlaybackSource {
+            val hash = raw.substringAfter("://").trim()
+            require(hash.isNotEmpty() && hash.none { it.isWhitespace() }) {
+                "URL de canal no permitida: acestream inválido"
+            }
+            val proxy = aceStreamProxy?.trim().orEmpty()
+            if (proxy.isEmpty()) {
+                throw IllegalArgumentException(
+                    "AceStream necesita el motor local: instala la app AceStream y configura el proxy en Ajustes",
+                )
+            }
+            val host = proxy.removePrefix("http://").removePrefix("https://").trimEnd('/')
+            require(host.isNotEmpty()) { "AceStream: proxy inválido en Ajustes" }
+            return Progressive("http://$host/ace/getstream?id=$hash")
         }
 
         private fun byContentType(url: String, ct: String): PlaybackSource {

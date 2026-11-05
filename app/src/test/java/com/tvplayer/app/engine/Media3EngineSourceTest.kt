@@ -1,7 +1,9 @@
 package com.tvplayer.app.engine
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.junit.Assert.fail
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -74,6 +76,27 @@ class Media3EngineSourceTest {
         val err = Media3Engine.errorFor(cause)
         assertEquals(PlayerError.Code.NETWORK, err.code)
         assertTrue(err.userMessageRes != 0)
+    }
+
+    @Test
+    fun `acestream sin proxy falla antes de crear el player`() {
+        try {
+            PlaybackSource.forUrl("acestream://1a2b3c4d5e6f708192a3b4c5d6e7f00")
+            fail("debía fallar sin proxy")
+        } catch (e: IllegalArgumentException) {
+            assertTrue((e.message ?: "").contains("AceStream"))
+        }
+    }
+
+    @Test
+    fun `acestream con proxy resuelve al proxy local`() {
+        assertEquals(
+            PlaybackSource.Progressive("http://127.0.0.1:6878/ace/getstream?id=1a2b3c4d5e6f708192a3b4c5d6e7f00"),
+            PlaybackSource.forUrl(
+                "acestream://1a2b3c4d5e6f708192a3b4c5d6e7f00",
+                aceStreamProxy = "127.0.0.1:6878",
+            ),
+        )
     }
 
     @Test

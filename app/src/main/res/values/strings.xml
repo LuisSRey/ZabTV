@@ -24,6 +24,7 @@
     <string name="error_server">El servidor devolvió un error</string>
     <string name="error_unsupported_format">Formato no soportado</string>
     <string name="error_cleartext">HTTP sin cifrar bloqueado. Actívalo en Ajustes o usa una lista https://</string>
+    <string name="error_acestream">AceStream no disponible: instala el motor AceStream y revisa el proxy en Ajustes</string>
     <string name="error_generic">Error de reproducción</string>
     <string name="fav_title">Favoritos</string>
     <string name="fav_added">Añadido a favoritos</string>
@@ -77,6 +78,9 @@
     <string name="settings_buffer_hint">Se aplica al próximo canal. En Fire TV Stick con WiFi justo, sube el mínimo.</string>
     <string name="settings_buffer_save">Guardar buffer</string>
     <string name="settings_buffer_saved">Buffer guardado</string>
+    <string name="settings_ace_title">AceStream: proxy del motor local</string>
+    <string name="settings_ace_hint">127.0.0.1:6878</string>
+    <string name="settings_ace_warn">Instala la app AceStream y déjala corriendo. Los enlaces acestream:// se reproducen a través de ese proxy.</string>
     <string name="sheet_play">Ver</string>
     <string name="sheet_fav">★ Favorito</string>
     <string name="sheet_unfav">Quitar favorito</string>

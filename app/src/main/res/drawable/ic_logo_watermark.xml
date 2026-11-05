@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Marca de agua: translucidez horneada (sin depender de android:alpha del item). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="220dp"
+    android:height="220dp"
+    android:viewportWidth="220"
+    android:viewportHeight="220">
+    <path
+        android:fillColor="#2910A84F"
+        android:pathData="M44,44h132a30,30 0 0 1 30,30v72a30,30 0 0 1 -30,30H88a30,30 0 0 1 -30,-30V74a30,30 0 0 1 30,-30z" />
+    <path
+        android:fillColor="#2BFFFFFF"
+        android:pathData="M92,78 L92,142 L152,110z" />
+</vector>

@@ -87,11 +87,18 @@ class SettingsFragment : Fragment() {
 
         // Buffer del reproductor (spec §6): segundos en UI, ms en DAO; se aplica
         // al próximo play (el engine se crea por reproducción).
+        val aceProxy = view.findViewById<android.widget.EditText>(R.id.settings_ace_proxy)
         lifecycleScope.launch {
             val current = com.tvplayer.app.data.BufferConfig.load(container.db)
             bufMin.setText((current.minMs / 1000).toString())
             bufMax.setText((current.maxMs / 1000).toString())
             bufBack.setText((current.backMs / 1000).toString())
+            aceProxy.setText(
+                container.db.settingsDao().get(
+                    com.tvplayer.app.data.AppContainer.KEY_ACE_PROXY,
+                    com.tvplayer.app.data.AppContainer.DEFAULT_ACE_PROXY,
+                ),
+            )
         }
         bufSave.setOnClickListener {
             lifecycleScope.launch {
@@ -105,6 +112,11 @@ class SettingsFragment : Fragment() {
                 bufMin.setText((applied.minMs / 1000).toString())
                 bufMax.setText((applied.maxMs / 1000).toString())
                 bufBack.setText((applied.backMs / 1000).toString())
+                val proxy = aceProxy.text.toString().trim()
+                container.db.settingsDao().put(
+                    com.tvplayer.app.data.AppContainer.KEY_ACE_PROXY,
+                    proxy.ifBlank { com.tvplayer.app.data.AppContainer.DEFAULT_ACE_PROXY },
+                )
                 Toast.makeText(requireContext(), R.string.settings_buffer_saved, Toast.LENGTH_SHORT).show()
             }
         }

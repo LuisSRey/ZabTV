@@ -103,6 +103,26 @@ class ImportServiceTest {
     }
 
     @Test
+    fun `acestream se preserva en el import para resolverlo al reproducir`() = runTest {
+        val listId = db.listDao().upsert(ListEntity(name = "L", sourceUrl = "http://x/lista.m3u"))
+        val body = buildString {
+            append("#EXTM3U\n")
+            append("#EXTINF:-1 tvg-id=\"ace1\",Ace Uno\n")
+            append("acestream://1a2b3c4d5e6f708192a3b4c5d6e7f00\n")
+        }
+        server.enqueue(MockResponse().setBody(body))
+
+        val result = service.import(listId, ImportSource.HttpSource(server.url("/list.m3u").toString(), null))
+
+        assertEquals(1, result.saved)
+        assertEquals(1, db.channelDao().countForList(listId))
+        assertEquals(
+            "acestream://1a2b3c4d5e6f708192a3b4c5d6e7f00",
+            db.channelDao().allForListAndGroup(listId, null).first().url,
+        )
+    }
+
+    @Test
     fun `reimport devolviendo 0 canales mantiene la tabla y marca rejected`() = runTest {
         val listId = seed100()
         server.enqueue(MockResponse().setBody("#EXTM3U\n"))
