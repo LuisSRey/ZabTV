@@ -19,6 +19,9 @@ interface ListDao {
 
     @Query("DELETE FROM lists WHERE id = :id")
     suspend fun delete(id: Long)
+
+    @Query("DELETE FROM lists")
+    suspend fun clearAll()
 }
 
 @Dao
@@ -32,6 +35,9 @@ interface ChannelDao {
 
     @Query("DELETE FROM channels WHERE listId = :listId")
     suspend fun deleteForList(listId: Long)
+
+    @Query("DELETE FROM channels")
+    suspend fun clearAll()
 
     @Query("SELECT groupName AS `group`, COUNT(*) AS count FROM channels WHERE listId = :listId GROUP BY groupName ORDER BY groupName")
     suspend fun groupsForList(listId: Long): List<GroupNameCount>
@@ -88,6 +94,9 @@ interface FavouriteDao {
     @Query("DELETE FROM favourites WHERE listId = :listId AND channelKey = :channelKey")
     suspend fun delete(listId: Long, channelKey: String)
 
+    @Query("DELETE FROM favourites")
+    suspend fun clearAll()
+
     @Query(
         "SELECT c.* FROM channels c JOIN favourites f ON f.listId = c.listId AND f.channelKey = c.stableKey " +
             "WHERE c.listId = :listId ORDER BY f.addedAtMillis DESC",
@@ -128,6 +137,9 @@ interface EpgDao {
 
     @Query("DELETE FROM epg_programs WHERE endMillis < :beforeMillis")
     suspend fun pruneBefore(beforeMillis: Long): Int
+
+    @Query("DELETE FROM epg_programs")
+    suspend fun clearAll()
 }
 
 @Dao

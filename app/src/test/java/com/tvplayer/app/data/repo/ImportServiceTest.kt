@@ -46,6 +46,9 @@ class ImportServiceTest {
             .allowMainThreadQueries()
             .build()
         val container = AppContainer(context)
+        // Los tests usan MockWebServer (http://localhost): el gate de Task 11 los
+        // bloquearía; el seam setAllowHttp existe justo para esto (prod lee SettingsDao).
+        container.setAllowHttp(true)
         service = ImportService(context, db, container.okHttp, Dispatchers.IO)
         smallCapService = ImportService(context, db, container.okHttp, Dispatchers.IO, maxBodyBytes = 1000)
     }
