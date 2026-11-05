@@ -19,4 +19,7 @@
     <string name="error_unsupported_format">Unsupported format</string>
     <string name="error_cleartext">Unencrypted HTTP blocked. Enable it in Settings or use an https:// list</string>
     <string name="error_generic">Playback error</string>
+    <string name="fav_title">Favourites</string>
+    <string name="fav_added">Added to favourites</string>
+    <string name="fav_removed">Removed from favourites</string>
 </resources>

@@ -19,4 +19,7 @@
     <string name="error_unsupported_format">Formato no soportado</string>
     <string name="error_cleartext">HTTP sin cifrar bloqueado. Actívalo en Ajustes o usa una lista https://</string>
     <string name="error_generic">Error de reproducción</string>
+    <string name="fav_title">Favoritos</string>
+    <string name="fav_added">Añadido a favoritos</string>
+    <string name="fav_removed">Eliminado de favoritos</string>
 </resources>

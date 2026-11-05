@@ -8,6 +8,7 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.TextView
+import android.widget.Toast
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
@@ -19,6 +20,7 @@ import com.tvplayer.app.TpApp
 import com.tvplayer.app.TvNavigator
 import com.tvplayer.app.data.AppContainer
 import com.tvplayer.app.data.db.ChannelEntity
+import com.tvplayer.app.data.repo.FavouritesRepo
 import com.tvplayer.app.engine.Media3Engine
 import com.tvplayer.app.engine.PlaybackSource
 import com.tvplayer.app.engine.PlayerState
@@ -122,9 +124,21 @@ class PlayerFragment : Fragment() {
                 false
             }
         }
-        // long-press OK → favorito (Task 9: placeholder)
+        // long-press OK → favorito (Task 9)
         view.setOnLongClickListener {
-            if (isTv) true else false
+            val channel = current
+            if (channel != null) {
+                lifecycleScope.launch {
+                    val listId = arguments?.getLong(ARG_LIST_ID, -1L) ?: -1L
+                    val added = FavouritesRepo(container.db).toggle(listId, channel)
+                    Toast.makeText(
+                        requireContext(),
+                        if (added) R.string.fav_added else R.string.fav_removed,
+                        Toast.LENGTH_SHORT,
+                    ).show()
+                }
+            }
+            true
         }
     }
 

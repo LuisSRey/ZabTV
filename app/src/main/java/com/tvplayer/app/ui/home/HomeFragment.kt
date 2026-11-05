@@ -4,15 +4,25 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
+import androidx.paging.PagingData
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.tvplayer.app.R
+import com.tvplayer.app.TpApp
 import com.tvplayer.app.TvNavigator
+import com.tvplayer.app.data.repo.FavouritesRepo
+import com.tvplayer.app.ui.channels.ChannelGridAdapter
 import com.tvplayer.app.ui.common.FocusScaleHelper
+import kotlinx.coroutines.launch
 
 /**
  * Home v0.1 (spec §5): sin listas muestra el disclaimer de "no hay contenido incluido"
- * + acceso directo a añadir lista. Las secciones reales llegan con datos (Tasks 7-11).
+ * + acceso directo a añadir lista. Con listas, muestra el rail de favoritos
+ * (Task 9, reutiliza el adapter del browser) sobre la primera lista.
  */
 class HomeFragment : Fragment() {
 
@@ -32,6 +42,26 @@ class HomeFragment : Fragment() {
         }
         // Placeholder de navegación hasta Task 11: el tile apunta a un diálogo con el disclaimer
         // completo (§6.8) para que el flujo TV completo sea navegable desde el primer build.
+
+        val favsSection = view.findViewById<LinearLayout>(R.id.home_favs_section)
+        val favsRail = view.findViewById<RecyclerView>(R.id.home_favs_rail)
+        val favsAdapter = ChannelGridAdapter { channel ->
+            val listId = channel.listId
+            (activity as? TvNavigator.NavHost)?.openPlayer(listId, channel.position)
+        }
+        favsRail.layoutManager =
+            LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
+        favsRail.adapter = favsAdapter
+
+        lifecycleScope.launch {
+            val db = (requireActivity().application as TpApp).container.db
+            val firstList = db.listDao().all().firstOrNull()
+            val favs = if (firstList != null) FavouritesRepo(db).favourites(firstList.id) else emptyList()
+            if (favs.isNotEmpty()) {
+                favsSection.visibility = View.VISIBLE
+                favsAdapter.submitData(PagingData.from(favs))
+            }
+        }
     }
 }
 
