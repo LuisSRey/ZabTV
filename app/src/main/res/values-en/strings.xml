@@ -15,6 +15,9 @@
     <string name="player_now_approx">Now (approx.): %1$s</string>
     <string name="player_zap_prev">Previous channel</string>
     <string name="player_zap_next">Next channel</string>
+    <string name="player_seek_back">Back 10 seconds</string>
+    <string name="player_seek_fwd">Forward 10 seconds</string>
+    <string name="player_toggle">Play / Pause</string>
     <string name="player_zapping_hint">Up/Down to change channel</string>
     <string name="player_zapping_hint_tv">D-pad Up/Down to change channel · BACK to exit</string>
     <string name="error_network">No connection or server not responding</string>

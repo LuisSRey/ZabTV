@@ -58,6 +58,10 @@ interface ChannelDao {
     @Query("SELECT * FROM channels WHERE listId = :listId AND position = :pos LIMIT 1")
     suspend fun channelAtPosition(listId: Long, pos: Int): ChannelEntity?
 
+    /** Resolución por clave estable (último canal aunque el orden cambie). */
+    @Query("SELECT * FROM channels WHERE listId = :listId AND stableKey = :stableKey LIMIT 1")
+    suspend fun channelByKey(listId: Long, stableKey: String): ChannelEntity?
+
     /** Siguiente / previo en el orden de la lista (zapping arriba/abajo, Task 8). */
     @Query("SELECT * FROM channels WHERE listId = :listId AND position > :pos ORDER BY position ASC LIMIT 1")
     suspend fun nextInList(listId: Long, pos: Int): ChannelEntity?

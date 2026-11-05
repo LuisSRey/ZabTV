@@ -65,8 +65,10 @@ class HomeFragment : Fragment() {
                 disclaimer.visibility = View.VISIBLE
                 return@launch
             }
-            // Destacado: primer canal de la lista activa + su "ahora".
-            val featured: ChannelEntity? = db.channelDao().channelAtPosition(activeId, 0)
+            // Destacado: último reproducido; si no hay, primer canal de la lista activa.
+            val featured: ChannelEntity? =
+                com.tvplayer.app.data.LastPlayed.resolve(db)
+                    ?: db.channelDao().channelAtPosition(activeId, 0)
             if (featured != null) {
                 hero.visibility = View.VISIBLE
                 heroTitle.text = featured.displayName
@@ -95,14 +97,19 @@ class HomeFragment : Fragment() {
                 favsSection.visibility = View.VISIBLE
                 favsAdapter.submitData(PagingData.from(favs))
             }
-            // Estantería Mis listas: tarjetas con nombre + nº canales → browser.
+            // Estantería Mis listas: parrilla de 2 por fila (3 si hay más de 4).
+            // Altura calculada porque el grid vive dentro del ScrollView.
             val listsSection = view.findViewById<LinearLayout>(R.id.home_lists_section)
             val listsRail = view.findViewById<RecyclerView>(R.id.home_lists_rail)
             val lists = db.listDao().all()
             if (lists.isNotEmpty()) {
                 listsSection.visibility = View.VISIBLE
+                val span = if (lists.size > 4) 3 else 2
                 listsRail.layoutManager =
-                    LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
+                    androidx.recyclerview.widget.GridLayoutManager(requireContext(), span)
+                val rows = (lists.size + span - 1) / span
+                listsRail.layoutParams.height =
+                    (rows * 56 * resources.displayMetrics.density).toInt()
                 listsRail.adapter = ListsShelfAdapter(
                     lists.map { entity ->
                         ListsShelfAdapter.Row(entity.id, entity.name)
@@ -130,11 +137,6 @@ class HomeFragment : Fragment() {
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): Holder {
             val v = LayoutInflater.from(parent.context).inflate(R.layout.item_group, parent, false)
             FocusScaleHelper.attach(v)
-            // Tarjeta ancha fija para la estantería (el chip se auto-ajusta).
-            v.layoutParams = RecyclerView.LayoutParams(
-                (200 * parent.resources.displayMetrics.density).toInt(),
-                RecyclerView.LayoutParams.MATCH_PARENT,
-            )
             v.findViewById<View>(R.id.group_count).visibility = View.GONE
             return Holder(v)
         }

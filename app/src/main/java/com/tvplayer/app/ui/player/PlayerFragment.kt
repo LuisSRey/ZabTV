@@ -117,7 +117,9 @@ class PlayerFragment : Fragment() {
             } }
             updateNowLine(current!!)
             showOverlay()
-            prepareCurrent(current!!)
+            val featured = current!!
+            com.tvplayer.app.data.LastPlayed.save(container.db, featured.listId, featured.stableKey)
+            prepareCurrent(featured)
 
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 engine.state.collect { state ->
@@ -259,6 +261,7 @@ class PlayerFragment : Fragment() {
         title.text = channel.displayName
         channel.logoUrl?.let { logo.load(it) }
         updateNowLine(channel)
+        com.tvplayer.app.data.LastPlayed.save(container.db, channel.listId, channel.stableKey)
         hideOverlay()
         showOverlay()
         prepareCurrent(channel)
