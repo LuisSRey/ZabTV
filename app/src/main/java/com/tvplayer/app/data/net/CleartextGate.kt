@@ -16,11 +16,20 @@ class CleartextGate(private val allowHttp: () -> Boolean) : Interceptor {
 
     override fun intercept(chain: Interceptor.Chain): Response {
         val request = chain.request()
-        if (request.url.scheme.equals("http", ignoreCase = true) && !allowHttp()) {
+        val url = request.url
+        if (url.scheme.equals("http", ignoreCase = true) && !allowHttp() && !url.isLoopback()) {
             throw IOException(
                 "HTTP sin cifrar bloqueado. Actívalo en Ajustes o usa una lista https://",
             )
         }
         return chain.proceed(request)
+    }
+
+    companion object {
+        /** Loopback siempre permitido (como la plataforma): es el proxy AceStream local. */
+        fun okhttp3.HttpUrl.isLoopback(): Boolean {
+            val host = host.lowercase()
+            return host == "localhost" || host == "127.0.0.1" || host == "[::1]" || host == "::1"
+        }
     }
 }

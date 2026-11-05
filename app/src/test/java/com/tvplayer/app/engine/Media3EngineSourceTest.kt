@@ -100,6 +100,14 @@ class Media3EngineSourceTest {
     }
 
     @Test
+    fun `loopback http pasa sin cleartext (proxy AceStream local)`() {
+        assertEquals(
+            PlaybackSource.Progressive("http://127.0.0.1:6878/ace/getstream?id=x"),
+            PlaybackSource.forUrl("http://127.0.0.1:6878/ace/getstream?id=x", allowCleartext = false),
+        )
+    }
+
+    @Test
     fun `cualquier otro error es GENERIC`() {
         val err = Media3Engine.errorFor(IllegalStateException("inesperado"))
         assertEquals(PlayerError.Code.GENERIC, err.code)

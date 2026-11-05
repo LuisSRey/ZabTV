@@ -35,7 +35,14 @@ sealed interface PlaybackSource {
             if (!UrlPolicer.isAllowedHttpUrl(checked)) {
                 throw IllegalArgumentException("URL de canal no permitida: ${checked.take(80)}")
             }
-            if (checked.startsWith("http://", ignoreCase = true) && !allowCleartext) {
+            // Loopback siempre permitido (proxy AceStream local), como la plataforma.
+            val isLoopback = try {
+                val host = java.net.URI(checked).host?.lowercase().orEmpty()
+                host == "localhost" || host == "127.0.0.1" || host == "[::1]" || host == "::1"
+            } catch (_: Exception) {
+                false
+            }
+            if (checked.startsWith("http://", ignoreCase = true) && !allowCleartext && !isLoopback) {
                 throw IllegalArgumentException(
                     "Texto plano desactivado: active 'Permitir HTTP' en Ajustes o use https://",
                 )

@@ -69,6 +69,21 @@ class CleartextGateTest {
     }
 
     @Test
+    fun `loopback pasa aunque este OFF (proxy AceStream local)`() = runTest {
+        // El gate no debe bloquear loopback por política: si la llamada falla,
+        // que sea por red (puerto 9 cerrado), nunca con el mensaje de Ajustes.
+        val gateClient = OkHttpClient.Builder().addInterceptor(CleartextGate { false }).build()
+        try {
+            gateClient.newCall(
+                Request.Builder().url("http://127.0.0.1:9/lista.m3u").build(),
+            ).execute().close()
+            fail("debía fallar por red, no por política")
+        } catch (e: IOException) {
+            assertTrue(!e.message.orEmpty().contains("Ajustes"))
+        }
+    }
+
+    @Test
     fun `https siempre pasa aunque esté OFF`() = runTest {
         // Sin red: lo que importa es que el gate NO la bloquee (falla por red, no por gate)
         val call = client(allowHttp = false).newCall(
