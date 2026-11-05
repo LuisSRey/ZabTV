@@ -54,6 +54,20 @@ class FavouritesRepoTest {
     }
 
     @Test
+    fun `toggle usa la stableKey almacenada aunque colisione el nombre`() = runTest {
+        val listId = db.listDao().upsert(ListEntity(name = "L", sourceUrl = "http://x/lista.m3u"))
+        // Canal duplicado: mismo nombre/grupo que otro, clave con sufijo (la genera ImportService).
+        val dupe = ChannelEntity(
+            listId = listId, tvgId = "dup.ext", displayName = "Dupe", normName = "dupe",
+            groupName = "G", url = "http://s/dup2.m3u8", stableKey = "dup.ext#2", position = 101,
+        )
+        db.channelDao().upsertAll(listOf(dupe))
+        assertTrue(repo.toggle(listId, dupe))
+        assertTrue(db.favouriteDao().exists(listId, "dup.ext#2"))
+        assertFalse(db.favouriteDao().exists(listId, "dup.ext"))
+    }
+
+    @Test
     fun `toggle marca y desmarca devolviendo el estado final`() = runTest {
         val (listId, channel) = seed()
         assertTrue(repo.toggle(listId, channel)) // on

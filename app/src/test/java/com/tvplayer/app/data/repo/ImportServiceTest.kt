@@ -123,6 +123,29 @@ class ImportServiceTest {
     }
 
     @Test
+    fun `canales con mismo nombre y grupo pero distinta URL se conservan todos`() = runTest {
+        val listId = db.listDao().upsert(ListEntity(name = "L", sourceUrl = "http://x/lista.m3u"))
+        val body = buildString {
+            append("#EXTM3U\n")
+            repeat(3) {
+                append("#EXTINF:-1 tvg-id=\"dup.ext\",Mismo Canal\n")
+                append("http://srv.example/$it.m3u8\n")
+            }
+        }
+        server.enqueue(MockResponse().setBody(body))
+
+        val result = service.import(listId, ImportSource.HttpSource(server.url("/list.m3u").toString(), null))
+
+        assertEquals(3, result.saved)
+        assertEquals(0, result.skipped)
+        val urls = db.channelDao().allForListAndGroup(listId, null).map { it.url }.sorted()
+        assertEquals(
+            listOf("http://srv.example/0.m3u8", "http://srv.example/1.m3u8", "http://srv.example/2.m3u8"),
+            urls,
+        )
+    }
+
+    @Test
     fun `reimport devolviendo 0 canales mantiene la tabla y marca rejected`() = runTest {
         val listId = seed100()
         server.enqueue(MockResponse().setBody("#EXTM3U\n"))

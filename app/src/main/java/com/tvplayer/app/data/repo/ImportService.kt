@@ -127,6 +127,7 @@ class ImportService(
         var skipped = 0
         var saved = 0
         val channels = ArrayList<ChannelEntity>(1024)
+        val usedKeys = HashSet<String>(1024)
         for ((index, ch) in doc.channels.withIndex()) {
             coroutineContext.ensureActive()
             // Se conserva http(s) y acestream:// (se resuelve al reproducir vía
@@ -139,6 +140,17 @@ class ImportService(
             }
             val name = ch.name.ifBlank { ch.tvgName ?: "Canal" }
             val group = ch.groupTitle ?: ""
+            // Clave única por importación: el mismo nombre/grupo (o tvg-id) en
+            // varias filas NO se fusiona — cada servidor entra (spec: no borrar).
+            // El sufijo es determinista (orden del documento) → reimports idénticos
+            // generan las mismas claves y los favoritos sobreviven.
+            val base = StableKey.of(ch.tvgId, name, group)
+            var stableKey = base
+            var n = 2
+            while (!usedKeys.add(stableKey)) {
+                stableKey = "$base#$n"
+                n++
+            }
             channels += ChannelEntity(
                 listId = listId,
                 tvgId = ch.tvgId,
@@ -147,7 +159,7 @@ class ImportService(
                 groupName = group,
                 logoUrl = ch.logoUrl?.takeIf { UrlPolicer.isAllowedHttpUrl(it) },
                 url = ch.url,
-                stableKey = StableKey.of(ch.tvgId, name, group),
+                stableKey = stableKey,
                 position = saved,
             )
             saved++

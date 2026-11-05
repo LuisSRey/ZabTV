@@ -1,6 +1,5 @@
 package com.tvplayer.app.data.repo
 
-import com.tvplayer.app.core.StableKey
 import com.tvplayer.app.data.db.AppDatabase
 import com.tvplayer.app.data.db.ChannelEntity
 
@@ -13,15 +12,12 @@ class FavouritesRepo(private val db: AppDatabase) {
 
     /** Toggle; devuelve el estado final (true = marcado). */
     suspend fun toggle(listId: Long, channel: ChannelEntity): Boolean =
-        db.favouriteDao().toggle(listId, keyOf(channel))
+        db.favouriteDao().toggle(listId, channel.stableKey)
 
     suspend fun isFavourite(listId: Long, channel: ChannelEntity): Boolean =
-        db.favouriteDao().exists(listId, keyOf(channel))
+        db.favouriteDao().exists(listId, channel.stableKey)
 
     /** Rail de favoritos en orden de marcado (más reciente primero). */
     suspend fun favourites(listId: Long): List<ChannelEntity> =
         db.favouriteDao().favouritesListId(listId)
-
-    private fun keyOf(channel: ChannelEntity): String =
-        StableKey.of(channel.tvgId, channel.displayName, channel.groupName)
 }
