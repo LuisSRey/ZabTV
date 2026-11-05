@@ -45,6 +45,13 @@
             android:layout_marginStart="12dp"
             android:text="@string/lists_delete" />
 
+        <Button
+            android:id="@+id/list_activate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:text="@string/lists_activate" />
+
     </LinearLayout>
 
 </LinearLayout>

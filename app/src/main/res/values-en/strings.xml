@@ -37,6 +37,9 @@
     <string name="lists_cancel">Cancel</string>
     <string name="lists_refresh">Refresh</string>
     <string name="lists_delete">Delete</string>
+    <string name="lists_activate">Set active</string>
+    <string name="lists_activated">Playlist activated</string>
+    <string name="lists_active">Active</string>
     <string name="lists_empty">No playlists yet. Add your first M3U playlist.</string>
     <string name="lists_max">Maximum 10 playlists</string>
     <string name="lists_refreshing">Refreshing…</string>

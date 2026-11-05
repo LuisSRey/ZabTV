@@ -61,6 +61,13 @@ class ListsFragment : Fragment() {
             },
             onRefresh = { row -> refresh(row.id) },
             onDelete = { row -> delete(row.id) },
+            onActivate = { row ->
+                lifecycleScope.launch {
+                    com.tvplayer.app.data.ActiveList.set(container().db, row.id)
+                    Toast.makeText(requireContext(), R.string.lists_activated, Toast.LENGTH_SHORT).show()
+                    reload()
+                }
+            },
         )
         list.layoutManager = LinearLayoutManager(requireContext())
         list.adapter = adapter
@@ -80,12 +87,14 @@ class ListsFragment : Fragment() {
         lifecycleScope.launch {
             val db = container().db
             val lists = db.listDao().all()
+            val activeId = com.tvplayer.app.data.ActiveList.resolve(db)
             emptyView.visibility = if (lists.isEmpty()) View.VISIBLE else View.GONE
             adapter.submit(
                 lists.map { entity ->
                     val count = db.channelDao().countForList(entity.id)
-                    val sub = "${entity.status} • $count canales"
-                    ListsAdapter.Row(entity.id, entity.name, sub)
+                    val activeMark = if (entity.id == activeId) " • ${getString(R.string.lists_active)}" else ""
+                    val sub = "${entity.status} • $count canales$activeMark"
+                    ListsAdapter.Row(entity.id, entity.name, sub, entity.id == activeId)
                 },
             )
         }
@@ -212,6 +221,7 @@ class ListsFragment : Fragment() {
             val db = container().db
             db.channelDao().deleteForList(listId)
             db.listDao().delete(listId)
+            com.tvplayer.app.data.ActiveList.clearIf(db, listId)
             reload()
         }
     }

@@ -67,8 +67,17 @@ class PlayerFragment : Fragment() {
         val isTv = FocusScaleHelper.isTv(view)
         container = (requireActivity().application as TpApp).container
 
-        surface = view.findViewById(R.id.player_surface)
+        val playerView = view.findViewById<androidx.media3.ui.PlayerView>(R.id.player_view)
+        // PlayerView 1.11 expone la surface como View (soporta surface/texture).
+        surface = requireNotNull(playerView.videoSurfaceView as? SurfaceView) { "PlayerView sin surface" }
         overlay = view.findViewById(R.id.player_overlay)
+        // Flechas táctiles (móvil; en TV no existen → null seguro)
+        view.findViewById<View>(R.id.player_zap_up)?.setOnClickListener {
+            lifecycleScope.launch { zap(1) }
+        }
+        view.findViewById<View>(R.id.player_zap_down)?.setOnClickListener {
+            lifecycleScope.launch { zap(-1) }
+        }
         logo = view.findViewById(R.id.player_logo)
         title = view.findViewById(R.id.player_title)
         nowText = view.findViewById(R.id.player_now)
@@ -100,7 +109,10 @@ class PlayerFragment : Fragment() {
                             progress.visibility = View.GONE
                             showError(state.messageRes)
                         }
-                        PlayerState.Playing -> hideOverlayDelayed()
+                        PlayerState.Playing -> {
+                            progress.visibility = View.GONE
+                            hideOverlayDelayed()
+                        }
                         PlayerState.Loading, PlayerState.Buffering -> progress.visibility = View.VISIBLE
                         else -> progress.visibility = View.GONE
                     }

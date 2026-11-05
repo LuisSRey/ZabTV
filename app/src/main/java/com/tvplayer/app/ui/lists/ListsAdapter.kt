@@ -9,14 +9,15 @@ import androidx.recyclerview.widget.RecyclerView
 import com.tvplayer.app.R
 import com.tvplayer.app.ui.common.FocusScaleHelper
 
-/** Fila de lista: nombre + estado • nº canales; abrir / actualizar / borrar. */
+/** Fila de lista: nombre + estado • nº canales; abrir / actualizar / borrar / activar. */
 class ListsAdapter(
     private val onOpen: (Row) -> Unit,
     private val onRefresh: (Row) -> Unit,
     private val onDelete: (Row) -> Unit,
+    private val onActivate: (Row) -> Unit,
 ) : RecyclerView.Adapter<ListsAdapter.Holder>() {
 
-    data class Row(val id: Long, val name: String, val subtitle: String)
+    data class Row(val id: Long, val name: String, val subtitle: String, val isActive: Boolean)
 
     private var rows: List<Row> = emptyList()
 
@@ -30,6 +31,7 @@ class ListsAdapter(
         val subtitle: TextView = root.findViewById(R.id.list_subtitle)
         val refresh: Button = root.findViewById(R.id.list_refresh)
         val delete: Button = root.findViewById(R.id.list_delete)
+        val activate: Button = root.findViewById(R.id.list_activate)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): Holder {
@@ -47,5 +49,7 @@ class ListsAdapter(
         holder.itemView.setOnClickListener { onOpen(row) }
         holder.refresh.setOnClickListener { onRefresh(row) }
         holder.delete.setOnClickListener { onDelete(row) }
+        holder.activate.setOnClickListener { onActivate(row) }
+        holder.activate.isEnabled = !row.isActive
     }
 }
