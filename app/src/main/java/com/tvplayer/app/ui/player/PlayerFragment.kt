@@ -226,6 +226,12 @@ class PlayerFragment : Fragment() {
 
     private fun togglePlay() {
         if (!ready()) return
+        // Tras un error, play reintenta la preparación (p. ej. motor AceStream ya arrancado).
+        if (engine.state.value is PlayerState.Error) {
+            val channel = current ?: return
+            lifecycleScope.launch { prepareCurrent(channel) }
+            return
+        }
         if (engine.state.value == PlayerState.Playing) engine.pause() else engine.play()
     }
 
@@ -240,12 +246,13 @@ class PlayerFragment : Fragment() {
     }
 
     private fun showError(resId: Int) {
-        // El overlay DEBE verse: es donde vive el mensaje (antes se ocultaba → negro total).
+        // El overlay DEBE verse (antes se ocultaba → negro total) pero el título
+        // conserva el canal: el error va en la línea de "ahora".
         overlay.visibility = View.VISIBLE
         overlayJob?.cancel()
         overlayJob = null
-        title.setText(resId)
-        title.visibility = View.VISIBLE
+        nowText.setText(resId)
+        nowText.visibility = View.VISIBLE
     }
 
     /** Zapping: delta +1 = siguiente en el orden de la lista, -1 = anterior. */
@@ -270,8 +277,8 @@ class PlayerFragment : Fragment() {
     }
 
     /**
-     * Motor AceStream: si no responde en local, intenta lanzar la app del motor;
-     * si ni está instalada, error accionable. Devuelve false si no se puede reproducir.
+     * Motor AceStream: si no responde en local, lanza la app del motor y espera
+     * hasta 60 s a que escuche; si ni está instalada, error accionable.
      */
     private suspend fun ensureEngineRunning(): Boolean {
         val (host, port) = AceStreamEngine.splitHostPort(com.tvplayer.app.data.AppContainer.DEFAULT_ACE_PROXY)
@@ -280,13 +287,23 @@ class PlayerFragment : Fragment() {
         }
         if (ok) return true
         val intent = AceStreamEngine.launchIntent(requireContext().applicationContext)
-        progress.visibility = View.GONE
-        if (intent != null) {
-            showError(R.string.error_acestream_starting)
-            runCatching { startActivity(intent) }
-        } else {
+        if (intent == null) {
+            progress.visibility = View.GONE
             showError(R.string.error_acestream)
+            return false
         }
+        progress.visibility = View.VISIBLE
+        nowText.setText(R.string.error_acestream_starting)
+        overlay.visibility = View.VISIBLE
+        runCatching { startActivity(intent) }
+        repeat(30) {
+            kotlinx.coroutines.delay(2000)
+            if (withContext(kotlinx.coroutines.Dispatchers.IO) { AceStreamEngine.isReachable(host, port) }) {
+                return true
+            }
+        }
+        progress.visibility = View.GONE
+        showError(R.string.error_acestream)
         return false
     }
 
