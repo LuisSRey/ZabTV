@@ -49,9 +49,14 @@ class ChannelRailAdapter(
 
     override fun onBindViewHolder(holder: Holder, position: Int) {
         val row = rows[position]
+        val active = selected == row.group
         holder.label.text = row.label
         holder.count.text = row.count.toString()
-        holder.itemView.isActivated = selected == row.group
+        holder.itemView.isActivated = active
+        val ctx = holder.itemView.context
+        holder.label.setTextColor(
+            if (active) ctx.getColor(R.color.tp_text) else ctx.getColor(R.color.tp_text_secondary),
+        )
         holder.itemView.setOnClickListener { onSelect(row) }
     }
 }

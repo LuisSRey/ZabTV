@@ -59,7 +59,9 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="@string/sheet_play" />
+                android:background="@drawable/btn_primary"
+                android:text="@string/sheet_play"
+                android:textColor="@color/tp_text" />
 
             <Button
                 android:id="@+id/sheet_fav"
@@ -67,7 +69,9 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="12dp"
                 android:layout_weight="1"
-                android:text="@string/sheet_fav" />
+                android:background="@drawable/btn_ghost"
+                android:text="@string/sheet_fav"
+                android:textColor="@color/tp_text" />
 
         </LinearLayout>
 

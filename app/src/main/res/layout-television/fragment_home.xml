@@ -54,7 +54,9 @@
                     android:layout_width="220dp"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
-                    android:text="@string/sheet_play" />
+                    android:background="@drawable/btn_primary"
+                    android:text="@string/sheet_play"
+                    android:textColor="@color/tp_text" />
             </LinearLayout>
         </FrameLayout>
 

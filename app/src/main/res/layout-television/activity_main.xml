@@ -10,7 +10,7 @@
         android:id="@+id/sidebar"
         android:layout_width="280dp"
         android:layout_height="match_parent"
-        android:background="#0F0F11"
+        android:background="#E60F0F11"
         android:orientation="vertical"
         android:padding="16dp">
 

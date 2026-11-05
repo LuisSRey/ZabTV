@@ -46,9 +46,9 @@ class MainActivity : AppCompatActivity(), TvNavigator.NavHost {
             supportFragmentManager.beginTransaction()
                 .replace(R.id.container, HomeFragment(), HomeFragment.TAG)
                 .commit()
-        } else {
-            syncShell()
         }
+        supportFragmentManager.executePendingTransactions()
+        syncShell()
     }
 
     private fun goTab(tag: String) {
@@ -123,6 +123,9 @@ class MainActivity : AppCompatActivity(), TvNavigator.NavHost {
         supportFragmentManager.beginTransaction()
             .replace(R.id.container, fragment, tag)
             .commitAllowingStateLoss()
+        // open() no toca el back stack → el listener no dispara: sincronizar a mano.
+        supportFragmentManager.executePendingTransactions()
+        syncShell()
     }
 
     override fun openPlayer(listId: Long, position: Int) {

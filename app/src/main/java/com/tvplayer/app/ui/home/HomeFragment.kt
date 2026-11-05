@@ -70,7 +70,10 @@ class HomeFragment : Fragment() {
             if (featured != null) {
                 hero.visibility = View.VISIBLE
                 heroTitle.text = featured.displayName
-                featured.logoUrl?.let { heroLogo.load(it) }
+                val hr = 12f * view.resources.displayMetrics.density
+                featured.logoUrl?.let { heroLogo.load(it) {
+                    transformations(coil.transform.RoundedCornersTransformation(hr))
+                } }
                 val match = EpgMatcher(db.epgDao()).match(featured)
                 val nn = if (match != null) {
                     db.epgDao().nowNext(listOf(match.tvgId), System.currentTimeMillis())

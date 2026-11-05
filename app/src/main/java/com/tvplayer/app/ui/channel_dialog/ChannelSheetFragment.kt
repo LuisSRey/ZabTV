@@ -71,7 +71,10 @@ class ChannelSheetFragment : DialogFragment() {
             }
             name.text = channel.displayName
             group.text = channel.groupName.ifBlank { getString(R.string.browser_groups_all) }
-            channel.logoUrl?.let { logo.load(it) }
+            val rr = 10f * view.resources.displayMetrics.density
+            channel.logoUrl?.let { logo.load(it) {
+                transformations(coil.transform.RoundedCornersTransformation(rr))
+            } }
 
             val match = matcher.match(channel)
             val now = System.currentTimeMillis()

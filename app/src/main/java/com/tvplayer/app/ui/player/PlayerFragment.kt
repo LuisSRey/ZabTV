@@ -101,7 +101,10 @@ class PlayerFragment : Fragment() {
                 return@launch
             }
             title.text = current!!.displayName
-            current!!.logoUrl?.let { logo.load(it) }
+            val lr = 8f * view.resources.displayMetrics.density
+            current!!.logoUrl?.let { logo.load(it) {
+                transformations(coil.transform.RoundedCornersTransformation(lr))
+            } }
             updateNowLine(current!!)
             showOverlay()
             prepareCurrent(current!!)
@@ -286,9 +289,16 @@ class PlayerFragment : Fragment() {
     }
 
     private fun close() {
-        (activity as? TvNavigator.NavHost)?.open(
-            com.tvplayer.app.ui.home.HomeFragment(),
-            com.tvplayer.app.ui.home.HomeFragment.TAG,
-        )
+        // Vuelve atrás en la pila (browser/lista anterior) con syncShell automático;
+        // si no hay pila, cae a Home.
+        val fm = activity?.supportFragmentManager
+        if (fm != null && fm.backStackEntryCount > 0) {
+            fm.popBackStack()
+        } else {
+            (activity as? TvNavigator.NavHost)?.open(
+                com.tvplayer.app.ui.home.HomeFragment(),
+                com.tvplayer.app.ui.home.HomeFragment.TAG,
+            )
+        }
     }
 }

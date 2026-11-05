@@ -73,7 +73,10 @@ class ChannelGridAdapter(
         if (full) {
             holder.name.text = channel.displayName
             holder.logo.setImageDrawable(null) // reciclado: sin logo fantasma
-            channel.logoUrl?.let { holder.logo.load(it) }
+            val radiusPx = 8f * holder.itemView.resources.displayMetrics.density
+            channel.logoUrl?.let { holder.logo.load(it) {
+                transformations(coil.transform.RoundedCornersTransformation(radiusPx))
+            } }
             holder.itemView.setOnClickListener { onClick(channel) }
             holder.itemView.setOnLongClickListener {
                 onLongClick?.invoke(channel)

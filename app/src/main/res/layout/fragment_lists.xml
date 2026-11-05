@@ -25,7 +25,9 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="@string/lists_add_url" />
+            android:background="@drawable/btn_primary"
+            android:text="@string/lists_add_url"
+            android:textColor="@color/tp_text" />
 
         <Button
             android:id="@+id/lists_add_file"
@@ -33,7 +35,9 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="12dp"
             android:layout_weight="1"
-            android:text="@string/lists_add_file" />
+            android:background="@drawable/btn_ghost"
+            android:text="@string/lists_add_file"
+            android:textColor="@color/tp_text" />
 
     </LinearLayout>
 
