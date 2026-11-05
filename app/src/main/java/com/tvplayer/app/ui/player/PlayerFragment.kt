@@ -66,7 +66,6 @@ class PlayerFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         val isTv = FocusScaleHelper.isTv(view)
         container = (requireActivity().application as TpApp).container
-        engine = Media3Engine(requireContext(), container.okHttp)
 
         surface = view.findViewById(R.id.player_surface)
         overlay = view.findViewById(R.id.player_overlay)
@@ -75,11 +74,12 @@ class PlayerFragment : Fragment() {
         nowText = view.findViewById(R.id.player_now)
         progress = view.findViewById(R.id.player_progress)
 
-        engine.bind(surface)
-
         val listId = arguments?.getLong(ARG_LIST_ID, -1L) ?: -1L
         val position = arguments?.getInt(ARG_POSITION, 0) ?: 0
         lifecycleScope.launch {
+            // Engine con el buffer configurado (DAO) — se crea aquí porque load es suspend.
+            engine = Media3Engine(requireContext(), container.okHttp, com.tvplayer.app.data.BufferConfig.load(container.db))
+            engine.bind(surface)
             current = container.db.channelDao().channelAtPosition(listId, position)
             if (current == null) {
                 close()
@@ -108,7 +108,8 @@ class PlayerFragment : Fragment() {
             }
         }
 
-        // Zapping D-pad: arriba/abajo cambia canal sobre el orden de la lista; BACK cierra
+        // Zapping D-pad: arriba/abajo cambia canal; BACK cierra. Mando Fire TV:
+        // teclas multimedia (play/pausa/stop/FF/REW) y OK muestra/oculta el overlay.
         view.isFocusable = true
         view.isFocusableInTouchMode = true
         view.requestFocus()
@@ -117,6 +118,14 @@ class PlayerFragment : Fragment() {
                 when (keyCode) {
                     android.view.KeyEvent.KEYCODE_DPAD_UP -> { lifecycleScope.launch { zap(-1) }; true }
                     android.view.KeyEvent.KEYCODE_DPAD_DOWN -> { lifecycleScope.launch { zap(1) }; true }
+                    android.view.KeyEvent.KEYCODE_DPAD_CENTER,
+                    android.view.KeyEvent.KEYCODE_ENTER -> { toggleOverlay(); true }
+                    android.view.KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE -> { togglePlay(); true }
+                    android.view.KeyEvent.KEYCODE_MEDIA_PLAY -> { if (ready()) engine.play(); true }
+                    android.view.KeyEvent.KEYCODE_MEDIA_PAUSE,
+                    android.view.KeyEvent.KEYCODE_MEDIA_STOP -> { if (ready()) engine.pause(); true }
+                    android.view.KeyEvent.KEYCODE_MEDIA_FAST_FORWARD -> { if (ready()) engine.seekBy(30_000); true }
+                    android.view.KeyEvent.KEYCODE_MEDIA_REWIND -> { if (ready()) engine.seekBy(-30_000); true }
                     android.view.KeyEvent.KEYCODE_BACK -> { close(); true }
                     else -> false
                 }
@@ -144,9 +153,12 @@ class PlayerFragment : Fragment() {
 
     override fun onDestroyView() {
         overlayJob?.cancel()
-        engine.release()
+        if (ready()) engine.release()
         super.onDestroyView()
     }
+
+    /** El engine se crea en corrutina (lee el buffer de DAO); teclas tempranas se ignoran. */
+    private fun ready(): Boolean = ::engine.isInitialized
 
     private fun showOverlay() {
         overlay.visibility = View.VISIBLE
@@ -168,6 +180,21 @@ class PlayerFragment : Fragment() {
     private fun hideOverlay() {
         overlay.visibility = View.GONE
         overlayJob = null
+    }
+
+    private fun togglePlay() {
+        if (!ready()) return
+        if (engine.state.value == PlayerState.Playing) engine.pause() else engine.play()
+    }
+
+    private fun toggleOverlay() {
+        overlayJob?.cancel()
+        overlayJob = null
+        if (overlay.visibility == View.VISIBLE) {
+            hideOverlay()
+        } else {
+            showOverlay()
+        }
     }
 
     private fun showError(resId: Int) {

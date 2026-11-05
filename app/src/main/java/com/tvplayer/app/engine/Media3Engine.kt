@@ -5,6 +5,7 @@ import android.view.SurfaceView
 import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
+import androidx.media3.exoplayer.DefaultLoadControl
 import androidx.media3.exoplayer.ExoPlaybackException
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.hls.HlsMediaSource
@@ -13,6 +14,7 @@ import androidx.media3.exoplayer.source.ProgressiveMediaSource
 import androidx.media3.datasource.DataSource
 import androidx.media3.datasource.okhttp.OkHttpDataSource
 import com.tvplayer.app.R
+import com.tvplayer.app.data.BufferConfig
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -25,12 +27,21 @@ import kotlinx.coroutines.flow.StateFlow
 class Media3Engine(
     private val context: Context,
     private val client: okhttp3.OkHttpClient,
+    private val buffer: BufferConfig = BufferConfig(),
 ) : PlaybackEngine {
 
     private val player: ExoPlayer = ExoPlayer.Builder(context)
-        // TODO: buffer del spec (back 8 s / min 15 s / max 30 s) — el Builder de
-        // DefaultLoadControl en 1.11.1 no expone setBackBufferDurationMs; afinar
-        // cuando se confirme la firma exacta (spec §6, no bloquea Task 8).
+        .setLoadControl(
+            DefaultLoadControl.Builder()
+                .setBufferDurationsMs(
+                    buffer.minMs,
+                    buffer.maxMs,
+                    DefaultLoadControl.DEFAULT_BUFFER_FOR_PLAYBACK_MS,
+                    DefaultLoadControl.DEFAULT_BUFFER_FOR_PLAYBACK_AFTER_REBUFFER_MS,
+                )
+                .setBackBuffer(buffer.backMs, false)
+                .build(),
+        )
         .build()
 
     private val _state = MutableStateFlow<PlayerState>(PlayerState.Idle)
@@ -79,6 +90,13 @@ class Media3Engine(
 
     override fun play() = player.play()
     override fun pause() = player.pause()
+
+    /** Salto relativo (mando Fire TV: FF/REW ±30 s). Clamp a [0, duración]. */
+    override fun seekBy(millis: Long) {
+        val duration = player.duration.takeIf { it > 0 } ?: return
+        player.seekTo((player.currentPosition + millis).coerceIn(0, duration))
+    }
+
     override fun release() = player.release()
 
     private fun urlOf(source: PlaybackSource): String = when (source) {
@@ -125,6 +143,8 @@ interface PlaybackEngine {
     suspend fun prepare(source: PlaybackSource)
     fun play()
     fun pause()
+    /** Salto relativo en ms (positivo = adelante). */
+    fun seekBy(millis: Long)
     fun release()
     val state: StateFlow<PlayerState>
     fun errorFor(cause: Throwable): PlayerError

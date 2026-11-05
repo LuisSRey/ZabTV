@@ -61,6 +61,13 @@
     <string name="settings_wipe_all">Clear everything</string>
     <string name="settings_wiped">Cleanup done</string>
     <string name="settings_about_title">About</string>
+    <string name="settings_buffer_title">Player buffer (seconds)</string>
+    <string name="settings_buffer_min">Minimum (15)</string>
+    <string name="settings_buffer_max">Maximum (30)</string>
+    <string name="settings_buffer_back">Back (8)</string>
+    <string name="settings_buffer_hint">Applies to the next channel. On Fire TV Stick with weak WiFi, raise the minimum.</string>
+    <string name="settings_buffer_save">Save buffer</string>
+    <string name="settings_buffer_saved">Buffer saved</string>
     <string name="sheet_play">Watch</string>
     <string name="sheet_fav">★ Favourite</string>
     <string name="sheet_unfav">Remove favourite</string>

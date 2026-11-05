@@ -41,8 +41,12 @@ class SettingsFragment : Fragment() {
         val wipeEpg = view.findViewById<Button>(R.id.settings_wipe_epg)
         val wipeLogos = view.findViewById<Button>(R.id.settings_wipe_logos)
         val wipeAll = view.findViewById<Button>(R.id.settings_wipe_all)
+        val bufMin = view.findViewById<android.widget.EditText>(R.id.settings_buffer_min)
+        val bufMax = view.findViewById<android.widget.EditText>(R.id.settings_buffer_max)
+        val bufBack = view.findViewById<android.widget.EditText>(R.id.settings_buffer_back)
+        val bufSave = view.findViewById<Button>(R.id.settings_buffer_save)
         view.findViewById<TextView>(R.id.settings_about).text = getString(R.string.about_disclaimer_full)
-        listOf(httpSwitch, wipeFavs, wipeEpg, wipeLogos, wipeAll).forEach { FocusScaleHelper.attach(it) }
+        listOf(httpSwitch, wipeFavs, wipeEpg, wipeLogos, wipeAll, bufSave).forEach { FocusScaleHelper.attach(it) }
 
         lifecycleScope.launch {
             httpSwitch.isChecked = container.db.settingsDao()
@@ -78,6 +82,30 @@ class SettingsFragment : Fragment() {
                 db.favouriteDao().clearAll()
                 db.epgDao().clearAll()
                 db.listDao().clearAll()
+            }
+        }
+
+        // Buffer del reproductor (spec §6): segundos en UI, ms en DAO; se aplica
+        // al próximo play (el engine se crea por reproducción).
+        lifecycleScope.launch {
+            val current = com.tvplayer.app.data.BufferConfig.load(container.db)
+            bufMin.setText((current.minMs / 1000).toString())
+            bufMax.setText((current.maxMs / 1000).toString())
+            bufBack.setText((current.backMs / 1000).toString())
+        }
+        bufSave.setOnClickListener {
+            lifecycleScope.launch {
+                val config = com.tvplayer.app.data.BufferConfig(
+                    minMs = (bufMin.text.toString().toIntOrNull() ?: 15) * 1000,
+                    maxMs = (bufMax.text.toString().toIntOrNull() ?: 30) * 1000,
+                    backMs = (bufBack.text.toString().toIntOrNull() ?: 8) * 1000,
+                )
+                com.tvplayer.app.data.BufferConfig.save(container.db, config)
+                val applied = com.tvplayer.app.data.BufferConfig.load(container.db)
+                bufMin.setText((applied.minMs / 1000).toString())
+                bufMax.setText((applied.maxMs / 1000).toString())
+                bufBack.setText((applied.backMs / 1000).toString())
+                Toast.makeText(requireContext(), R.string.settings_buffer_saved, Toast.LENGTH_SHORT).show()
             }
         }
     }
