@@ -2,7 +2,6 @@
 <resources>
     <string name="app_name">TVPlayer</string>
     <string name="home_no_content">Esta aplicación no incluye, aloja ni distribuye contenido. Añade tu propia lista para empezar.</string>
-    <string name="home_add_list">Añadir lista</string>
     <string name="about_disclaimer_full">TVPlayer es un reproductor de listas multimedia para Android TV, Fire TV y móvil/tableta Android. No incluye, aloja ni distribuye contenido: reproduce los canales y vídeos de las listas M3U/EPG que tú añades (proveedor o playlist propia).</string>
     <string name="browser_title">Canales</string>
     <string name="browser_groups_all">Todos</string>

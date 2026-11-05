@@ -76,6 +76,8 @@ class PlayerFragment : Fragment() {
 
         val listId = arguments?.getLong(ARG_LIST_ID, -1L) ?: -1L
         val position = arguments?.getInt(ARG_POSITION, 0) ?: 0
+        // UN SOLO launch secuencial (fix crash UninitializedPropertyAccessException):
+        // engine → canal → prepare → y SOLO DESPUÉS el collect del estado.
         lifecycleScope.launch {
             // Engine con el buffer configurado (DAO) — se crea aquí porque load es suspend.
             engine = Media3Engine(requireContext(), container.okHttp, com.tvplayer.app.data.BufferConfig.load(container.db))
@@ -90,9 +92,7 @@ class PlayerFragment : Fragment() {
             updateNowLine(current!!)
             showOverlay()
             engine.prepare(PlaybackSource.Progressive(current!!.url))
-        }
 
-        lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 engine.state.collect { state ->
                     when (state) {
@@ -126,13 +126,19 @@ class PlayerFragment : Fragment() {
                     android.view.KeyEvent.KEYCODE_MEDIA_STOP -> { if (ready()) engine.pause(); true }
                     android.view.KeyEvent.KEYCODE_MEDIA_FAST_FORWARD -> { if (ready()) engine.seekBy(30_000); true }
                     android.view.KeyEvent.KEYCODE_MEDIA_REWIND -> { if (ready()) engine.seekBy(-30_000); true }
-                    android.view.KeyEvent.KEYCODE_BACK -> { close(); true }
                     else -> false
                 }
             } else {
                 false
             }
         }
+        // BACK vía dispatcher (no depende del foco de la vista — mandos Fire TV).
+        requireActivity().onBackPressedDispatcher.addCallback(
+            viewLifecycleOwner,
+            object : androidx.activity.OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() = close()
+            },
+        )
         // long-press OK → favorito (Task 9)
         view.setOnLongClickListener {
             val channel = current
@@ -204,6 +210,7 @@ class PlayerFragment : Fragment() {
 
     /** Zapping: delta +1 = siguiente en el orden de la lista, -1 = anterior. */
     private suspend fun zap(delta: Int) {
+        if (!ready()) return
         val listId = arguments?.getLong(ARG_LIST_ID, -1L) ?: -1L
         val pos = current?.position ?: return
         val target: ChannelEntity? = if (delta > 0) {

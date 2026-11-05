@@ -36,13 +36,23 @@ class HomeFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         val addTile = view.findViewById<TextView>(R.id.home_add_list)
+        val browseTile = view.findViewById<TextView>(R.id.home_browse)
         val searchTile = view.findViewById<TextView>(R.id.home_search)
         val settingsTile = view.findViewById<TextView>(R.id.home_settings)
         FocusScaleHelper.attach(addTile)
+        FocusScaleHelper.attach(browseTile)
         FocusScaleHelper.attach(searchTile)
         FocusScaleHelper.attach(settingsTile)
         addTile.setOnClickListener {
             (activity as? TvNavigator.NavHost)?.openLists()
+        }
+        browseTile.setOnClickListener {
+            val nav = activity as? TvNavigator.NavHost ?: return@setOnClickListener
+            lifecycleScope.launch {
+                val db = (requireActivity().application as TpApp).container.db
+                val first = db.listDao().all().firstOrNull()
+                if (first != null) nav.openBrowser(first.id) else nav.openLists()
+            }
         }
         searchTile.setOnClickListener {
             val nav = activity as? TvNavigator.NavHost ?: return@setOnClickListener
