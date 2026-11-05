@@ -30,6 +30,7 @@
     <string name="search_empty">Sin resultados</string>
     <string name="lists_title">Mis listas</string>
     <string name="lists_add">Añadir lista</string>
+    <string name="lists_edit">Editar lista</string>
     <string name="lists_add_url">Añadir URL</string>
     <string name="lists_add_file">Desde archivo</string>
     <string name="lists_name">Nombre</string>
@@ -42,6 +43,7 @@
     <string name="lists_activate">Activar</string>
     <string name="lists_activated">Lista activada</string>
     <string name="lists_active">Activa</string>
+    <string name="lists_updated">Lista actualizada</string>
     <string name="lists_empty">Sin listas. Añade tu primera lista M3U.</string>
     <string name="lists_max">Máximo 10 listas</string>
     <string name="lists_refreshing">Actualizando…</string>

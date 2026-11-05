@@ -9,11 +9,15 @@ import com.tvplayer.app.data.db.ChannelEntity
 import com.tvplayer.app.data.db.ListEntity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
@@ -96,5 +100,38 @@ class ChannelBrowserViewModelTest {
         vm = ChannelBrowserViewModel(db.channelDao(), listId)
         assertEquals(listOf("B0", "B1", "B2"), asSnapshotNames("B"))
         assertEquals(listOf("C1"), asSnapshotNames("C"))
+    }
+
+    /**
+     * Patrón exacto del fragment: colección continua + submitData al adapter.
+     * Al cambiar de grupo el adapter debe mostrar solo ese grupo (bug device).
+     * Las cargas de Room/Paging corren en hilos reales → espera en tiempo real.
+     */
+    @Test
+    fun `cambiar de grupo actualiza el adapter en coleccion continua`() = runTest {
+        val listId = seed()
+        vm = ChannelBrowserViewModel(db.channelDao(), listId)
+        val adapter = ChannelGridAdapter(onClick = {})
+        val job = launch { vm.channels.collectLatest { adapter.submitData(it) } }
+        withContext(Dispatchers.IO) {
+            withTimeout(15_000) {
+                adapter.loadStateFlow.first { it.refresh is androidx.paging.LoadState.NotLoading }
+            }
+        }
+        assertEquals(6, adapter.itemCount)
+        vm.select("B")
+        withContext(Dispatchers.IO) {
+            withTimeout(15_000) {
+                adapter.loadStateFlow.first {
+                    it.refresh is androidx.paging.LoadState.NotLoading && adapter.itemCount == 3
+                }
+            }
+        }
+        assertEquals(3, adapter.itemCount)
+        assertEquals(
+            listOf("B0", "B1", "B2"),
+            (0 until adapter.itemCount).map { adapter.peek(it)!!.displayName },
+        )
+        job.cancel()
     }
 }

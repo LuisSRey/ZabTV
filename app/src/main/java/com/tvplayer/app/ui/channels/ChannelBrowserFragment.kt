@@ -10,6 +10,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import kotlinx.coroutines.flow.collectLatest
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -114,7 +115,9 @@ class ChannelBrowserFragment : Fragment() {
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.channels.collect { pagingData -> gridAdapter.submitData(pagingData) }
+                // collectLatest: cada grupo nuevo cancela el submit anterior (si no,
+                // el primer submitData se queda suspendido y la parrilla no cambia).
+                viewModel.channels.collectLatest { pagingData -> gridAdapter.submitData(pagingData) }
             }
         }
 

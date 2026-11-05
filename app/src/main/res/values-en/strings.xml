@@ -6,6 +6,7 @@
     <string name="about_disclaimer_full">TVPlayer is a playlist player for Android TV, Fire TV and Android phones/tablets. It includes, hosts or distributes no content: it plays the channels and videos from the M3U/EPG lists you add (your own provider or playlist).</string>
     <string name="browser_title">Channels</string>
     <string name="browser_groups_all">All</string>
+    <string name="browser_no_group">No group</string>
     <string name="browser_channel_logo">Channel logo</string>
     <string name="player_coming">Player available in the next release</string>
     <string name="player_logo">Channel logo</string>
@@ -29,6 +30,7 @@
     <string name="search_empty">No results</string>
     <string name="lists_title">My playlists</string>
     <string name="lists_add">Add playlist</string>
+    <string name="lists_edit">Edit playlist</string>
     <string name="lists_add_url">Add URL</string>
     <string name="lists_add_file">From file</string>
     <string name="lists_name">Name</string>
@@ -41,6 +43,7 @@
     <string name="lists_activate">Set active</string>
     <string name="lists_activated">Playlist activated</string>
     <string name="lists_active">Active</string>
+    <string name="lists_updated">Playlist updated</string>
     <string name="lists_empty">No playlists yet. Add your first M3U playlist.</string>
     <string name="lists_max">Maximum 10 playlists</string>
     <string name="lists_refreshing">Refreshing…</string>

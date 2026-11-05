@@ -61,6 +61,7 @@ class ListsFragment : Fragment() {
             },
             onRefresh = { row -> refresh(row.id) },
             onDelete = { row -> delete(row.id) },
+            onEdit = { row -> edit(row.id) },
             onActivate = { row ->
                 lifecycleScope.launch {
                     com.tvplayer.app.data.ActiveList.set(container().db, row.id)
@@ -198,6 +199,103 @@ class ListsFragment : Fragment() {
     }
 
     private fun portalMessage(message: String?): String? = safeMessage(message)
+
+    /** Editar lista existente (nombre/URL/UA o datos del portal + reimport si cambió el origen). */
+    private fun edit(listId: Long) {
+        lifecycleScope.launch {
+            val db = container().db
+            val entity = db.listDao().get(listId) ?: return@launch
+            val initial: AddListInput = if (entity.portalHost != null) {
+                val creds = com.tvplayer.app.data.portal.SecureCredentials
+                    .createEncrypted(requireContext().applicationContext).load(listId)
+                AddListInput.Portal(
+                    name = entity.name,
+                    host = entity.portalHost!!,
+                    username = creds?.first.orEmpty(),
+                    password = creds?.second.orEmpty(),
+                )
+            } else {
+                AddListInput.Url(
+                    name = entity.name,
+                    url = entity.sourceUrl,
+                    userAgent = entity.userAgent,
+                )
+            }
+            AddListDialog(initial) { input -> applyEdit(listId, entity, input) }
+                .show(parentFragmentManager, "edit_list")
+        }
+    }
+
+    private fun applyEdit(listId: Long, old: com.tvplayer.app.data.db.ListEntity, input: AddListInput) {
+        when (input) {
+            is AddListInput.Url -> {
+                val changed = input.url != old.sourceUrl || input.userAgent != old.userAgent
+                lifecycleScope.launch {
+                    val db = container().db
+                    db.listDao().upsert(
+                        old.copy(
+                            name = input.name.ifBlank { old.name },
+                            sourceUrl = input.url,
+                            userAgent = input.userAgent,
+                            status = if (changed) "importing" else old.status,
+                        ),
+                    )
+                    reload()
+                    if (changed && input.url.isNotBlank()) {
+                        val result = com.tvplayer.app.data.repo.ImportService(
+                            requireContext().applicationContext, db, container().okHttp,
+                        ).import(listId, com.tvplayer.app.data.repo.ImportSource.HttpSource(input.url, input.userAgent))
+                        Toast.makeText(requireContext(), safeMessage(result.message), Toast.LENGTH_LONG).show()
+                        reload()
+                    } else {
+                        Toast.makeText(requireContext(), R.string.lists_updated, Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+            is AddListInput.Portal -> {
+                lifecycleScope.launch {
+                    val playlistUrl: String
+                    val epgUrl: String?
+                    try {
+                        playlistUrl = com.tvplayer.app.data.portal.XtreamLogin.playlistUrl(input.host, input.username, input.password)
+                        epgUrl = com.tvplayer.app.data.portal.XtreamLogin.epgUrl(input.host, input.username, input.password)
+                    } catch (_: IllegalArgumentException) {
+                        Toast.makeText(requireContext(), R.string.portal_invalid_host, Toast.LENGTH_LONG).show()
+                        return@launch
+                    }
+                    val db = container().db
+                    val creds = com.tvplayer.app.data.portal.SecureCredentials
+                        .createEncrypted(requireContext().applicationContext).load(listId)
+                    val changed = input.host != old.portalHost ||
+                        input.username != (creds?.first.orEmpty()) ||
+                        input.password != (creds?.second.orEmpty())
+                    db.listDao().upsert(
+                        old.copy(
+                            name = input.name.ifBlank { old.name },
+                            epgUrl = epgUrl,
+                            portalHost = input.host,
+                            status = if (changed) "importing" else old.status,
+                        ),
+                    )
+                    if (changed) {
+                        com.tvplayer.app.data.portal.SecureCredentials
+                            .createEncrypted(requireContext().applicationContext)
+                            .save(listId, input.username, input.password)
+                    }
+                    reload()
+                    if (changed) {
+                        val result = com.tvplayer.app.data.repo.ImportService(
+                            requireContext().applicationContext, db, container().okHttp,
+                        ).import(listId, com.tvplayer.app.data.repo.ImportSource.HttpSource(playlistUrl, null))
+                        Toast.makeText(requireContext(), safeMessage(result.message), Toast.LENGTH_LONG).show()
+                        reload()
+                    } else {
+                        Toast.makeText(requireContext(), R.string.lists_updated, Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+        }
+    }
 
     private fun refresh(listId: Long) {
         lifecycleScope.launch {

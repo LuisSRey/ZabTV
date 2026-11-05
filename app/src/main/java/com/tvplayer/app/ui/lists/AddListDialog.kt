@@ -18,6 +18,7 @@ import com.tvplayer.app.R
  * a SecureCredentials, nunca a logs ni Toasts.
  */
 class AddListDialog(
+    private val initial: AddListInput? = null,
     private val onSave: (AddListInput) -> Unit,
 ) : DialogFragment() {
 
@@ -36,15 +37,22 @@ class AddListDialog(
         modeRow.addView(portalMode, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
         layout.addView(modeRow)
 
-        val name = EditText(context).apply { hint = getString(R.string.lists_name) }
+        val name = EditText(context).apply {
+            hint = getString(R.string.lists_name)
+            initial?.let { setText(it.name) }
+        }
         layout.addView(name)
 
         val urlGroup = LinearLayout(context).apply { orientation = LinearLayout.VERTICAL }
         val url = EditText(context).apply {
             hint = getString(R.string.lists_url)
             inputType = InputType.TYPE_TEXT_VARIATION_URI
+            if (initial is AddListInput.Url) setText(initial.url)
         }
-        val userAgent = EditText(context).apply { hint = getString(R.string.lists_ua) }
+        val userAgent = EditText(context).apply {
+            hint = getString(R.string.lists_ua)
+            if (initial is AddListInput.Url) setText(initial.userAgent.orEmpty())
+        }
         urlGroup.addView(url)
         urlGroup.addView(userAgent)
         layout.addView(urlGroup)
@@ -56,27 +64,36 @@ class AddListDialog(
         val host = EditText(context).apply {
             hint = getString(R.string.lists_host)
             inputType = InputType.TYPE_TEXT_VARIATION_URI
+            if (initial is AddListInput.Portal) setText(initial.host)
         }
-        val username = EditText(context).apply { hint = getString(R.string.lists_user) }
+        val username = EditText(context).apply {
+            hint = getString(R.string.lists_user)
+            if (initial is AddListInput.Portal) setText(initial.username)
+        }
         val password = EditText(context).apply {
             hint = getString(R.string.lists_pass)
             inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
+            if (initial is AddListInput.Portal) setText(initial.password)
         }
         portalGroup.addView(host)
         portalGroup.addView(username)
         portalGroup.addView(password)
         layout.addView(portalGroup)
 
-        var mode: Mode = Mode.URL
+        var mode: Mode = when (initial) {
+            is AddListInput.Portal -> Mode.PORTAL
+            else -> Mode.URL
+        }
         val sync = {
             urlGroup.visibility = if (mode == Mode.URL) View.VISIBLE else View.GONE
             portalGroup.visibility = if (mode == Mode.PORTAL) View.VISIBLE else View.GONE
         }
+        sync()
         urlMode.setOnClickListener { mode = Mode.URL; sync() }
         portalMode.setOnClickListener { mode = Mode.PORTAL; sync() }
 
         return AlertDialog.Builder(context)
-            .setTitle(R.string.lists_add)
+            .setTitle(if (initial == null) R.string.lists_add else R.string.lists_edit)
             .setView(layout)
             .setPositiveButton(R.string.lists_save) { _, _ ->
                 val input = if (mode == Mode.URL) {
@@ -104,6 +121,7 @@ class AddListDialog(
 
 /** Resultado del diálogo: o URL directa o credenciales de portal. */
 sealed interface AddListInput {
-    data class Url(val name: String, val url: String, val userAgent: String?) : AddListInput
-    data class Portal(val name: String, val host: String, val username: String, val password: String) : AddListInput
+    val name: String
+    data class Url(override val name: String, val url: String, val userAgent: String?) : AddListInput
+    data class Portal(override val name: String, val host: String, val username: String, val password: String) : AddListInput
 }
