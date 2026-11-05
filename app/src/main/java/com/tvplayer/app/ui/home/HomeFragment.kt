@@ -97,19 +97,14 @@ class HomeFragment : Fragment() {
                 favsSection.visibility = View.VISIBLE
                 favsAdapter.submitData(PagingData.from(favs))
             }
-            // Estantería Mis listas: parrilla de 2 por fila (3 si hay más de 4).
-            // Altura calculada porque el grid vive dentro del ScrollView.
+            // Estantería Mis listas: rail horizontal, tarjetas adyacentes.
             val listsSection = view.findViewById<LinearLayout>(R.id.home_lists_section)
             val listsRail = view.findViewById<RecyclerView>(R.id.home_lists_rail)
             val lists = db.listDao().all()
             if (lists.isNotEmpty()) {
                 listsSection.visibility = View.VISIBLE
-                val span = if (lists.size > 4) 3 else 2
                 listsRail.layoutManager =
-                    androidx.recyclerview.widget.GridLayoutManager(requireContext(), span)
-                val rows = (lists.size + span - 1) / span
-                listsRail.layoutParams.height =
-                    (rows * 56 * resources.displayMetrics.density).toInt()
+                    LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
                 listsRail.adapter = ListsShelfAdapter(
                     lists.map { entity ->
                         ListsShelfAdapter.Row(entity.id, entity.name)

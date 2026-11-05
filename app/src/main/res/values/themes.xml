@@ -4,7 +4,7 @@
         <item name="colorPrimary">@color/tp_accent</item>
         <item name="colorAccent">@color/tp_accent</item>
         <item name="android:colorBackground">@color/tp_bg</item>
-        <item name="android:windowBackground">@color/tp_bg</item>
+        <item name="android:windowBackground">@drawable/app_background</item>
         <item name="android:textColorPrimary">@color/tp_text</item>
         <item name="android:textColorSecondary">@color/tp_text_secondary</item>
         <item name="android:statusBarColor">@color/tp_bg</item>
