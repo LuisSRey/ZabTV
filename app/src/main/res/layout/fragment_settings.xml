@@ -71,83 +71,23 @@
             android:textSize="18sp"
             android:textStyle="bold" />
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:orientation="horizontal">
-
-            <EditText
-                android:id="@+id/settings_buffer_min"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:background="@drawable/tile_focus_bg"
-                android:hint="@string/settings_buffer_min"
-                android:imeOptions="actionNext"
-                android:inputType="number"
-                android:padding="12dp"
-                android:textColor="@color/tp_text"
-                android:textColorHint="@color/tp_text_secondary"
-                android:textSize="15sp" />
-
-            <EditText
-                android:id="@+id/settings_buffer_max"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="12dp"
-                android:layout_weight="1"
-                android:background="@drawable/tile_focus_bg"
-                android:hint="@string/settings_buffer_max"
-                android:imeOptions="actionNext"
-                android:inputType="number"
-                android:padding="12dp"
-                android:textColor="@color/tp_text"
-                android:textColorHint="@color/tp_text_secondary"
-                android:textSize="15sp" />
-
-            <EditText
-                android:id="@+id/settings_buffer_back"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="12dp"
-                android:layout_weight="1"
-                android:background="@drawable/tile_focus_bg"
-                android:hint="@string/settings_buffer_back"
-                android:imeOptions="actionDone"
-                android:inputType="number"
-                android:padding="12dp"
-                android:textColor="@color/tp_text"
-                android:textColorHint="@color/tp_text_secondary"
-                android:textSize="15sp" />
-
-        </LinearLayout>
-
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:text="@string/settings_buffer_hint"
-            android:textColor="@color/tp_text_secondary"
-            android:textSize="13sp" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:text="@string/settings_ace_title"
+            android:text="@string/settings_buffer_min_label"
             android:textColor="@color/tp_text"
             android:textSize="15sp" />
 
         <EditText
-            android:id="@+id/settings_ace_proxy"
+            android:id="@+id/settings_buffer_min"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="4dp"
             android:background="@drawable/tile_focus_bg"
-            android:hint="@string/settings_ace_hint"
-            android:imeOptions="actionDone"
-            android:inputType="textUri"
+            android:hint="@string/settings_buffer_min"
+            android:imeOptions="actionNext"
+            android:inputType="number"
             android:padding="12dp"
             android:textColor="@color/tp_text"
             android:textColorHint="@color/tp_text_secondary"
@@ -156,8 +96,76 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="@string/settings_ace_warn"
+            android:layout_marginTop="4dp"
+            android:text="@string/settings_buffer_why_min"
+            android:textColor="@color/tp_text_secondary"
+            android:textSize="13sp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="@string/settings_buffer_max_label"
+            android:textColor="@color/tp_text"
+            android:textSize="15sp" />
+
+        <EditText
+            android:id="@+id/settings_buffer_max"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:background="@drawable/tile_focus_bg"
+            android:hint="@string/settings_buffer_max"
+            android:imeOptions="actionNext"
+            android:inputType="number"
+            android:padding="12dp"
+            android:textColor="@color/tp_text"
+            android:textColorHint="@color/tp_text_secondary"
+            android:textSize="15sp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="@string/settings_buffer_why_max"
+            android:textColor="@color/tp_text_secondary"
+            android:textSize="13sp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="@string/settings_buffer_back_label"
+            android:textColor="@color/tp_text"
+            android:textSize="15sp" />
+
+        <EditText
+            android:id="@+id/settings_buffer_back"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:background="@drawable/tile_focus_bg"
+            android:hint="@string/settings_buffer_back"
+            android:imeOptions="actionDone"
+            android:inputType="number"
+            android:padding="12dp"
+            android:textColor="@color/tp_text"
+            android:textColorHint="@color/tp_text_secondary"
+            android:textSize="15sp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="@string/settings_buffer_why_back"
+            android:textColor="@color/tp_text_secondary"
+            android:textSize="13sp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:text="@string/settings_ace_auto"
             android:textColor="@color/tp_text_secondary"
             android:textSize="13sp" />
 

@@ -79,6 +79,13 @@
     <string name="settings_buffer_hint">Se aplica al próximo canal. En Fire TV Stick con WiFi justo, sube el mínimo.</string>
     <string name="settings_buffer_save">Guardar buffer</string>
     <string name="settings_buffer_saved">Buffer guardado</string>
+    <string name="settings_buffer_min_label">Mínimo (segundos)</string>
+    <string name="settings_buffer_why_min">Cuánto guarda antes de empezar. Súbelo si los canales tardan en arrancar o se cortan al inicio.</string>
+    <string name="settings_buffer_max_label">Máximo (segundos)</string>
+    <string name="settings_buffer_why_max">Tope de memoria del buffer. Súbelo solo con buena conexión para aguantar microcortes.</string>
+    <string name="settings_buffer_back_label">Atrás (segundos)</string>
+    <string name="settings_buffer_why_back">Cuánto puedes retroceder en un directo. Más valor = más memoria usada.</string>
+    <string name="settings_ace_auto">AceStream: se usa siempre el motor local (127.0.0.1:6878). Ten la app AceStream instalada y abierta.</string>
     <string name="settings_buffer_what">Mínimo: segundos que guarda antes de empezar. Máximo: tope de memoria. Atrás: cuánto puedes retroceder en directos.</string>
     <string name="settings_confirm_title">Confirmar borrado</string>
     <string name="settings_confirm_wipe">¿Borrar %1$s? Esta acción no se puede deshacer.</string>

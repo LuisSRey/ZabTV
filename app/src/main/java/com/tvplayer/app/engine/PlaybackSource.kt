@@ -44,7 +44,7 @@ sealed interface PlaybackSource {
             }
             if (checked.startsWith("http://", ignoreCase = true) && !allowCleartext && !isLoopback) {
                 throw IllegalArgumentException(
-                    "Texto plano desactivado: active 'Permitir HTTP' en Ajustes o use https://",
+                    "Texto plano desactivado: use https://",
                 )
             }
 

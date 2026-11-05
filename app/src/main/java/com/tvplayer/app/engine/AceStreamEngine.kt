@@ -28,10 +28,16 @@ object AceStreamEngine {
         }
     }
 
-    /** Intent para abrir la app del motor, o null si no está instalada. */
+    /** Intent para abrir la app del motor (busca por nombre, no por id fijo). */
     fun launchIntent(context: Context): Intent? {
         val pm: PackageManager = context.packageManager
-        for (pkg in ENGINE_PACKAGES) {
+        val pkgs = try {
+            pm.getInstalledPackages(0).map { it.packageName }
+        } catch (_: Exception) {
+            emptyList<String>()
+        }
+        val candidates = (pkgs.filter { it.contains("acestream", ignoreCase = true) } + ENGINE_PACKAGES).distinct()
+        for (pkg in candidates) {
             try {
                 val intent = pm.getLaunchIntentForPackage(pkg) ?: continue
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
