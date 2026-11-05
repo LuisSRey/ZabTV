@@ -62,5 +62,6 @@ dependencies {
     testImplementation(libs.junit)
     testImplementation(libs.robolectric)
     testImplementation(libs.kotlin.coroutines.test)
+    testImplementation(libs.mockwebserver)
     testImplementation("androidx.test:core-ktx:1.7.0")
 }
