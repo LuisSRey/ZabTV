@@ -277,30 +277,44 @@ class PlayerFragment : Fragment() {
     }
 
     /**
-     * Motor AceStream: si no responde en local, lanza la app del motor y espera
-     * hasta 60 s a que escuche; si ni está instalada, error accionable.
+     * Motor AceStream: si no responde en local, intenta lanzarlo (launcher y,
+     * en último recurso, VIEW del enlace que resuelve la app AceStream) y
+     * espera hasta 60 s a que escuche. Sin autoplay en segundo plano: si el
+     * usuario salió a otra app, se queda listo para darle a play al volver.
      */
-    private suspend fun ensureEngineRunning(): Boolean {
+    private suspend fun ensureEngineRunning(aceUrl: String): Boolean {
         val (host, port) = AceStreamEngine.splitHostPort(com.tvplayer.app.data.AppContainer.DEFAULT_ACE_PROXY)
-        val ok = withContext(kotlinx.coroutines.Dispatchers.IO) {
+        suspend fun reachable(): Boolean = withContext(kotlinx.coroutines.Dispatchers.IO) {
             AceStreamEngine.isReachable(host, port)
         }
-        if (ok) return true
-        val intent = AceStreamEngine.launchIntent(requireContext().applicationContext)
-        if (intent == null) {
-            progress.visibility = View.GONE
-            showError(R.string.error_acestream)
-            return false
+        if (reachable()) return true
+        // 1) Intent launcher de la app del motor.
+        val launched = runCatching {
+            AceStreamEngine.launchIntent(requireContext().applicationContext)?.let {
+                startActivity(it)
+                true
+            } ?: false
+        }.getOrDefault(false)
+        // 2) Fallback: VIEW del enlace (lo abre AceStream aunque no exponga launcher).
+        if (!launched) {
+            try {
+                startActivity(AceStreamEngine.viewIntent(aceUrl))
+            } catch (_: android.content.ActivityNotFoundException) {
+                progress.visibility = View.GONE
+                showError(R.string.error_acestream)
+                return false
+            }
+            nowText.setText(R.string.player_opening_acestream)
+            overlay.visibility = View.VISIBLE
+        } else {
+            progress.visibility = View.VISIBLE
+            nowText.setText(R.string.error_acestream_starting)
+            overlay.visibility = View.VISIBLE
         }
-        progress.visibility = View.VISIBLE
-        nowText.setText(R.string.error_acestream_starting)
-        overlay.visibility = View.VISIBLE
-        runCatching { startActivity(intent) }
+        // 3) Espera hasta 60 s a que el proxy escuche.
         repeat(30) {
             kotlinx.coroutines.delay(2000)
-            if (withContext(kotlinx.coroutines.Dispatchers.IO) { AceStreamEngine.isReachable(host, port) }) {
-                return true
-            }
+            if (reachable()) return isResumed
         }
         progress.visibility = View.GONE
         showError(R.string.error_acestream)
@@ -313,7 +327,7 @@ class PlayerFragment : Fragment() {
      */
     private suspend fun prepareCurrent(channel: ChannelEntity) {
         if (channel.url.startsWith("acestream://", ignoreCase = true)) {
-            if (!ensureEngineRunning()) return
+            if (!ensureEngineRunning(channel.url)) return
         }
         val proxy = com.tvplayer.app.data.AppContainer.DEFAULT_ACE_PROXY
         val source = try {

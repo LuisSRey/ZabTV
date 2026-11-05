@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">TVPlayer</string>
     <string name="home_no_content">This app does not include, host or distribute any content. Add your own playlist to start.</string>
@@ -25,7 +25,8 @@
     <string name="error_unsupported_format">Unsupported format</string>
     <string name="error_cleartext">Unencrypted HTTP blocked. Use an https:// list</string>
     <string name="error_acestream">AceStream unavailable: install the AceStream app and keep it open</string>
-    <string name="error_acestream_starting">Starting AceStream engine… try again in a few seconds</string>
+    <string name="error_acestream_starting">Starting the AceStream engine - please wait</string>
+    <string name="player_opening_acestream">Opening in the AceStream app - check it opened</string>
     <string name="error_generic">Playback error</string>
     <string name="fav_title">Favourites</string>
     <string name="fav_added">Added to favourites</string>
