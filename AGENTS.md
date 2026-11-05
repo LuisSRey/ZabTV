@@ -53,6 +53,13 @@ app/src/main/java/com/tvplayer/app/
 - **Room** como único estado de UI (UI observa DB, no ViewModels con estado duplicado).
 - **StableKey** del canal: `tvg-id` si existe; si no, sha1 de `normName+group`. Los favoritos sobreviven reimports con esta clave.
 
+## Diseño estilo Apple TV (reskin post-v0.1)
+- Tokens: fondo `#000000`, superficies `#1C1C1E`/`#2C2C2E`, acento `#0A84FF`, texto `#FFFFFF`/`#98989D`. Foco = borde blanco + escala 1.1 (`tile_focus_bg` + `FocusScaleHelper`); seleccionado = pastilla `surface2` (`state_activated`).
+- Inter empaquetada en `res/font/inter_*` (OTF estáticos v3.19 — los variables necesitan API 26+); estilos `TextAppearance_TVPlayer_*` en themes.xml (los nombres de estilo NO llevan puntos, AAPT los rechaza).
+- Logo propio: `ic_logo_mark` (pastilla azul + play), adaptive icon + PNG legacy generados con `tools/gen_launcher_icon.py`, banner vector 320x180.
+- Shell en `MainActivity`: sidebar TV / barra inferior móvil (`activity_main` + variante television), selección sincronizada con el back stack; el player oculta el chrome.
+- Nombres de recursos con guion en TOML rompen Kotlin DSL: Media3 va como coordenadas string (también `media3-ui`).
+
 ## Gotchas de Windows/pwsh
 
 - Comandos con `.\gradlew.bat` en foreground para capturar output completo; background (`&`) pierde stderr.
