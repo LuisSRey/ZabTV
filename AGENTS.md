@@ -30,6 +30,8 @@ Android TV / Fire TV / móvil media player. Player-only: la app no incluye, aloj
 
 - **minSdk 23** (ruling de usuario: Fire TV 3ª gen = Fire OS 7 = API 28; 23 cubre de sobra). NO bajar a 21 — la política anterior quedó obsoleta.
 - **Media3 1.11.1** con deps como coordenadas string en `build.gradle.kts` (el catalog TOML no soporta claves con guión accesibles por punto en Kotlin DSL; `libs.named()` también falló).
+- **Desugaring activado** (`desugar_jdk_libs:2.0.4`, `isCoreLibraryDesugaringEnabled=true`): `XmltvParser` usa `java.time`, inexistente en API 23-25.
+- **WorkManager 2.9.0** (2.12.0 declara minSdk 24). Inyecta 5 permisos + componentes exportados con permisos de sistema — ver `scripts/acceptance.sh` y ledger Task 16.
 - **Room 2.7.2** (2.8.x exige minSdk 23 pero no aporta nada crítico; quedará así hasta que algo lo exija). `room.schemaLocation` via KSP arg → schemas JSON en `app/schemas/` (commiteados).
 - **Paging 3.3.6** — la última compatible con lo ya construido; NO subir sin verificar `asSnapshot` y `room-paging` juntos.
 - **Coil 2.7.0** (`io.coil-kt:coil`, red embebida, `.okHttpClient()` first-class). Coil 3 exige refactor; no hay ganancia.

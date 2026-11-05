@@ -15,6 +15,20 @@ android {
         versionName = "0.1.0"
     }
 
+    // Firma release vía env (keystore local, NUNCA en git — ver .gitignore).
+    // Sin env, el APK release sale sin firmar (R8 sí se verifica igual).
+    val releaseKeystorePath = System.getenv("TVPLAYER_KEYSTORE_PATH")
+    signingConfigs {
+        if (!releaseKeystorePath.isNullOrBlank()) {
+            create("release") {
+                storeFile = file(releaseKeystorePath)
+                storePassword = System.getenv("TVPLAYER_KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("TVPLAYER_KEY_ALIAS")
+                keyPassword = System.getenv("TVPLAYER_KEY_PASSWORD")
+            }
+        }
+    }
+
     buildTypes {
         debug {
             isMinifyEnabled = false
@@ -22,7 +36,9 @@ android {
         release {
             isMinifyEnabled = true
             isShrinkResources = true
+            isDebuggable = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            signingConfigs.findByName("release")?.let { signingConfig = it }
         }
     }
 
