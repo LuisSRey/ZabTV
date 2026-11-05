@@ -35,7 +35,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
-        android:background="#880B0E14"
+        android:background="@drawable/player_scrim"
         android:orientation="vertical"
         android:padding="16dp"
         android:visibility="gone">
@@ -56,15 +56,15 @@
             android:layout_marginTop="4dp"
             android:ellipsize="end"
             android:maxLines="1"
-            android:textColor="@color/tp_text"
-            android:textSize="18sp" />
+            android:textAppearance="@style/TextAppearance_TVPlayer_HeroTitle"
+            android:textSize="22sp" />
 
         <TextView
             android:id="@+id/player_now"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
-            android:textColor="@color/tp_text_secondary"
+            android:textAppearance="@style/TextAppearance_TVPlayer_Meta"
             android:textSize="14sp" />
 
         <LinearLayout

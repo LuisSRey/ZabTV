@@ -22,16 +22,15 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:textColor="@color/tp_text"
-            android:textSize="20sp"
-            android:textStyle="bold" />
+            android:textAppearance="@style/TextAppearance_TVPlayer_SectionTitle"
+            android:textSize="20sp" />
 
         <TextView
             android:id="@+id/sheet_group"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
-            android:textColor="@color/tp_text_secondary"
+            android:textAppearance="@style/TextAppearance_TVPlayer_Meta"
             android:textSize="14sp" />
 
         <TextView
