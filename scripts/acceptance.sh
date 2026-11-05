@@ -47,7 +47,11 @@ extra=$(echo "$perms" | grep -vxF -e "android.permission.INTERNET" -e "android.p
 echo "== 2. Manifest: sin cleartext estático, allowBackup=false =="
 manifest=$(apkanalyzer manifest print "$APK")
 echo "$manifest" | grep -q 'usesCleartextTraffic' && fail "usesCleartextTraffic presente (el gate es runtime)" || pass "sin usesCleartextTraffic"
-echo "$manifest" | grep -q 'networkSecurityConfig' && fail "networkSecurityConfig presente" || pass "sin networkSecurityConfig"
+echo "== 2b. networkSecurityConfig: SOLO loopback en claro =="
+cfg="app/src/main/res/xml/network_security_config.xml"
+grep -q 'base-config cleartextTrafficPermitted="false"' "$cfg" && pass "base deniega cleartext" || fail "base permite cleartext"
+extra=$(grep -o '<domain[^>]*>[^<]*</domain>' "$cfg" | grep -v -e "127.0.0.1" -e "localhost" || true)
+[ -z "$extra" ] && pass "solo loopback permitido" || fail "dominio no-loopback: $extra"
 echo "$manifest" | grep -q 'allowBackup="true"' && fail "allowBackup=true" || pass "allowBackup=false"
 
 echo "== 3. Exported: ningún componente PROPIO salvo MainActivity (launcher) =="

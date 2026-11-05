@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Excepción mínima y cerrada: SOLO loopback en claro (proxy AceStream local).
+     Todo el http:// de internet sigue bloqueado por defecto y lo gobierna
+     CleartextGate en runtime según el ajuste del usuario (spec F8). -->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="false" />
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">127.0.0.1</domain>
+        <domain includeSubdomains="false">localhost</domain>
+    </domain-config>
+</network-security-config>
