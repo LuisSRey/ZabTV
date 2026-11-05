@@ -6,6 +6,7 @@
     <string name="about_disclaimer_full">TVPlayer es un reproductor de listas multimedia para Android TV, Fire TV y móvil/tableta Android. No incluye, aloja ni distribuye contenido: reproduce los canales y vídeos de las listas M3U/EPG que tú añades (proveedor o playlist propia).</string>
     <string name="browser_title">Canales</string>
     <string name="browser_groups_all">Todos</string>
+    <string name="browser_no_group">Sin grupo</string>
     <string name="browser_channel_logo">Logotipo del canal</string>
     <string name="player_coming">Reproductor disponible en la próxima versión</string>
     <string name="player_logo">Logotipo del canal</string>

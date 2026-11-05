@@ -120,7 +120,11 @@ class ChannelBrowserFragment : Fragment() {
 
         // Rail: consulta puntual por ciclo de vida (vuelve a leerse al re-entrar)
         lifecycleScope.launch {
-            val rows = railAdapter.buildRows(viewModel.groups(), getString(R.string.browser_groups_all))
+            val rows = railAdapter.buildRows(
+                viewModel.groups(),
+                getString(R.string.browser_groups_all),
+                getString(R.string.browser_no_group),
+            )
             railAdapter.submit(rows)
         }
     }

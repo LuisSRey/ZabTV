@@ -23,10 +23,12 @@ class ChannelRailAdapter(
             notifyDataSetChanged()
         }
 
-    /** "Todos" siemra primero + grupos con su conteo. */
-    fun buildRows(groups: List<GroupNameCount>, allLabel: String): List<Row> {
+    /** "Todos" siempre primero + grupos con su conteo. Sin nombre → "Sin grupo". */
+    fun buildRows(groups: List<GroupNameCount>, allLabel: String, noGroupLabel: String): List<Row> {
         val total = groups.sumOf { it.count }
-        return listOf(Row(null, allLabel, total)) + groups.map { Row(it.group, it.group, it.count) }
+        return listOf(Row(null, allLabel, total)) + groups.map {
+            Row(it.group, it.group.ifBlank { noGroupLabel }, it.count)
+        }
     }
 
     fun submit(list: List<Row>) {
