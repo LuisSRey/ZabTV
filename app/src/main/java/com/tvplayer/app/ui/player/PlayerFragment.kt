@@ -91,13 +91,13 @@ class PlayerFragment : Fragment() {
             current!!.logoUrl?.let { logo.load(it) }
             updateNowLine(current!!)
             showOverlay()
-            engine.prepare(PlaybackSource.Progressive(current!!.url))
+            prepareCurrent(current!!)
 
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 engine.state.collect { state ->
                     when (state) {
                         is PlayerState.Error -> {
-                            hideOverlay()
+                            progress.visibility = View.GONE
                             showError(state.messageRes)
                         }
                         PlayerState.Playing -> hideOverlayDelayed()
@@ -204,6 +204,10 @@ class PlayerFragment : Fragment() {
     }
 
     private fun showError(resId: Int) {
+        // El overlay DEBE verse: es donde vive el mensaje (antes se ocultaba → negro total).
+        overlay.visibility = View.VISIBLE
+        overlayJob?.cancel()
+        overlayJob = null
         title.setText(resId)
         title.visibility = View.VISIBLE
     }
@@ -225,7 +229,27 @@ class PlayerFragment : Fragment() {
         updateNowLine(channel)
         hideOverlay()
         showOverlay()
-        engine.prepare(PlaybackSource.Progressive(channel.url))
+        prepareCurrent(channel)
+    }
+
+    /**
+     * Resuelve la fuente ANTES de tocar el player (spec F8): http con cleartext
+     * OFF o esquema no permitido → error visible inmediato, sin pantalla negra.
+     */
+    private suspend fun prepareCurrent(channel: ChannelEntity) {
+        val source = try {
+            PlaybackSource.forUrl(channel.url, allowCleartext = container.allowHttp)
+        } catch (e: IllegalArgumentException) {
+            progress.visibility = View.GONE
+            val res = if ((e.message ?: "").contains("Texto plano")) {
+                R.string.error_cleartext
+            } else {
+                R.string.error_unsupported_format
+            }
+            showError(res)
+            return
+        }
+        engine.prepare(source)
     }
 
     /** Línea "ahora" del overlay (Task 14): exacta o aproximada, o placeholder sin guía. */
