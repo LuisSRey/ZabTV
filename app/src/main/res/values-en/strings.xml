@@ -83,6 +83,7 @@
     <string name="settings_confirm_title">Confirm deletion</string>
     <string name="settings_confirm_wipe">Delete %1$s? This cannot be undone.</string>
     <string name="lists_confirm_delete">Delete this playlist and all its channels? This cannot be undone.</string>
+    <string name="epg_refreshed">EPG updated: %1$d programs</string>
     <string name="settings_ace_title">AceStream: local engine</string>
     <string name="settings_ace_hint">127.0.0.1:6878</string>
     <string name="settings_ace_warn">Install the AceStream app and keep it open. acestream:// links play automatically.</string>

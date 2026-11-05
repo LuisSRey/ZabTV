@@ -122,7 +122,8 @@ class ListsFragment : Fragment() {
             val result = ImportService(
                 requireContext().applicationContext, db, container().okHttp,
             ).import(listId, ImportSource.HttpSource(url, userAgent))
-            Toast.makeText(requireContext(), result.message ?: "OK", Toast.LENGTH_LONG).show()
+            Toast.makeText(requireContext(), safeMessage(result.message), Toast.LENGTH_LONG).show()
+            if (!result.rejected) refreshEpgIfNeeded(listId)
             reload()
         }
     }
@@ -142,7 +143,8 @@ class ListsFragment : Fragment() {
             val result = ImportService(
                 requireContext().applicationContext, db, container().okHttp,
             ).import(listId, ImportSource.FileSource(uri))
-            Toast.makeText(requireContext(), result.message ?: "OK", Toast.LENGTH_LONG).show()
+            Toast.makeText(requireContext(), safeMessage(result.message), Toast.LENGTH_LONG).show()
+            if (!result.rejected) refreshEpgIfNeeded(listId)
             reload()
         }
     }
@@ -181,7 +183,33 @@ class ListsFragment : Fragment() {
             ).import(listId, ImportSource.HttpSource(playlistUrl, null))
             val shown = portalMessage(result.message)
             Toast.makeText(requireContext(), shown, Toast.LENGTH_LONG).show()
+            if (!result.rejected) refreshEpgIfNeeded(listId)
             reload()
+        }
+    }
+
+    /**
+     * EPG automática tras importar: si la lista trae epgUrl (cabecera M3U o
+     * portal), ingiere la guía para que "ahora/siguiente" funcione sin esperar
+     * al worker de 6 h. Silenciosa salvo éxito con programas.
+     */
+    private fun refreshEpgIfNeeded(listId: Long) {
+        lifecycleScope.launch {
+            val db = container().db
+            val epgUrl = db.listDao().get(listId)?.epgUrl
+            if (epgUrl.isNullOrBlank()) return@launch
+            val res = runCatching {
+                com.tvplayer.app.data.repo.EpgService(
+                    requireContext().applicationContext, db, container().okHttp,
+                ).refresh(epgUrl)
+            }.getOrNull() ?: return@launch
+            if (!res.rejected && res.inserted > 0) {
+                Toast.makeText(
+                    requireContext(),
+                    getString(R.string.epg_refreshed, res.inserted),
+                    Toast.LENGTH_SHORT,
+                ).show()
+            }
         }
     }
 
@@ -246,6 +274,7 @@ class ListsFragment : Fragment() {
                             requireContext().applicationContext, db, container().okHttp,
                         ).import(listId, com.tvplayer.app.data.repo.ImportSource.HttpSource(input.url, input.userAgent))
                         Toast.makeText(requireContext(), safeMessage(result.message), Toast.LENGTH_LONG).show()
+                        if (!result.rejected) refreshEpgIfNeeded(listId)
                         reload()
                     } else {
                         Toast.makeText(requireContext(), R.string.lists_updated, Toast.LENGTH_SHORT).show()
@@ -288,6 +317,7 @@ class ListsFragment : Fragment() {
                             requireContext().applicationContext, db, container().okHttp,
                         ).import(listId, com.tvplayer.app.data.repo.ImportSource.HttpSource(playlistUrl, null))
                         Toast.makeText(requireContext(), safeMessage(result.message), Toast.LENGTH_LONG).show()
+                        if (!result.rejected) refreshEpgIfNeeded(listId)
                         reload()
                     } else {
                         Toast.makeText(requireContext(), R.string.lists_updated, Toast.LENGTH_SHORT).show()
@@ -309,7 +339,8 @@ class ListsFragment : Fragment() {
             val result = ImportService(
                 requireContext().applicationContext, db, container().okHttp,
             ).import(listId, ImportSource.HttpSource(entity.sourceUrl, entity.userAgent))
-            Toast.makeText(requireContext(), result.message ?: "OK", Toast.LENGTH_LONG).show()
+            Toast.makeText(requireContext(), safeMessage(result.message), Toast.LENGTH_LONG).show()
+            if (!result.rejected) refreshEpgIfNeeded(listId)
             reload()
         }
     }

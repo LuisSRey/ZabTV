@@ -90,6 +90,7 @@
     <string name="settings_confirm_title">Confirmar borrado</string>
     <string name="settings_confirm_wipe">¿Borrar %1$s? Esta acción no se puede deshacer.</string>
     <string name="lists_confirm_delete">¿Borrar esta lista y todos sus canales? No se puede deshacer.</string>
+    <string name="epg_refreshed">EPG actualizada: %1$d programas</string>
     <string name="settings_ace_title">AceStream: proxy del motor local</string>
     <string name="settings_ace_hint">127.0.0.1:6878</string>
     <string name="settings_ace_warn">Instala la app AceStream y déjala corriendo. Los enlaces acestream:// se reproducen a través de ese proxy.</string>

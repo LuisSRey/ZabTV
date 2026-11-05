@@ -68,7 +68,15 @@ class ChannelBrowserFragment : Fragment() {
                     .show(parentFragmentManager, ChannelSheetFragment.TAG)
             },
         )
-        grid.layoutManager = GridLayoutManager(requireContext(), if (isTv) 4 else 3)
+        // 1 columna en vertical, 2 en horizontal y en TV.
+        val span = if (isTv) {
+            2
+        } else if (resources.configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE) {
+            2
+        } else {
+            1
+        }
+        grid.layoutManager = GridLayoutManager(requireContext(), span)
         grid.adapter = gridAdapter
 
         // Tira Ahora/Siguiente (Task 14): un batch nowNext por pausa de scroll.
