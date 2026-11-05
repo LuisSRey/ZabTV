@@ -6,6 +6,7 @@
     <!-- Visibilidad de paquetes (Android 11+): sin esto la app no ve ni puede
          abrir AceStream, y el auto-arranque del motor falla en silencio. -->
     <queries>
+        <package android:name="org.free.aceserve" />
         <package android:name="org.acestream.media" />
         <package android:name="org.acestream.engine" />
         <intent>

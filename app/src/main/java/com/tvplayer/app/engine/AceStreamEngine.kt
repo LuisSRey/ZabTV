@@ -14,7 +14,12 @@ import java.net.Socket
 object AceStreamEngine {
 
     /** Paquetes conocidos de la app AceStream (motor). */
-    private val ENGINE_PACKAGES = listOf("org.acestream.media", "org.acestream.engine")
+    /** Paquetes del motor (el usuario prefiere AceServe). */
+    private val ENGINE_PACKAGES = listOf(
+        "org.free.aceserve",
+        "org.acestream.media",
+        "org.acestream.engine",
+    )
 
     /** ¿Hay algo escuchando en host:port? (socket corto, sin red real). */
     fun isReachable(host: String, port: Int, timeoutMs: Int = 1500): Boolean {
