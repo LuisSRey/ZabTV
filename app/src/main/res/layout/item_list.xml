@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Fila de lista (Task 11): nombre + subtítulo estado/canales + actualizar/borrar. -->
+<!-- Fila de lista: nombre + subtítulo estado/canales + acciones (scroll horizontal). -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
@@ -75,6 +75,16 @@
                 android:layout_marginStart="8dp"
                 android:background="@drawable/btn_ghost"
                 android:text="@string/lists_edit"
+                android:textColor="@color/tp_text"
+                android:textSize="13sp" />
+
+            <Button
+                android:id="@+id/list_epg"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:background="@drawable/btn_ghost"
+                android:text="@string/lists_epg"
                 android:textColor="@color/tp_text"
                 android:textSize="13sp" />
 

@@ -15,6 +15,7 @@ class ListsAdapter(
     private val onRefresh: (Row) -> Unit,
     private val onDelete: (Row) -> Unit,
     private val onEdit: (Row) -> Unit,
+    private val onEpg: (Row) -> Unit,
     private val onActivate: (Row) -> Unit,
 ) : RecyclerView.Adapter<ListsAdapter.Holder>() {
 
@@ -34,6 +35,7 @@ class ListsAdapter(
         val delete: Button = root.findViewById(R.id.list_delete)
         val activate: Button = root.findViewById(R.id.list_activate)
         val edit: Button = root.findViewById(R.id.list_edit)
+        val epg: Button = root.findViewById(R.id.list_epg)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): Holder {
@@ -54,5 +56,6 @@ class ListsAdapter(
         holder.activate.setOnClickListener { onActivate(row) }
         holder.activate.isEnabled = !row.isActive
         holder.edit.setOnClickListener { onEdit(row) }
+        holder.epg.setOnClickListener { onEpg(row) }
     }
 }

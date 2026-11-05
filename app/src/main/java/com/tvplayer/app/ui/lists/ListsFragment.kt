@@ -62,6 +62,7 @@ class ListsFragment : Fragment() {
             onRefresh = { row -> refresh(row.id) },
             onDelete = { row -> delete(row.id) },
             onEdit = { row -> edit(row.id) },
+            onEpg = { row -> refreshEpgIfNeeded(row.id, announce = true) },
             onActivate = { row ->
                 lifecycleScope.launch {
                     com.tvplayer.app.data.ActiveList.set(container().db, row.id)
@@ -193,24 +194,38 @@ class ListsFragment : Fragment() {
      * portal), ingiere la guía para que "ahora/siguiente" funcione sin esperar
      * al worker de 6 h. Silenciosa salvo éxito con programas.
      */
-    private fun refreshEpgIfNeeded(listId: Long) {
+    private fun refreshEpgIfNeeded(listId: Long, announce: Boolean = false) {
         lifecycleScope.launch {
             val db = container().db
             val epgUrl = db.listDao().get(listId)?.epgUrl
-            if (epgUrl.isNullOrBlank()) return@launch
+            if (epgUrl.isNullOrBlank()) {
+                if (announce) toast(R.string.epg_no_source)
+                return@launch
+            }
             val res = runCatching {
                 com.tvplayer.app.data.repo.EpgService(
                     requireContext().applicationContext, db, container().okHttp,
                 ).refresh(epgUrl)
-            }.getOrNull() ?: return@launch
-            if (!res.rejected && res.inserted > 0) {
-                Toast.makeText(
-                    requireContext(),
-                    getString(R.string.epg_refreshed, res.inserted),
-                    Toast.LENGTH_SHORT,
-                ).show()
+            }.getOrNull()
+            if (res == null || res.rejected) {
+                toast(safeEpgMessage(res?.message))
+                return@launch
+            }
+            if (res.inserted > 0 || announce) {
+                toast(getString(R.string.epg_refreshed, res.inserted))
             }
         }
+    }
+
+    private fun safeEpgMessage(message: String?): String =
+        safeMessage(message).ifBlank { getString(R.string.portal_import_error) }
+
+    private fun toast(text: String) {
+        Toast.makeText(requireContext(), text, Toast.LENGTH_SHORT).show()
+    }
+
+    private fun toast(resId: Int) {
+        Toast.makeText(requireContext(), resId, Toast.LENGTH_SHORT).show()
     }
 
     /**

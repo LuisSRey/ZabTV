@@ -49,6 +49,10 @@ object AceStreamEngine {
         return null
     }
 
+    /** Intent VIEW del enlace: lo resuelve la app AceStream aunque no exponga launcher. */
+    fun viewIntent(aceStreamUrl: String): android.content.Intent =
+        android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(aceStreamUrl))
+
     fun splitHostPort(proxy: String, defaultPort: Int = 6878): Pair<String, Int> {
         val clean = proxy.trim().removePrefix("http://").removePrefix("https://").trimEnd('/')
         val parts = clean.split(':')
