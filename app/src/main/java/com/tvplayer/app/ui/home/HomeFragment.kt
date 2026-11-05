@@ -4,6 +4,8 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.fragment.app.Fragment
@@ -11,18 +13,22 @@ import androidx.lifecycle.lifecycleScope
 import androidx.paging.PagingData
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import coil.load
 import com.tvplayer.app.R
 import com.tvplayer.app.TpApp
 import com.tvplayer.app.TvNavigator
+import com.tvplayer.app.data.ActiveList
+import com.tvplayer.app.data.db.ChannelEntity
+import com.tvplayer.app.data.repo.EpgMatcher
 import com.tvplayer.app.data.repo.FavouritesRepo
 import com.tvplayer.app.ui.channels.ChannelGridAdapter
 import com.tvplayer.app.ui.common.FocusScaleHelper
 import kotlinx.coroutines.launch
 
 /**
- * Home v0.1 (spec §5): sin listas muestra el disclaimer de "no hay contenido incluido"
- * + acceso directo a añadir lista. Con listas, muestra el rail de favoritos
- * (Task 9, reutiliza el adapter del browser) sobre la primera lista.
+ * Home estilo app tvOS (spec §5): hero panorámico del destacado + estantería
+ * de Favoritos. Sin listas muestra el disclaimer de "no hay contenido incluido".
+ * La navegación vive en el shell (sidebar TV / barra móvil); aquí solo contenido.
  */
 class HomeFragment : Fragment() {
 
@@ -35,47 +41,18 @@ class HomeFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        val addTile = view.findViewById<TextView>(R.id.home_add_list)
-        val browseTile = view.findViewById<TextView>(R.id.home_browse)
-        val searchTile = view.findViewById<TextView>(R.id.home_search)
-        val settingsTile = view.findViewById<TextView>(R.id.home_settings)
-        FocusScaleHelper.attach(addTile)
-        FocusScaleHelper.attach(browseTile)
-        FocusScaleHelper.attach(searchTile)
-        FocusScaleHelper.attach(settingsTile)
-        addTile.setOnClickListener {
-            (activity as? TvNavigator.NavHost)?.openLists()
-        }
-        browseTile.setOnClickListener {
-            val nav = activity as? TvNavigator.NavHost ?: return@setOnClickListener
-            lifecycleScope.launch {
-                val db = (requireActivity().application as TpApp).container.db
-                val activeId = com.tvplayer.app.data.ActiveList.resolve(db)
-                if (activeId != null) nav.openBrowser(activeId) else nav.openLists()
-            }
-        }
-        searchTile.setOnClickListener {
-            val nav = activity as? TvNavigator.NavHost ?: return@setOnClickListener
-            lifecycleScope.launch {
-                val db = (requireActivity().application as TpApp).container.db
-                val activeId = com.tvplayer.app.data.ActiveList.resolve(db)
-                if (activeId != null) {
-                    nav.open(
-                        com.tvplayer.app.ui.search.SearchFragment.newInstance(activeId),
-                        com.tvplayer.app.ui.search.SearchFragment.TAG,
-                    )
-                }
-            }
-        }
-        settingsTile.setOnClickListener {
-            (activity as? TvNavigator.NavHost)?.openSettings()
-        }
-
+        val hero = view.findViewById<View>(R.id.home_hero)
+        val heroLogo = view.findViewById<ImageView>(R.id.hero_logo)
+        val heroTitle = view.findViewById<TextView>(R.id.hero_title)
+        val heroNow = view.findViewById<TextView>(R.id.hero_now)
+        val heroPlay = view.findViewById<Button>(R.id.hero_play)
+        val disclaimer = view.findViewById<TextView>(R.id.home_disclaimer)
         val favsSection = view.findViewById<LinearLayout>(R.id.home_favs_section)
         val favsRail = view.findViewById<RecyclerView>(R.id.home_favs_rail)
+        FocusScaleHelper.attach(heroPlay)
+
         val favsAdapter = ChannelGridAdapter(onClick = { channel ->
-            val listId = channel.listId
-            (activity as? TvNavigator.NavHost)?.openPlayer(listId, channel.position)
+            (activity as? TvNavigator.NavHost)?.openPlayer(channel.listId, channel.position)
         })
         favsRail.layoutManager =
             LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
@@ -83,8 +60,34 @@ class HomeFragment : Fragment() {
 
         lifecycleScope.launch {
             val db = (requireActivity().application as TpApp).container.db
-            val activeId = com.tvplayer.app.data.ActiveList.resolve(db)
-            val favs = if (activeId != null) FavouritesRepo(db).favourites(activeId) else emptyList()
+            val activeId = ActiveList.resolve(db)
+            if (activeId == null) {
+                disclaimer.visibility = View.VISIBLE
+                return@launch
+            }
+            // Destacado: primer canal de la lista activa + su "ahora".
+            val featured: ChannelEntity? = db.channelDao().channelAtPosition(activeId, 0)
+            if (featured != null) {
+                hero.visibility = View.VISIBLE
+                heroTitle.text = featured.displayName
+                featured.logoUrl?.let { heroLogo.load(it) }
+                val match = EpgMatcher(db.epgDao()).match(featured)
+                val nn = if (match != null) {
+                    db.epgDao().nowNext(listOf(match.tvgId), System.currentTimeMillis())
+                } else {
+                    emptyMap()
+                }
+                val nowTitle = match?.let { nn[it.tvgId]?.first?.title }
+                heroNow.text = if (nowTitle != null) {
+                    getString(R.string.player_now, nowTitle)
+                } else {
+                    getString(R.string.player_now_placeholder)
+                }
+                heroPlay.setOnClickListener {
+                    (activity as? TvNavigator.NavHost)?.openPlayer(featured.listId, featured.position)
+                }
+            }
+            val favs = FavouritesRepo(db).favourites(activeId)
             if (favs.isNotEmpty()) {
                 favsSection.visibility = View.VISIBLE
                 favsAdapter.submitData(PagingData.from(favs))

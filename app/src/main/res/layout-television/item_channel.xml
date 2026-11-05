@@ -26,7 +26,7 @@
         android:lines="2"
         android:paddingStart="6dp"
         android:paddingEnd="6dp"
-        android:textColor="@color/tp_text"
+        android:textAppearance="@style/TextAppearance_TVPlayer_CardTitle"
         android:textSize="15sp" />
 
     <!-- Tira Ahora/Siguiente (Task 14): GONE sin guía para el canal. -->

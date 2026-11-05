@@ -1,25 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Foco D-pad: borde acento grueso (spec §3/§5) -->
+    <!-- Foco estilo tvOS: borde claro + la escala la pone FocusScaleHelper (1.1). -->
     <item android:state_focused="true">
         <shape android:shape="rectangle">
             <solid android:color="@color/tp_surface" />
-            <stroke android:width="3dp" android:color="@color/tp_accent" />
-            <corners android:radius="14dp" />
+            <stroke android:width="2dp" android:color="#FFFFFF" />
+            <corners android:radius="10dp" />
         </shape>
     </item>
-    <!-- Seleccionado (chips/filas de grupo): borde acento fino -->
+    <!-- Seleccionado (pastilla Apple, rail de grupos): gris sistema sin borde. -->
     <item android:state_activated="true">
         <shape android:shape="rectangle">
-            <solid android:color="@color/tp_surface" />
-            <stroke android:width="2dp" android:color="@color/tp_accent" />
-            <corners android:radius="14dp" />
+            <solid android:color="@color/tp_surface2" />
+            <corners android:radius="10dp" />
         </shape>
     </item>
     <item>
         <shape android:shape="rectangle">
             <solid android:color="@color/tp_surface" />
-            <corners android:radius="14dp" />
+            <corners android:radius="10dp" />
         </shape>
     </item>
 </selector>

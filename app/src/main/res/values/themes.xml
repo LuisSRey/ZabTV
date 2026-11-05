@@ -1,5 +1,5 @@
 <resources>
-    <!-- Tokens del spec (§3). Atributos AppCompat puros: material-components llega cuando aporte. -->
+    <!-- Tema estilo Apple TV: negro puro, Inter, sin ActionBar. -->
     <style name="Theme.TVPlayer" parent="Theme.AppCompat.NoActionBar">
         <item name="colorPrimary">@color/tp_accent</item>
         <item name="colorAccent">@color/tp_accent</item>
@@ -9,6 +9,29 @@
         <item name="android:textColorSecondary">@color/tp_text_secondary</item>
         <item name="android:statusBarColor">@color/tp_bg</item>
         <item name="android:navigationBarColor">@color/tp_bg</item>
+        <item name="android:fontFamily">@font/inter_regular</item>
         <item name="android:windowAllowEnterTransitionOverlap">true</item>
+    </style>
+
+    <!-- Escala tipo tvOS: titulares grandes y aireados. -->
+    <style name="TextAppearance_TVPlayer_HeroTitle">
+        <item name="android:fontFamily">@font/inter_bold</item>
+        <item name="android:textSize">34sp</item>
+        <item name="android:textColor">@color/tp_text</item>
+    </style>
+    <style name="TextAppearance_TVPlayer_SectionTitle">
+        <item name="android:fontFamily">@font/inter_semibold</item>
+        <item name="android:textSize">20sp</item>
+        <item name="android:textColor">@color/tp_text</item>
+    </style>
+    <style name="TextAppearance_TVPlayer_CardTitle">
+        <item name="android:fontFamily">@font/inter_medium</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColor">@color/tp_text</item>
+    </style>
+    <style name="TextAppearance_TVPlayer_Meta">
+        <item name="android:fontFamily">@font/inter_regular</item>
+        <item name="android:textSize">13sp</item>
+        <item name="android:textColor">@color/tp_text_secondary</item>
     </style>
 </resources>

@@ -1,38 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Banner TV (320x180) del spec §3: fondo + bloque de acento, abstracto. -->
-<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <item>
-        <shape android:shape="rectangle">
-            <solid android:color="@color/tp_bg" />
-        </shape>
-    </item>
-    <item
-        android:left="28dp"
-        android:top="44dp">
-        <shape android:shape="rectangle">
-            <solid android:color="@color/tp_accent" />
-            <size android:width="36dp" android:height="92dp" />
-            <corners android:radius="8dp" />
-        </shape>
-    </item>
-    <item
-        android:left="84dp"
-        android:top="44dp"
-        android:right="36dp">
-        <shape android:shape="rectangle">
-            <solid android:color="@color/tp_surface" />
-            <size android:width="200dp" android:height="28dp" />
-            <corners android:radius="6dp" />
-        </shape>
-    </item>
-    <item
-        android:left="84dp"
-        android:top="108dp"
-        android:right="36dp">
-        <shape android:shape="rectangle">
-            <solid android:color="@color/tp_surface" />
-            <size android:width="200dp" android:height="28dp" />
-            <corners android:radius="6dp" />
-        </shape>
-    </item>
-</layer-list>
+<!-- Banner TV 320x180: marca centrada sobre negro. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="320dp"
+    android:height="180dp"
+    android:viewportWidth="320"
+    android:viewportHeight="180">
+    <path
+        android:fillColor="#000000"
+        android:pathData="M0,0h320v180h-320z" />
+    <path
+        android:fillColor="#0A84FF"
+        android:pathData="M128,52h64a16,16 0 0 1 16,16v44a16,16 0 0 1 -16,16h-48a16,16 0 0 1 -16,-16V68a16,16 0 0 1 16,-16z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M148,74 L148,106 L176,90z" />
+</vector>

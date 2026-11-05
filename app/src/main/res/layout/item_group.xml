@@ -18,7 +18,7 @@
         android:ellipsize="end"
         android:maxLines="1"
         android:maxWidth="160dp"
-        android:textColor="@color/tp_text"
+        android:textAppearance="@style/TextAppearance_TVPlayer_CardTitle"
         android:textSize="14sp" />
 
     <TextView

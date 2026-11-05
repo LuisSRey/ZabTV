@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Marca TVPlayer en la app: pastilla azul + play blanco. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+    <path
+        android:fillColor="#0A84FF"
+        android:pathData="M8,8h32a8,8 0 0 1 8,8v16a8,8 0 0 1 -8,8L16,40a8,8 0 0 1 -8,-8V16a8,8 0 0 1 8,-8z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M20,17 L20,31 L32,24z" />
+</vector>

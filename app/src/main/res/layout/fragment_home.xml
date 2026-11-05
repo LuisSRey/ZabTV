@@ -1,104 +1,98 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<!-- Móvil/tablet estilo app tvOS: hero panorámico + estanterías. -->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="24dp">
+    android:fillViewport="true">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/app_name"
-        android:textColor="@color/tp_accent"
-        android:textSize="24sp"
-        android:textStyle="bold" />
-
-    <TextView
-        android:id="@+id/home_disclaimer"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
-        android:text="@string/home_no_content"
-        android:textColor="@color/tp_text_secondary"
-        android:textSize="15sp" />
-
-    <TextView
-        android:id="@+id/home_add_list"
-        android:layout_width="match_parent"
-        android:layout_height="56dp"
-        android:layout_marginTop="24dp"
-        android:background="@drawable/tile_focus_bg"
-        android:contentDescription="@string/lists_title"
-        android:gravity="center_vertical"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
-        android:text="@string/lists_title"
-        android:textColor="@color/tp_text"
-        android:textSize="16sp" />
-
-    <TextView
-        android:id="@+id/home_browse"
-        android:layout_width="match_parent"
-        android:layout_height="56dp"
-        android:layout_marginTop="12dp"
-        android:background="@drawable/tile_focus_bg"
-        android:gravity="center_vertical"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
-        android:text="@string/browser_title"
-        android:textColor="@color/tp_text"
-        android:textSize="16sp" />
-
-    <TextView
-        android:id="@+id/home_search"
-        android:layout_width="match_parent"
-        android:layout_height="56dp"
-        android:layout_marginTop="12dp"
-        android:background="@drawable/tile_focus_bg"
-        android:gravity="center_vertical"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
-        android:text="@string/search_title"
-        android:textColor="@color/tp_text"
-        android:textSize="16sp" />
-
-    <TextView
-        android:id="@+id/home_settings"
-        android:layout_width="match_parent"
-        android:layout_height="56dp"
-        android:layout_marginTop="12dp"
-        android:background="@drawable/tile_focus_bg"
-        android:gravity="center_vertical"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
-        android:text="@string/settings_title"
-        android:textColor="@color/tp_text"
-        android:textSize="16sp" />
-
-    <!-- Rail de favoritos (Task 9): oculto hasta haber favoritos en la primera lista. -->
     <LinearLayout
-        android:id="@+id/home_favs_section"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
         android:orientation="vertical"
-        android:visibility="gone">
+        android:padding="20dp">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/fav_title"
-            android:textColor="@color/tp_accent"
-            android:textSize="18sp"
-            android:textStyle="bold" />
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/home_favs_rail"
+        <!-- Hero: destacado (logo grande + título + ahora + ver). -->
+        <FrameLayout
+            android:id="@+id/home_hero"
             android:layout_width="match_parent"
-            android:layout_height="160dp"
+            android:layout_height="220dp"
+            android:background="@drawable/tile_focus_bg"
+            android:visibility="gone">
+
+            <ImageView
+                android:id="@+id/hero_logo"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:contentDescription="@string/browser_channel_logo"
+                android:scaleType="centerCrop" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom"
+                android:background="#CC000000"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:id="@+id/hero_title"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:textAppearance="@style/TextAppearance_TVPlayer_HeroTitle"
+                    android:textSize="24sp" />
+
+                <TextView
+                    android:id="@+id/hero_now"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:textAppearance="@style/TextAppearance_TVPlayer_Meta"
+                    android:textSize="14sp" />
+
+                <Button
+                    android:id="@+id/hero_play"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="@string/sheet_play" />
+            </LinearLayout>
+        </FrameLayout>
+
+        <!-- Disclaimer cuando no hay listas. -->
+        <TextView
+            android:id="@+id/home_disclaimer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
-            android:clipToPadding="false" />
+            android:text="@string/home_no_content"
+            android:textColor="@color/tp_text_secondary"
+            android:textSize="15sp"
+            android:visibility="gone" />
+
+        <!-- Estantería Favoritos (reutiliza adapter del browser). -->
+        <LinearLayout
+            android:id="@+id/home_favs_section"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/fav_title"
+                android:textAppearance="@style/TextAppearance_TVPlayer_SectionTitle" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/home_favs_rail"
+                android:layout_width="match_parent"
+                android:layout_height="170dp"
+                android:layout_marginTop="12dp"
+                android:clipToPadding="false" />
+        </LinearLayout>
 
     </LinearLayout>
-
-</LinearLayout>
+</ScrollView>
