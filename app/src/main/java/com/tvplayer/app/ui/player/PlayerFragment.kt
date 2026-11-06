@@ -309,9 +309,11 @@ class PlayerFragment : Fragment() {
      * motor: AceServe o AceStream). Con el motor caído NO se arranca nada
      * solo: se muestra el diálogo (Reintentar / Abrir motor / Cerrar) y la
      * línea de guía queda intacta. "Abrir motor" prioriza AceServe.
+     * Vale para `acestream://` y para URLs ya proxificadas en loopback
+     * (algunas listas las traen así); el proxy a chequear se pasa explícito.
      */
-    private suspend fun ensureEngineRunning(aceUrl: String): Int {
-        val (host, defaultPort) = AceStreamEngine.splitHostPort(com.tvplayer.app.data.AppContainer.DEFAULT_ACE_PROXY)
+    private suspend fun ensureEngineRunning(aceUrl: String, proxy: String = com.tvplayer.app.data.AppContainer.DEFAULT_ACE_PROXY): Int {
+        val (host, defaultPort) = AceStreamEngine.splitHostPort(proxy)
         val up = withContext(kotlinx.coroutines.Dispatchers.IO) {
             AceStreamEngine.isReachable(host, defaultPort)
         }
@@ -322,7 +324,8 @@ class PlayerFragment : Fragment() {
         }
         progress.visibility = View.GONE
         needsPrepare = true
-        showEngineDialog(R.string.engine_no_service, offerOpen = true, aceUrl = aceUrl)
+        val viewUrl = AceStreamEngine.aceStreamUrlForView(aceUrl)
+        showEngineDialog(R.string.engine_no_service, offerOpen = true, aceUrl = viewUrl)
         return 0
     }
 
@@ -376,10 +379,13 @@ class PlayerFragment : Fragment() {
      */
     private suspend fun prepareCurrent(channel: ChannelEntity) {
         var proxy = com.tvplayer.app.data.AppContainer.DEFAULT_ACE_PROXY
-        val isAce = channel.url.startsWith("acestream://", ignoreCase = true)
-        android.util.Log.d("TvPlayer", "prepare ace=$isAce url=" + channel.url.take(40))
-        if (isAce) {
-            val port = ensureEngineRunning(channel.url)
+        // Necesita motor local tanto con `acestream://` como con URL ya
+        // proxificada en loopback (algunas listas la traen así): sin este
+        // chequeo el motor caído acababa en error de red en la guía.
+        val engineTarget = AceStreamEngine.engineProxyFor(channel.url, proxy)
+        android.util.Log.d("TvPlayer", "prepare ace=" + (engineTarget != null) + " url=" + channel.url.take(40))
+        if (engineTarget != null) {
+            val port = ensureEngineRunning(channel.url, engineTarget)
             if (port == 0) return
             proxy = "127.0.0.1:$port"
         }

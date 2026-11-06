@@ -96,6 +96,50 @@ object AceStreamEngine {
     fun viewIntent(aceStreamUrl: String): android.content.Intent =
         android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(aceStreamUrl))
 
+    /**
+     * Proxy local a chequear antes de reproducir (null = no necesita motor).
+     * Vale para `acestream://hash` (proxy por defecto) y para URLs ya
+     * proxificadas (`http://127.0.0.1:6878/ace/getstream?id=…`, forma que
+     * traen algunas listas): en ambas el motor caído debe mostrar el diálogo
+     * en vez de un error de red en la guía. Un loopback que no parezca proxy
+     * ace (otro servidor local) o cualquier remoto devuelven null.
+     */
+    fun engineProxyFor(url: String, defaultProxy: String = "127.0.0.1:6878"): String? {
+        val raw = url.trim()
+        if (raw.startsWith("acestream://", ignoreCase = true)) return defaultProxy
+        return try {
+            val uri = java.net.URI(raw)
+            val scheme = uri.scheme?.lowercase()
+            if (scheme != "http" && scheme != "https") return null
+            val host = uri.host?.lowercase() ?: return null
+            val loopback = host == "127.0.0.1" || host == "localhost" ||
+                host == "::1" || host == "[::1]" || host == "0:0:0:0:0:0:0:1"
+            if (!loopback || !uri.path.orEmpty().startsWith("/ace/")) return null
+            val h = if (host.startsWith("[")) "127.0.0.1" else uri.host
+            if (uri.port > 0) "$h:${uri.port}" else "$h:6878"
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    /**
+     * URL acestream:// para el fallback VIEW del diálogo ("Abrir motor"):
+     * con una pre-proxificada se reconstruye desde `?id=` para que la abra
+     * el motor y no el navegador.
+     */
+    fun aceStreamUrlForView(url: String): String {
+        val raw = url.trim()
+        if (raw.startsWith("acestream://", ignoreCase = true)) return raw
+        return try {
+            val id = java.net.URI(raw).query?.split('&')
+                ?.firstOrNull { it.startsWith("id=") }
+                ?.removePrefix("id=")?.trim().orEmpty()
+            if (id.isNotEmpty()) "acestream://$id" else raw
+        } catch (_: Exception) {
+            raw
+        }
+    }
+
     fun splitHostPort(proxy: String, defaultPort: Int = 6878): Pair<String, Int> {
         val clean = proxy.trim().removePrefix("http://").removePrefix("https://").trimEnd('/')
         val parts = clean.split(':')

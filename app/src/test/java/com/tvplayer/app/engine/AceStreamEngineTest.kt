@@ -48,6 +48,57 @@ class AceStreamEngineTest {
             AceStreamEngine.startContentDataUri("abc123"),
         )
     }
+
+    @Test
+    fun `engineProxyFor detecta esquema acestream`() {
+        assertEquals(
+            "127.0.0.1:6878",
+            AceStreamEngine.engineProxyFor("acestream://abc123", "127.0.0.1:6878"),
+        )
+        assertEquals(
+            "127.0.0.1:6878",
+            AceStreamEngine.engineProxyFor("  ACESTREAM://abc123  ", "127.0.0.1:6878"),
+        )
+    }
+
+    @Test
+    fun `engineProxyFor detecta url pre-proxificada en loopback`() {
+        assertEquals(
+            "127.0.0.1:6878",
+            AceStreamEngine.engineProxyFor(
+                "http://127.0.0.1:6878/ace/getstream?id=abc123",
+                "127.0.0.1:6878",
+            ),
+        )
+        assertEquals(
+            "localhost:6878",
+            AceStreamEngine.engineProxyFor(
+                "http://localhost:6878/ace/getstream?id=abc123",
+                "127.0.0.1:6878",
+            ),
+        )
+    }
+
+    @Test
+    fun `engineProxyFor ignora lo que no necesita motor local`() {
+        assertEquals(null, AceStreamEngine.engineProxyFor("https://example.com/live/1.m3u8", "127.0.0.1:6878"))
+        // Remoto aunque parezca proxy ace: no es el motor local.
+        assertEquals(null, AceStreamEngine.engineProxyFor("http://example.com:8080/ace/getstream?id=x", "127.0.0.1:6878"))
+        // Loopback sin pinta de proxy ace: otro servidor local, sin dialogo.
+        assertEquals(null, AceStreamEngine.engineProxyFor("http://127.0.0.1:8080/video.mp4", "127.0.0.1:6878"))
+        assertEquals(null, AceStreamEngine.engineProxyFor("no-es-url", "127.0.0.1:6878"))
+    }
+
+    @Test
+    fun `aceStreamUrlForView reconstruye acestream desde pre-proxificada`() {
+        assertEquals("acestream://abc", AceStreamEngine.aceStreamUrlForView("acestream://abc"))
+        assertEquals(
+            "acestream://abc123",
+            AceStreamEngine.aceStreamUrlForView("http://127.0.0.1:6878/ace/getstream?id=abc123"),
+        )
+        val raw = "http://127.0.0.1:6878/ace/getstream"
+        assertEquals(raw, AceStreamEngine.aceStreamUrlForView(raw))
+    }
 }
 
 class AceStreamStarterTest {
