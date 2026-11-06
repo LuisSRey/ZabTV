@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
@@ -49,6 +50,7 @@ class MainActivity : AppCompatActivity(), TvNavigator.NavHost {
         }
         supportFragmentManager.executePendingTransactions()
         syncShell()
+        refreshActiveEpg()
     }
 
     private fun goTab(tag: String) {
@@ -83,6 +85,24 @@ class MainActivity : AppCompatActivity(), TvNavigator.NavHost {
 
     private fun lifecycleScopeLaunch(block: suspend () -> Unit) {
         lifecycleScope.launch { block() }
+    }
+
+    /** EPG de la lista activa al arrancar: silenciosa salvo éxito con programas. */
+    private fun refreshActiveEpg() {
+        lifecycleScopeLaunch {
+            val app = application as TpApp
+            val db = app.container.db
+            val listId = com.tvplayer.app.data.ActiveList.resolve(db) ?: return@lifecycleScopeLaunch
+            val epgUrl = db.listDao().get(listId)?.epgUrl
+            if (epgUrl.isNullOrBlank()) return@lifecycleScopeLaunch
+            val res = runCatching {
+                com.tvplayer.app.data.repo.EpgService(applicationContext, db, app.container.okHttp)
+                    .refresh(epgUrl)
+            }.getOrNull() ?: return@lifecycleScopeLaunch
+            if (!res.rejected && res.inserted > 0) {
+                Toast.makeText(this, getString(R.string.epg_refreshed, res.inserted), Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 
     /** Estado del shell según el fragment visible: tab activa + chrome. */

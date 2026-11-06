@@ -43,6 +43,10 @@ class ListsFragment : Fragment() {
         if (uri != null) addFromFile(uri)
     }
 
+    private val pickDoc = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
+        if (uri != null) addFromFile(uri)
+    }
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         return inflater.inflate(R.layout.fragment_lists, container, false)
     }
@@ -79,8 +83,11 @@ class ListsFragment : Fragment() {
                 .show(parentFragmentManager, "add_list")
         }
         addFile.setOnClickListener {
-            // Fire TV no trae selector de archivos: launch() peta sin handler.
-            runCatching { pickFile.launch("*/*") }.onFailure {
+            // Fire TV: algunos gestores solo responden a OPEN_DOCUMENT; si no
+            // hay ninguno, aviso en vez de petar.
+            val opened = runCatching { pickFile.launch("*/*"); true }.getOrDefault(false) ||
+                runCatching { pickDoc.launch(arrayOf("*/*")); true }.getOrDefault(false)
+            if (!opened) {
                 Toast.makeText(requireContext(), R.string.lists_no_picker, Toast.LENGTH_LONG).show()
             }
         }
@@ -141,6 +148,12 @@ class ListsFragment : Fragment() {
     }
 
     private fun addFromFile(uri: Uri) {
+        // OPEN_DOCUMENT permite permiso persistente (reimporta sin pedir otra vez).
+        runCatching {
+            requireContext().contentResolver.takePersistableUriPermission(
+                uri, android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION,
+            )
+        }
         lifecycleScope.launch {
             val db = container().db
             if (db.listDao().all().size >= MAX_LISTS) {
