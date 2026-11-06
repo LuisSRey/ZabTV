@@ -52,7 +52,7 @@ class CleartextGateTest {
             call.execute().close()
             fail("debía bloquear el cleartext")
         } catch (e: IOException) {
-            assertTrue(e.message.orEmpty().contains("Ajustes"))
+            assertTrue(e.message.orEmpty().contains("https://"))
         }
         assertEquals(0, server.requestCount) // nada llegó al servidor
     }

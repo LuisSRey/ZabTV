@@ -19,7 +19,7 @@ class CleartextGate(private val allowHttp: () -> Boolean) : Interceptor {
         val url = request.url
         if (url.scheme.equals("http", ignoreCase = true) && !allowHttp() && !url.isLoopback()) {
             throw IOException(
-                "HTTP sin cifrar bloqueado. Actívalo en Ajustes o usa una lista https://",
+                "HTTP sin cifrar bloqueado. Usa una lista https://",
             )
         }
         return chain.proceed(request)
