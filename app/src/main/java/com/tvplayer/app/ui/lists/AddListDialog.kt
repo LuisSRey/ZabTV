@@ -53,8 +53,14 @@ class AddListDialog(
             hint = getString(R.string.lists_ua)
             if (initial is AddListInput.Url) setText(initial.userAgent.orEmpty())
         }
+        val epgUrl = EditText(context).apply {
+            hint = getString(R.string.lists_epg_hint)
+            inputType = InputType.TYPE_TEXT_VARIATION_URI
+            if (initial is AddListInput.Url) setText(initial.epgUrl.orEmpty())
+        }
         urlGroup.addView(url)
         urlGroup.addView(userAgent)
+        urlGroup.addView(epgUrl)
         layout.addView(urlGroup)
 
         val portalGroup = LinearLayout(context).apply {
@@ -101,6 +107,7 @@ class AddListDialog(
                         name = name.text.toString().trim(),
                         url = url.text.toString().trim(),
                         userAgent = userAgent.text.toString().trim().ifBlank { null },
+                        epgUrl = epgUrl.text.toString().trim().ifBlank { null },
                     )
                 } else {
                     AddListInput.Portal(
@@ -122,6 +129,11 @@ class AddListDialog(
 /** Resultado del diálogo: o URL directa o credenciales de portal. */
 sealed interface AddListInput {
     val name: String
-    data class Url(override val name: String, val url: String, val userAgent: String?) : AddListInput
+    data class Url(
+        override val name: String,
+        val url: String,
+        val userAgent: String?,
+        val epgUrl: String? = null,
+    ) : AddListInput
     data class Portal(override val name: String, val host: String, val username: String, val password: String) : AddListInput
 }

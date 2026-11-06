@@ -13,13 +13,20 @@ import java.net.Socket
  */
 object AceStreamEngine {
 
-    /** Paquetes conocidos de la app AceStream (motor). */
-    /** Paquetes del motor (el usuario prefiere AceServe). */
+    /** Paquetes del motor (el usuario prefiere AceServe, servidor sin pausas). */
     private val ENGINE_PACKAGES = listOf(
         "org.free.aceserve",
         "org.acestream.media",
+        "org.acestream.media.atv",
+        "org.acestream.core",
+        "org.acestream.core.atv",
         "org.acestream.engine",
+        "org.acestream.node",
+        "org.acestream.node.web",
     )
+
+    /** Acción oficial de integración básica (reproduce en el Ace Player, sin límite de proxy). */
+    const val START_CONTENT_ACTION = "org.acestream.action.start_content"
 
     /** ¿Hay algo escuchando en host:port? (socket corto, sin red real). */
     fun isReachable(host: String, port: Int, timeoutMs: Int = 1500): Boolean {
@@ -33,25 +40,56 @@ object AceStreamEngine {
         }
     }
 
-    /** Intent para abrir la app del motor (busca por nombre, no por id fijo). */
+    /**
+     * Intent para abrir la app del motor. Prueba los paquetes conocidos
+     * directamente (getLaunchIntentForPackage ya respeta <queries>) y, como
+     * red, cualquier app que resuelva VIEW acestream:// (descubrimiento
+     * dinámico, robusto en Android 11+).
+     */
     fun launchIntent(context: Context): Intent? {
         val pm: PackageManager = context.packageManager
-        val pkgs = try {
-            pm.getInstalledPackages(0).map { it.packageName }
-        } catch (_: Exception) {
-            emptyList<String>()
-        }
-        val candidates = (pkgs.filter { it.contains("acestream", ignoreCase = true) } + ENGINE_PACKAGES).distinct()
-        for (pkg in candidates) {
+        for (pkg in ENGINE_PACKAGES) {
             try {
-                val intent = pm.getLaunchIntentForPackage(pkg) ?: continue
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                return intent
+                pm.getLaunchIntentForPackage(pkg)?.let {
+                    it.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    return it
+                }
             } catch (_: Exception) {
                 continue
             }
         }
-        return null
+        // Red: el handler que el sistema resuelva para el esquema acestream://.
+        return try {
+            val probe = Intent(Intent.ACTION_VIEW, android.net.Uri.parse("acestream://probe"))
+            val handlers = pm.queryIntentActivities(probe, 0)
+            val pkg = handlers.firstOrNull()?.activityInfo?.packageName ?: return null
+            pm.getLaunchIntentForPackage(pkg)?.apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    /** Hash/content_id de un enlace acestream:// (vacío si no hay nada). */
+    fun contentIdOf(aceStreamUrl: String): String =
+        aceStreamUrl.trim().substringAfter("://", "").trim()
+
+    /** URI de datos de la integración básica oficial (start_content). */
+    fun startContentDataUri(contentId: String): String =
+        "acestream:?content_id=${contentId.trim()}"
+
+    /**
+     * Intent de integración básica: reproduce el contenido en el propio
+     * Ace Player (app oficial). No usa el proxy local, así que no le afecta
+     * el límite de 5 min de la opción "Proxy Server" en reproductores externos.
+     */
+    fun startContentIntent(aceStreamUrl: String, pkg: String? = null): Intent {
+        val hash = contentIdOf(aceStreamUrl)
+        val intent = Intent(START_CONTENT_ACTION, android.net.Uri.parse(startContentDataUri(hash)))
+        if (pkg != null) intent.setPackage(pkg)
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        return intent
     }
 
     /** Intent VIEW del enlace: lo resuelve la app AceStream aunque no exponga launcher. */

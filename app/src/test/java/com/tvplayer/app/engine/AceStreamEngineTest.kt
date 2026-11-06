@@ -33,4 +33,19 @@ class AceStreamEngineTest {
         assertEquals("127.0.0.1" to 6878, AceStreamEngine.splitHostPort(""))
         assertEquals("host" to 6878, AceStreamEngine.splitHostPort("host:abc"))
     }
+
+    @Test
+    fun `contentIdOf extrae el hash sin esquema ni espacios`() {
+        assertEquals("abc123", AceStreamEngine.contentIdOf("acestream://abc123"))
+        assertEquals("abc123", AceStreamEngine.contentIdOf("  ACESTREAM://abc123  "))
+        assertEquals("", AceStreamEngine.contentIdOf("acestream://  "))
+    }
+
+    @Test
+    fun `startContentDataUri usa el formato de la integracion basica`() {
+        assertEquals(
+            "acestream:?content_id=abc123",
+            AceStreamEngine.startContentDataUri("abc123"),
+        )
+    }
 }

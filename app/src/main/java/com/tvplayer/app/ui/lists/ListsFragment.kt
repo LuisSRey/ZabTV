@@ -104,12 +104,12 @@ class ListsFragment : Fragment() {
 
     private fun onAddInput(input: AddListInput) {
         when (input) {
-            is AddListInput.Url -> addFromUrl(input.name, input.url, input.userAgent)
+            is AddListInput.Url -> addFromUrl(input.name, input.url, input.userAgent, input.epgUrl)
             is AddListInput.Portal -> addFromPortal(input.name, input.host, input.username, input.password)
         }
     }
 
-    private fun addFromUrl(name: String, url: String, userAgent: String?) {
+    private fun addFromUrl(name: String, url: String, userAgent: String?, epgUrl: String?) {
         lifecycleScope.launch {
             val db = container().db
             if (db.listDao().all().size >= MAX_LISTS) {
@@ -117,7 +117,13 @@ class ListsFragment : Fragment() {
                 return@launch
             }
             val listId = db.listDao().upsert(
-                ListEntity(name = name.ifBlank { url }, sourceUrl = url, userAgent = userAgent, status = "importing"),
+                ListEntity(
+                    name = name.ifBlank { url },
+                    sourceUrl = url,
+                    userAgent = userAgent,
+                    epgUrl = epgUrl,
+                    status = "importing",
+                ),
             )
             reload()
             val result = ImportService(
@@ -262,6 +268,7 @@ class ListsFragment : Fragment() {
                     name = entity.name,
                     url = entity.sourceUrl,
                     userAgent = entity.userAgent,
+                    epgUrl = entity.epgUrl,
                 )
             }
             AddListDialog(initial) { input -> applyEdit(listId, entity, input) }
@@ -273,6 +280,7 @@ class ListsFragment : Fragment() {
         when (input) {
             is AddListInput.Url -> {
                 val changed = input.url != old.sourceUrl || input.userAgent != old.userAgent
+                val epgChanged = (input.epgUrl.orEmpty()) != (old.epgUrl.orEmpty())
                 lifecycleScope.launch {
                     val db = container().db
                     db.listDao().upsert(
@@ -280,6 +288,7 @@ class ListsFragment : Fragment() {
                             name = input.name.ifBlank { old.name },
                             sourceUrl = input.url,
                             userAgent = input.userAgent,
+                            epgUrl = input.epgUrl,
                             status = if (changed) "importing" else old.status,
                         ),
                     )
@@ -290,6 +299,10 @@ class ListsFragment : Fragment() {
                         ).import(listId, com.tvplayer.app.data.repo.ImportSource.HttpSource(input.url, input.userAgent))
                         Toast.makeText(requireContext(), safeMessage(result.message), Toast.LENGTH_LONG).show()
                         if (!result.rejected) refreshEpgIfNeeded(listId)
+                        reload()
+                    } else if (epgChanged) {
+                        // Lista de archivo o misma URL: solo cambió la guía → descargarla ya.
+                        refreshEpgIfNeeded(listId, announce = true)
                         reload()
                     } else {
                         Toast.makeText(requireContext(), R.string.lists_updated, Toast.LENGTH_SHORT).show()

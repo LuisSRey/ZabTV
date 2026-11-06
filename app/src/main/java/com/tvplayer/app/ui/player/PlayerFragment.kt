@@ -59,6 +59,8 @@ class PlayerFragment : Fragment() {
     private lateinit var progress: ProgressBar
 
     private var current: ChannelEntity? = null
+    /** True si el canal aún no llegó a engine.prepare (motor sin arrancar o error). */
+    private var needsPrepare = true
     private var overlayJob: kotlinx.coroutines.Job? = null
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -226,9 +228,11 @@ class PlayerFragment : Fragment() {
 
     private fun togglePlay() {
         if (!ready()) return
-        // Tras un error, play reintenta la preparación (p. ej. motor AceStream ya arrancado).
-        if (engine.state.value is PlayerState.Error) {
-            val channel = current ?: return
+        // Tras un error (o con el motor aún sin arrancar), play reintenta la
+        // preparación en vez de hacer no-op sobre un engine vacío.
+        val channel = current
+        if ((engine.state.value is PlayerState.Error ||
+                (needsPrepare && engine.state.value != PlayerState.Loading)) && channel != null) {
             lifecycleScope.launch { prepareCurrent(channel) }
             return
         }
@@ -277,10 +281,11 @@ class PlayerFragment : Fragment() {
     }
 
     /**
-     * Motor AceStream: si no responde en local, intenta lanzarlo (launcher y,
-     * en último recurso, VIEW del enlace que resuelve la app AceStream) y
-     * espera hasta 60 s a que escuche. Sin autoplay en segundo plano: si el
-     * usuario salió a otra app, se queda listo para darle a play al volver.
+     * Motor AceStream: si el proxy local no responde, abre la app del motor
+     * (launcher o VIEW del enlace) y devuelve false con un mensaje honesto:
+     * el usuario vuelve y le da a play cuando el motor esté arriba (el
+     * reintento ya lo hace togglePlay). Sin espera de 60 s en segundo plano:
+     * esa espera moría al salir a AceServe (isResumed falso) y nunca enganchaba.
      */
     private suspend fun ensureEngineRunning(aceUrl: String): Boolean {
         val (host, port) = AceStreamEngine.splitHostPort(com.tvplayer.app.data.AppContainer.DEFAULT_ACE_PROXY)
@@ -288,36 +293,19 @@ class PlayerFragment : Fragment() {
             AceStreamEngine.isReachable(host, port)
         }
         if (reachable()) return true
-        // 1) Intent launcher de la app del motor.
-        val launched = runCatching {
-            AceStreamEngine.launchIntent(requireContext().applicationContext)?.let {
+        val opened = runCatching {
+            val app = requireContext().applicationContext
+            AceStreamEngine.launchIntent(app)?.let {
                 startActivity(it)
                 true
-            } ?: false
-        }.getOrDefault(false)
-        // 2) Fallback: VIEW del enlace (lo abre AceStream aunque no exponga launcher).
-        if (!launched) {
-            try {
+            } ?: run {
                 startActivity(AceStreamEngine.viewIntent(aceUrl))
-            } catch (_: android.content.ActivityNotFoundException) {
-                progress.visibility = View.GONE
-                showError(R.string.error_acestream)
-                return false
+                true
             }
-            nowText.setText(R.string.player_opening_acestream)
-            overlay.visibility = View.VISIBLE
-        } else {
-            progress.visibility = View.VISIBLE
-            nowText.setText(R.string.error_acestream_starting)
-            overlay.visibility = View.VISIBLE
-        }
-        // 3) Espera hasta 60 s a que el proxy escuche.
-        repeat(30) {
-            kotlinx.coroutines.delay(2000)
-            if (reachable()) return isResumed
-        }
+        }.getOrDefault(false)
         progress.visibility = View.GONE
-        showError(R.string.error_acestream)
+        showError(if (opened) R.string.error_acestream_starting else R.string.error_acestream)
+        needsPrepare = true
         return false
     }
 
@@ -345,6 +333,7 @@ class PlayerFragment : Fragment() {
             return
         }
         engine.prepare(source)
+        needsPrepare = false
     }
 
     /** Línea "ahora" del overlay (Task 14): exacta o aproximada, o placeholder sin guía. */

@@ -8,7 +8,12 @@
     <queries>
         <package android:name="org.free.aceserve" />
         <package android:name="org.acestream.media" />
+        <package android:name="org.acestream.media.atv" />
+        <package android:name="org.acestream.core" />
+        <package android:name="org.acestream.core.atv" />
         <package android:name="org.acestream.engine" />
+        <package android:name="org.acestream.node" />
+        <package android:name="org.acestream.node.web" />
         <intent>
             <action android:name="android.intent.action.VIEW" />
             <data android:scheme="acestream" />

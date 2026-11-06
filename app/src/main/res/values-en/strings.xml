@@ -25,7 +25,7 @@
     <string name="error_unsupported_format">Unsupported format</string>
     <string name="error_cleartext">Unencrypted HTTP blocked. Use an https:// list</string>
     <string name="error_acestream">AceStream unavailable: install the AceStream app and keep it open</string>
-    <string name="error_acestream_starting">Starting the AceStream engine - please wait</string>
+    <string name="error_acestream_starting">Engine off: AceServe was opened, come back and press play</string>
     <string name="player_opening_acestream">Opening in the AceStream app - check it opened</string>
     <string name="error_generic">Playback error</string>
     <string name="fav_title">Favourites</string>
@@ -87,6 +87,7 @@
     <string name="epg_refreshed">EPG updated: %1$d programs</string>
     <string name="epg_no_source">This playlist has no guide data</string>
     <string name="lists_epg">EPG</string>
+    <string name="lists_epg_hint">EPG guide URL (optional)</string>
     <string name="settings_ace_title">AceStream: local engine</string>
     <string name="settings_ace_hint">127.0.0.1:6878</string>
     <string name="settings_ace_warn">Install the AceStream app and keep it open. acestream:// links play automatically.</string>

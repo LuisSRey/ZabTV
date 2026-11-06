@@ -25,7 +25,7 @@
     <string name="error_unsupported_format">Formato no soportado</string>
     <string name="error_cleartext">HTTP sin cifrar bloqueado. Usa una lista https://</string>
     <string name="error_acestream">AceStream no disponible: instala la app AceStream y mantenla abierta</string>
-    <string name="error_acestream_starting">Iniciando motor AceStream… espera un momento</string>
+    <string name="error_acestream_starting">Motor apagado: se abrió AceServe, vuelve aquí y dale a play</string>
     <string name="player_opening_acestream">Abriendo en la app AceStream…</string>
     <string name="error_generic">Error de reproducción</string>
     <string name="fav_title">Favoritos</string>
@@ -94,6 +94,7 @@
     <string name="epg_refreshed">EPG actualizada: %1$d programas</string>
     <string name="epg_no_source">Esta lista no trae guía de programación</string>
     <string name="lists_epg">EPG</string>
+    <string name="lists_epg_hint">URL guía EPG (opcional)</string>
     <string name="settings_ace_title">AceStream: proxy del motor local</string>
     <string name="settings_ace_hint">127.0.0.1:6878</string>
     <string name="settings_ace_warn">Instala la app AceStream y déjala corriendo. Los enlaces acestream:// se reproducen a través de ese proxy.</string>
