@@ -78,7 +78,12 @@ class ListsFragment : Fragment() {
             AddListDialog { input -> onAddInput(input) }
                 .show(parentFragmentManager, "add_list")
         }
-        addFile.setOnClickListener { pickFile.launch("*/*") }
+        addFile.setOnClickListener {
+            // Fire TV no trae selector de archivos: launch() peta sin handler.
+            runCatching { pickFile.launch("*/*") }.onFailure {
+                Toast.makeText(requireContext(), R.string.lists_no_picker, Toast.LENGTH_LONG).show()
+            }
+        }
 
         reload()
     }

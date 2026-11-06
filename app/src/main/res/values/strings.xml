@@ -98,6 +98,7 @@
     <string name="epg_no_source">Esta lista no trae guía de programación</string>
     <string name="lists_epg">EPG</string>
     <string name="lists_epg_hint">URL guía EPG (opcional)</string>
+    <string name="lists_no_picker">Este dispositivo no tiene selector de archivos: añade la lista por URL</string>
     <string name="settings_ace_title">AceStream: proxy del motor local</string>
     <string name="settings_ace_hint">127.0.0.1:6878</string>
     <string name="settings_ace_warn">Instala la app AceStream y déjala corriendo. Los enlaces acestream:// se reproducen a través de ese proxy.</string>
