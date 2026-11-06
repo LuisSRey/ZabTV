@@ -25,8 +25,8 @@
     <string name="error_unsupported_format">Formato no soportado</string>
     <string name="error_cleartext">HTTP sin cifrar bloqueado. Usa una lista https://</string>
     <string name="error_acestream">AceStream no disponible: instala la app AceStream y mantenla abierta</string>
-    <string name="error_acestream_starting">Motor apagado: se abrió AceServe, vuelve aquí y dale a play</string>
-    <string name="player_opening_acestream">Abriendo en la app AceStream…</string>
+    <string name="error_acestream_starting">Arrancando motor AceStream, espera un momento</string>
+    <string name="player_opening_acestream">Se abrio el motor: vuelve aqui y dale a play</string>
     <string name="error_generic">Error de reproducción</string>
     <string name="fav_title">Favoritos</string>
     <string name="fav_added">Añadido a favoritos</string>

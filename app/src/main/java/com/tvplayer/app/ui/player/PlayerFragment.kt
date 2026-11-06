@@ -22,6 +22,7 @@ import com.tvplayer.app.data.AppContainer
 import com.tvplayer.app.data.db.ChannelEntity
 import com.tvplayer.app.data.repo.FavouritesRepo
 import com.tvplayer.app.engine.AceStreamEngine
+import com.tvplayer.app.engine.AceStreamStarter
 import com.tvplayer.app.engine.Media3Engine
 import com.tvplayer.app.engine.PlaybackSource
 import com.tvplayer.app.engine.PlayerState
@@ -281,18 +282,31 @@ class PlayerFragment : Fragment() {
     }
 
     /**
-     * Motor AceStream: si el proxy local no responde, abre la app del motor
-     * (launcher o VIEW del enlace) y devuelve false con un mensaje honesto:
-     * el usuario vuelve y le da a play cuando el motor esté arriba (el
-     * reintento ya lo hace togglePlay). Sin espera de 60 s en segundo plano:
-     * esa espera moría al salir a AceServe (isResumed falso) y nunca enganchaba.
+     * Motor AceStream: fast-path si el proxy ya escucha; si no, arranca el
+     * motor por la vía oficial (servicio bindeado, SIN abrir su UI) y espera
+     * a que escuche. Devuelve el puerto HTTP o 0 si no fue posible.
+     * Como último recurso abre la UI del motor para arranque manual y el
+     * usuario reintenta con play al volver (togglePlay ya lo reintenta).
      */
-    private suspend fun ensureEngineRunning(aceUrl: String): Boolean {
-        val (host, port) = AceStreamEngine.splitHostPort(com.tvplayer.app.data.AppContainer.DEFAULT_ACE_PROXY)
-        suspend fun reachable(): Boolean = withContext(kotlinx.coroutines.Dispatchers.IO) {
+    private suspend fun ensureEngineRunning(aceUrl: String): Int {
+        val (host, defaultPort) = AceStreamEngine.splitHostPort(com.tvplayer.app.data.AppContainer.DEFAULT_ACE_PROXY)
+        suspend fun reachable(port: Int): Boolean = withContext(kotlinx.coroutines.Dispatchers.IO) {
             AceStreamEngine.isReachable(host, port)
         }
-        if (reachable()) return true
+        if (reachable(defaultPort)) return defaultPort
+        progress.visibility = View.VISIBLE
+        nowText.setText(R.string.error_acestream_starting)
+        overlay.visibility = View.VISIBLE
+        // 1) Vía servicio: sin salir de TVPlayer.
+        val port = AceStreamStarter.startAndWait(requireContext().applicationContext)
+        if (port > 0) {
+            repeat(30) {
+                kotlinx.coroutines.delay(2_000)
+                if (reachable(port)) return port
+            }
+            if (reachable(defaultPort)) return defaultPort
+        }
+        // 2) Fallback: abrir la UI del motor para arranque manual.
         val opened = runCatching {
             val app = requireContext().applicationContext
             AceStreamEngine.launchIntent(app)?.let {
@@ -304,9 +318,9 @@ class PlayerFragment : Fragment() {
             }
         }.getOrDefault(false)
         progress.visibility = View.GONE
-        showError(if (opened) R.string.error_acestream_starting else R.string.error_acestream)
+        showError(if (opened) R.string.player_opening_acestream else R.string.error_acestream)
         needsPrepare = true
-        return false
+        return 0
     }
 
     /**
@@ -314,10 +328,12 @@ class PlayerFragment : Fragment() {
      * OFF o esquema no permitido → error visible inmediato, sin pantalla negra.
      */
     private suspend fun prepareCurrent(channel: ChannelEntity) {
+        var proxy = com.tvplayer.app.data.AppContainer.DEFAULT_ACE_PROXY
         if (channel.url.startsWith("acestream://", ignoreCase = true)) {
-            if (!ensureEngineRunning(channel.url)) return
+            val port = ensureEngineRunning(channel.url)
+            if (port == 0) return
+            proxy = "127.0.0.1:$port"
         }
-        val proxy = com.tvplayer.app.data.AppContainer.DEFAULT_ACE_PROXY
         val source = try {
             PlaybackSource.forUrl(channel.url, allowCleartext = container.allowHttp, aceStreamProxy = proxy)
         } catch (e: IllegalArgumentException) {

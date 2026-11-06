@@ -49,3 +49,21 @@ class AceStreamEngineTest {
         )
     }
 }
+
+class AceStreamStarterTest {
+
+    @Test
+    fun `elige el candidato con mayor version`() {
+        val versions = mapOf("org.free.aceserve" to 10L, "org.acestream.node.web" to 42L)
+        assertEquals(
+            "org.acestream.node.web",
+            AceStreamStarter.selectBest(versions.keys.toList()) { versions[it] ?: -1 },
+        )
+    }
+
+    @Test
+    fun `sin candidatos instalados devuelve null`() {
+        assertEquals(null, AceStreamStarter.selectBest(listOf("org.free.aceserve")) { -1 })
+        assertEquals(null, AceStreamStarter.selectBest(emptyList()) { 0 })
+    }
+}

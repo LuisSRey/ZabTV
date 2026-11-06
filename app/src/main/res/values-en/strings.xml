@@ -25,8 +25,8 @@
     <string name="error_unsupported_format">Unsupported format</string>
     <string name="error_cleartext">Unencrypted HTTP blocked. Use an https:// list</string>
     <string name="error_acestream">AceStream unavailable: install the AceStream app and keep it open</string>
-    <string name="error_acestream_starting">Engine off: AceServe was opened, come back and press play</string>
-    <string name="player_opening_acestream">Opening in the AceStream app - check it opened</string>
+    <string name="error_acestream_starting">Starting AceStream engine, please wait</string>
+    <string name="player_opening_acestream">Engine app opened: come back and press play</string>
     <string name="error_generic">Playback error</string>
     <string name="fav_title">Favourites</string>
     <string name="fav_added">Added to favourites</string>

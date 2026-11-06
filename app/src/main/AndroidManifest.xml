@@ -18,6 +18,10 @@
             <action android:name="android.intent.action.VIEW" />
             <data android:scheme="acestream" />
         </intent>
+        <!-- Descubrimiento del servicio del motor (arranque sin UI, vía oficial). -->
+        <intent>
+            <action android:name="org.acestream.engine.service.v0.IAceStreamEngine" />
+        </intent>
     </queries>
 
     <uses-feature android:name="android.software.leanback" android:required="false" />

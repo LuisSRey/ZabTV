@@ -39,10 +39,29 @@ class EpgService(
         private const val FIVE_DAYS_MILLIS = 5L * 24 * 3_600_000
     }
 
+    /**
+     * La cabecera url-tvg puede traer VARIAS guías separadas por comas
+     * (p. ej. Elcano trae 3): se prueban en orden y vale la primera que
+     * descargue bien. Así un 404 en una de ellas no mata toda la guía.
+     */
     suspend fun refresh(url: String): EpgResult {
         val now = nowProvider()
         return try {
-            withContext(ioDispatcher) { drain(url, now) }
+            withContext(ioDispatcher) {
+                val candidates = url.split(',').map { it.trim() }.filter { it.isNotEmpty() }
+                if (candidates.isEmpty()) throw ImportAbortedException("guía sin URL válida")
+                var last: EpgResult? = null
+                for (candidate in candidates) {
+                    val res = try {
+                        drain(candidate, now)
+                    } catch (abort: ImportAbortedException) {
+                        EpgResult(inserted = 0, skippedOutOfWindow = 0, pruned = 0, rejected = true, message = abort.message)
+                    }
+                    if (!res.rejected) return@withContext res
+                    last = res
+                }
+                last ?: EpgResult(inserted = 0, skippedOutOfWindow = 0, pruned = 0, rejected = true, message = "guía sin URL válida")
+            }
         } catch (abort: ImportAbortedException) {
             EpgResult(inserted = 0, skippedOutOfWindow = 0, pruned = 0, rejected = true, message = abort.message)
         } catch (cancelled: CancellationException) {
@@ -65,7 +84,7 @@ class EpgService(
                 throw ImportAbortedException("guía mayor que el límite de 120 MB (${body.contentLength()} bytes declarados)")
             }
             val reader = CountingInputStream(body.byteStream())
-            val doc = XmltvParser.parse(reader, now)
+            val doc = XmltvParser.parse(decompressed(reader), now)
             coroutineContext.ensureActive()
             // Catálogo XMLTV para el fallback por nombre (Task 14)
             val epgChannels = doc.channels.map { com.tvplayer.app.data.db.EpgChannelEntity(it.id, it.displayName) }
@@ -97,9 +116,24 @@ class EpgService(
         return EpgResult(inserted, skippedOutOfWindow = 0, pruned, rejected = false, message = "epg ok ($inserted programas)")
     }
 
+    /**
+     * Algunas guías viajan como .xml.gz (p. ej. epgshare). Se detecta por
+     * firma (1F 8B), no por extensión: OkHttp ya quita el gzip de transporte.
+     */
+    private fun decompressed(raw: InputStream): InputStream {
+        val peek = java.io.PushbackInputStream(raw, 2)
+        val head = ByteArray(2)
+        val read = peek.read(head)
+        if (read > 0) peek.unread(head, 0, read)
+        return if (read == 2 && head[0] == 0x1f.toByte() && head[1] == 0x8b.toByte()) {
+            java.util.zip.GZIPInputStream(peek)
+        } else {
+            peek
+        }
+    }
+
     /** Guard de bytes del stream: excede el cap → ImportAbortedException limpia. */
-    private inner class CountingInputStream(src: InputStream) : FilterInputStream(src) {
-        var count: Long = 0
+    private inner class CountingInputStream(src: InputStream) : FilterInputStream(src) {        var count: Long = 0
             private set
 
         override fun read(): Int {

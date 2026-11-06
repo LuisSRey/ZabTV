@@ -127,8 +127,7 @@ class EpgServiceTest {
     }
 
     @Test
-    fun `cap aborta limpio sin escribir nada`() = runTest {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+    fun `cap aborta limpio sin escribir nada`() = runTest {        val context = ApplicationProvider.getApplicationContext<Context>()
         val container = AppContainer(context)
         container.setAllowHttp(true)
         val smallCap = EpgService(
@@ -148,5 +147,36 @@ class EpgServiceTest {
         assertTrue(result.rejected)
         assertTrue(result.message.orEmpty().contains("120 MB"))
         assertEquals(0, db.epgDao().count())
+    }
+
+    @Test
+    fun `multi url con comas usa la primera que responde`() = runTest {
+        // La cabecera url-tvg de Elcano trae 3 guías separadas por comas; la
+        // primera (ruta refs/heads) da 404 y hay que seguir con la siguiente.
+        server.enqueue(MockResponse().setResponseCode(404))
+        val h = TimeUnit.HOURS.toMillis(1)
+        server.enqueue(MockResponse().setBody(tvXml(programmeXml("c1", now + h, now + 2 * h, "Rescate"))))
+        val bad = server.url("/muerta.xml").toString()
+        val good = server.url("/buena.xml").toString()
+
+        val result = service.refresh("$bad,$good")
+
+        assertEquals(1, result.inserted)
+        assertEquals(false, result.rejected)
+    }
+
+    @Test
+    fun `gz se descomprime solo`() = runTest {
+        val h = TimeUnit.HOURS.toMillis(1)
+        val body = tvXml(programmeXml("c1", now + h, now + 2 * h, "Gzip"))
+        val gzipped = java.io.ByteArrayOutputStream().also { out ->
+            java.util.zip.GZIPOutputStream(out).use { it.write(body.toByteArray(Charsets.UTF_8)) }
+        }.toByteArray()
+        server.enqueue(MockResponse().setBody(okio.Buffer().write(gzipped)))
+
+        val result = service.refresh(server.url("/epg.xml.gz").toString())
+
+        assertEquals(1, result.inserted)
+        assertEquals(false, result.rejected)
     }
 }
