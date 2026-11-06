@@ -42,7 +42,15 @@ class SettingsFragment : Fragment() {
         val bufMax = view.findViewById<android.widget.EditText>(R.id.settings_buffer_max)
         val bufBack = view.findViewById<android.widget.EditText>(R.id.settings_buffer_back)
         val bufSave = view.findViewById<Button>(R.id.settings_buffer_save)
-        view.findViewById<TextView>(R.id.settings_about).text = getString(R.string.about_disclaimer_full)
+        view.findViewById<TextView>(R.id.settings_about).text =
+            getString(R.string.about_disclaimer_full) + "\n\n" + getString(
+                R.string.settings_build,
+                java.text.SimpleDateFormat("dd/MM/yyyy HH:mm", java.util.Locale.getDefault()).format(
+                    java.util.Date(
+                        requireContext().packageManager.getPackageInfo(requireContext().packageName, 0).lastUpdateTime,
+                    ),
+                ),
+            )
         listOf(wipeFavs, wipeEpg, wipeLogos, wipeAll, bufSave).forEach { FocusScaleHelper.attach(it) }
 
         wipeFavs.setOnClickListener {

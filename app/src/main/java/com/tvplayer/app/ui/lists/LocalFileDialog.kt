@@ -92,6 +92,8 @@ class LocalFileDialog(
                 )
                 setPadding(pad, pad, pad, pad)
                 textSize = 17f
+                // Burbuja de foco visible en TV (borde del selector + escala).
+                setBackgroundResource(com.tvplayer.app.R.drawable.tile_focus_bg)
             }
             FocusScaleHelper.attach(tv)
             return Holder(tv)

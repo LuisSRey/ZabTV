@@ -43,7 +43,6 @@ class ChannelRailAdapter(
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): Holder {
         val v = LayoutInflater.from(parent.context).inflate(R.layout.item_group, parent, false)
-        FocusScaleHelper.attach(v)
         return Holder(v)
     }
 
@@ -60,5 +59,9 @@ class ChannelRailAdapter(
             if (active) ctx.getColor(R.color.tp_text) else ctx.getColor(R.color.tp_text_secondary),
         )
         holder.itemView.setOnClickListener { onSelect(row) }
+        // Marquee de la etiqueta larga solo con foco (requiere selected).
+        FocusScaleHelper.attach(holder.itemView) { _, focused ->
+            holder.label.isSelected = focused
+        }
     }
 }

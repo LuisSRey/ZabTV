@@ -97,6 +97,7 @@
     <string name="settings_ace_title">AceStream: local engine</string>
     <string name="settings_ace_hint">127.0.0.1:6878</string>
     <string name="settings_ace_warn">Install the AceStream app and keep it open. acestream:// links play automatically.</string>
+    <string name="settings_build">Installed build: %1$s</string>
     <string name="settings_buffer_min_label">Minimum (seconds)</string>
     <string name="settings_buffer_why_min">How much is buffered before starting. Raise it if channels take long to start or cut out at the beginning.</string>
     <string name="settings_buffer_max_label">Maximum (seconds)</string>
