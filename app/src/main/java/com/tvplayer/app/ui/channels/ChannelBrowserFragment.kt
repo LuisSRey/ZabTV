@@ -58,9 +58,8 @@ class ChannelBrowserFragment : Fragment() {
             GridLayoutManager(requireContext(), spanCount(FocusScaleHelper.isTv(grid), newConfig.orientation))
     }
 
-    /** 1 columna en vertical, 2 en horizontal y en TV. */
-    private fun spanCount(isTv: Boolean, orientation: Int): Int =
-        if (isTv || orientation == Configuration.ORIENTATION_LANDSCAPE) 2 else 1
+    /** Una sola columna (ruling usuario: legibilidad): la grilla es una lista. */
+    private fun spanCount(isTv: Boolean, orientation: Int): Int = 1
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         val listId = arguments?.getLong(ARG_LIST_ID, -1L) ?: -1L

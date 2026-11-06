@@ -11,7 +11,9 @@ android {
         applicationId = "com.tvplayer.app"
         minSdk = 23
         targetSdk = 36
-        versionCode = 1
+        // Subir a mano en cada release que cambie icono/banner (invalida
+        // cachés del launcher que ignoran la fecha).
+        versionCode = 68
         versionName = "0.1.0"
     }
 
