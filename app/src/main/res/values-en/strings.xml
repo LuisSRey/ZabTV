@@ -85,7 +85,6 @@
     <string name="settings_buffer_hint">Applies to the next channel. On Fire TV Stick with weak WiFi, raise the minimum.</string>
     <string name="settings_buffer_save">Save buffer</string>
     <string name="settings_buffer_saved">Buffer saved</string>
-    <string name="settings_buffer_what">Minimum: seconds buffered before starting. Maximum: memory cap. Back: how far you can rewind live TV.</string>
     <string name="settings_confirm_title">Confirm deletion</string>
     <string name="settings_confirm_wipe">Delete %1$s? This cannot be undone.</string>
     <string name="lists_confirm_delete">Delete this playlist and all its channels? This cannot be undone.</string>
@@ -96,7 +95,6 @@
     <string name="settings_ace_title">AceStream: local engine</string>
     <string name="settings_ace_hint">127.0.0.1:6878</string>
     <string name="settings_ace_warn">Install the AceStream app and keep it open. acestream:// links play automatically.</string>
-    <string name="settings_ace_auto">AceStream: always uses the local engine (127.0.0.1:6878). Keep the AceStream app installed and open.</string>
     <string name="settings_buffer_min_label">Minimum (seconds)</string>
     <string name="settings_buffer_why_min">How much is buffered before starting. Raise it if channels take long to start or cut out at the beginning.</string>
     <string name="settings_buffer_max_label">Maximum (seconds)</string>
