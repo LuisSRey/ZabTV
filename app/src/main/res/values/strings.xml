@@ -27,6 +27,11 @@
     <string name="error_acestream">AceStream no disponible: instala la app AceStream y mantenla abierta</string>
     <string name="error_acestream_starting">Arrancando motor AceStream, espera un momento</string>
     <string name="player_opening_acestream">Se abrio el motor: vuelve aqui y dale a play</string>
+    <string name="engine_dialog_title">Motor AceStream</string>
+    <string name="engine_retry">Reintentar</string>
+    <string name="engine_open">Abrir motor</string>
+    <string name="engine_close">Cerrar</string>
+    <string name="engine_no_service">El motor no responde. Abre AceServe (o AceStream), dejalo en segundo plano y dale a Reintentar.</string>
     <string name="error_generic">Error de reproducción</string>
     <string name="fav_title">Favoritos</string>
     <string name="fav_added">Añadido a favoritos</string>

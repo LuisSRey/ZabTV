@@ -93,13 +93,27 @@ object AceStreamStarter {
         orderedEnginePackages(pm).firstOrNull()
 
     /**
+     * Subconjunto bindeable: solo los que resuelven el intent del servicio.
+     * AceServe no lo expone (verificado en dispositivo): va por UI manual.
+     */
+    fun servicePackages(pm: PackageManager): List<String> {
+        val resolvers = try {
+            pm.queryIntentServices(Intent(SERVICE_ACTION), PackageManager.MATCH_DEFAULT_ONLY)
+                ?.map { it.serviceInfo.packageName }.orEmpty().toSet()
+        } catch (_: Exception) {
+            emptySet()
+        }
+        return orderedEnginePackages(pm).filter { it in resolvers }
+    }
+
+    /**
      * Bindea, arranca y espera el puerto HTTP del motor (defecto 6878).
      * Prueba los candidatos en orden (AceServe primero); devuelve el puerto
      * (>0) o 0 si ninguno fue posible. Siempre desbindea al salir.
      */
     suspend fun startAndWait(context: Context, timeoutMs: Long = 60_000): Int =
         withContext(Dispatchers.IO) {
-            val pkgs = orderedEnginePackages(context.packageManager).take(3)
+            val pkgs = servicePackages(context.packageManager).take(3)
             if (pkgs.isEmpty()) return@withContext 0
             val deadline = System.currentTimeMillis() + timeoutMs
             for (pkg in pkgs) {

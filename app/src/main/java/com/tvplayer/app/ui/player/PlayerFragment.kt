@@ -63,6 +63,7 @@ class PlayerFragment : Fragment() {
     /** True si el canal aún no llegó a engine.prepare (motor sin arrancar o error). */
     private var needsPrepare = true
     private var overlayJob: kotlinx.coroutines.Job? = null
+    private var engineDialog: android.app.AlertDialog? = null
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         return inflater.inflate(R.layout.fragment_player, container, false)
@@ -198,6 +199,7 @@ class PlayerFragment : Fragment() {
 
     override fun onDestroyView() {
         overlayJob?.cancel()
+        dismissEngineDialog()
         if (ready()) engine.release()
         super.onDestroyView()
     }
@@ -278,49 +280,93 @@ class PlayerFragment : Fragment() {
         com.tvplayer.app.data.LastPlayed.save(container.db, channel.listId, channel.stableKey)
         hideOverlay()
         showOverlay()
+        dismissEngineDialog()
         prepareCurrent(channel)
     }
 
     /**
-     * Motor AceStream: fast-path si el proxy ya escucha; si no, arranca el
-     * motor por la vía oficial (servicio bindeado, SIN abrir su UI) y espera
-     * a que escuche. Devuelve el puerto HTTP o 0 si no fue posible.
-     * Como último recurso abre la UI del motor para arranque manual y el
-     * usuario reintenta con play al volver (togglePlay ya lo reintenta).
+     * Motor AceStream: fast-path si el proxy ya escucha (vale cualquier
+     * motor: AceServe o AceStream); si no, arranca por servicio bindeado SIN
+     * abrir UIs y espera a que escuche. Devuelve el puerto o 0. Los avisos
+     * van en diálogo para no pisar la línea de guía (nowText).
      */
     private suspend fun ensureEngineRunning(aceUrl: String): Int {
         val (host, defaultPort) = AceStreamEngine.splitHostPort(com.tvplayer.app.data.AppContainer.DEFAULT_ACE_PROXY)
         suspend fun reachable(port: Int): Boolean = withContext(kotlinx.coroutines.Dispatchers.IO) {
             AceStreamEngine.isReachable(host, port)
         }
-        if (reachable(defaultPort)) return defaultPort
+        if (reachable(defaultPort)) {
+            dismissEngineDialog()
+            return defaultPort
+        }
+        // Solo el spinner: la línea de guía (nowText) no se toca.
         progress.visibility = View.VISIBLE
-        nowText.setText(R.string.error_acestream_starting)
         overlay.visibility = View.VISIBLE
         // 1) Vía servicio: sin salir de TVPlayer.
         val port = AceStreamStarter.startAndWait(requireContext().applicationContext)
         if (port > 0) {
             repeat(30) {
                 kotlinx.coroutines.delay(2_000)
-                if (reachable(port)) return port
+                if (reachable(port)) {
+                    progress.visibility = View.GONE
+                    dismissEngineDialog()
+                    return port
+                }
             }
-            if (reachable(defaultPort)) return defaultPort
+            if (reachable(defaultPort)) {
+                progress.visibility = View.GONE
+                dismissEngineDialog()
+                return defaultPort
+            }
         }
-        // 2) Fallback: abrir la UI del motor para arranque manual.
-        val opened = runCatching {
-            val app = requireContext().applicationContext
-            AceStreamEngine.launchIntent(app)?.let {
-                startActivity(it)
-                true
-            } ?: run {
-                startActivity(AceStreamEngine.viewIntent(aceUrl))
-                true
-            }
-        }.getOrDefault(false)
+        // 2) Sin servicio bindeable (p. ej. AceServe): diálogo con apertura manual.
         progress.visibility = View.GONE
-        showError(if (opened) R.string.player_opening_acestream else R.string.error_acestream)
         needsPrepare = true
+        showEngineDialog(R.string.engine_no_service, offerOpen = true, aceUrl = aceUrl)
         return 0
+    }
+
+    /** Abre la UI del motor para arranque manual (AceServe no expone servicio). */
+    private fun openEngineUi(aceUrl: String): Boolean = runCatching {
+        val app = requireContext().applicationContext
+        AceStreamEngine.launchIntent(app)?.let {
+            startActivity(it)
+            true
+        } ?: run {
+            startActivity(AceStreamEngine.viewIntent(aceUrl))
+            true
+        }
+    }.getOrDefault(false)
+
+    /**
+     * Avisos del motor en diálogo (no en la línea de guía): Reintentar lanza
+     * la preparación de nuevo, Abrir motor abre AceServe/AceStream para
+     * arranque manual, Cerrar lo deja con la guía visible.
+     */
+    private fun showEngineDialog(msgRes: Int, offerOpen: Boolean, aceUrl: String? = null) {
+        if (!isAdded) return
+        val activity = activity
+        if (activity == null || activity.isFinishing) return
+        dismissEngineDialog()
+        val builder = android.app.AlertDialog.Builder(activity)
+            .setTitle(R.string.engine_dialog_title)
+            .setMessage(msgRes)
+            .setPositiveButton(R.string.engine_retry) { _, _ ->
+                val channel = current
+                if (channel != null) lifecycleScope.launch { prepareCurrent(channel) }
+            }
+            .setNegativeButton(R.string.engine_close, null)
+        if (offerOpen && aceUrl != null) {
+            builder.setNeutralButton(R.string.engine_open) { _, _ ->
+                openEngineUi(aceUrl)
+            }
+        }
+        engineDialog = runCatching { builder.show() }.getOrNull()
+    }
+
+    private fun dismissEngineDialog() {
+        runCatching { engineDialog?.dismiss() }
+        engineDialog = null
     }
 
     /**
@@ -350,6 +396,7 @@ class PlayerFragment : Fragment() {
         }
         engine.prepare(source)
         needsPrepare = false
+        dismissEngineDialog()
     }
 
     /** Línea "ahora" del overlay (Task 14): exacta o aproximada, o placeholder sin guía. */
@@ -370,6 +417,7 @@ class PlayerFragment : Fragment() {
     }
 
     private fun close() {
+        dismissEngineDialog()
         // Vuelve atrás en la pila (browser/lista anterior) con syncShell automático;
         // si no hay pila, cae a Home.
         val fm = activity?.supportFragmentManager

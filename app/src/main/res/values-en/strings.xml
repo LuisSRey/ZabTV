@@ -27,6 +27,11 @@
     <string name="error_acestream">AceStream unavailable: install the AceStream app and keep it open</string>
     <string name="error_acestream_starting">Starting AceStream engine, please wait</string>
     <string name="player_opening_acestream">Engine app opened: come back and press play</string>
+    <string name="engine_dialog_title">AceStream engine</string>
+    <string name="engine_retry">Retry</string>
+    <string name="engine_open">Open engine</string>
+    <string name="engine_close">Close</string>
+    <string name="engine_no_service">The engine is not responding. Open AceServe (or AceStream), leave it in background and press Retry.</string>
     <string name="error_generic">Playback error</string>
     <string name="fav_title">Favourites</string>
     <string name="fav_added">Added to favourites</string>
