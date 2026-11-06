@@ -106,11 +106,14 @@ class PlayerFragment : Fragment() {
         // UN SOLO launch secuencial ligado a la VISTA (fix crash + leak al volver atrás):
         // engine → canal → prepare → y SOLO DESPUÉS el collect del estado.
         viewLifecycleOwner.lifecycleScope.launch {
+            // DIAG: hasta dónde llega el arranque (el tap no pisa prepareCurrent).
+            android.util.Log.d("TvPlayer", "player launch listId=" + listId + " pos=" + position)
             // Engine con el buffer configurado (DAO) — se crea aquí porque load es suspend.
             engine = Media3Engine(requireContext(), container.okHttp, com.tvplayer.app.data.BufferConfig.load(container.db))
             engine.bind(surface)
             playerView.player = engine.exoPlayer
             current = container.db.channelDao().channelAtPosition(listId, position)
+            android.util.Log.d("TvPlayer", "player channel=" + (current?.displayName ?: "NULL"))
             if (current == null) {
                 close()
                 return@launch
