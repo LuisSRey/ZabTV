@@ -35,3 +35,18 @@ for name, px in SIZES.items():
     rounded.paste(img, (0, 0), mask)
     rounded.save(f"{out_root}/{name}/ic_launcher_round.png")
     print(name, px)
+
+# Banner TV 320x180 (el launcher de Fire OS no renderiza vectores como banner).
+W, H = 320, 180
+banner = Image.new("RGBA", (W, H), (0, 0, 0, 255))
+d = ImageDraw.Draw(banner)
+m, s = (W - 76) // 2, 76
+r = 18
+d.rounded_rectangle([m, (H - s) // 2, m + s, (H + s) // 2], radius=r, fill=BLUE)
+cx, cy = W / 2, H / 2
+t = 21
+d.polygon([(cx - t * 0.6, cy - t), (cx - t * 0.6, cy + t),
+           (cx + t * 0.9, cy)], fill=WHITE)
+os.makedirs(f"{out_root}/drawable-xhdpi", exist_ok=True)
+banner.convert("RGB").save(f"{out_root}/drawable-xhdpi/banner.png")
+print("banner", W, H)
