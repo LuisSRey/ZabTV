@@ -204,6 +204,19 @@ class PlayerFragment : Fragment() {
         super.onDestroyView()
     }
 
+    /**
+     * Al volver de la UI del motor (flujo manual AceServe): si el diálogo
+     * seguía abierto, reintenta solo — sin tap extra — cuando el proxy ya
+     * responde reproduce y el diálogo se cierra; si no, se re-muestra.
+     */
+    override fun onResume() {
+        super.onResume()
+        if (engineDialog?.isShowing == true) {
+            val channel = current
+            if (channel != null && ready()) lifecycleScope.launch { prepareCurrent(channel) }
+        }
+    }
+
     /** El engine se crea en corrutina (lee el buffer de DAO); teclas tempranas se ignoran. */
     private fun ready(): Boolean = ::engine.isInitialized
 
