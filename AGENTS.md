@@ -20,7 +20,7 @@ Android TV / Fire TV / móvil media player. Player-only: la app no incluye, aloj
 ## Reglas duras del proyecto
 
 - **Un solo OkHttp compartido** (`AppContainer.okHttp`) para TODO el transporte: import, EPG, logos (Coil via `Coil.setImageLoader` en `TpApp.onCreate`), playback (Media3 via `OkHttpDataSource.Factory`). El interceptor `CleartextGate` (Task 11) será el ÚNICO switch de http:// — jamás crees un segundo cliente.
-- **Un solo permiso**: `INTERNET`. Sin WebView, sin DexClassLoader, sin `allowBackup`, sin telemetría. `usesCleartextTraffic` PROHIBIDO en manifest (el gate es runtime).
+- **Dos permisos** (`INTERNET` + `READ_EXTERNAL_STORAGE` con `maxSdkVersion=29`, ruling usuario 2026-11-06: navegador local .m3u en Fire TV; en 30+ el permiso no da acceso y no se declara). Sin WebView, sin DexClassLoader, sin `allowBackup`, sin telemetría. `usesCleartextTraffic` PROHIBIDO en manifest (el gate es runtime).
 - **TDD estricto**: RED (test fallando) antes de GREEN, registrado en el ledger. Commit por tarea: `feat:`/`fix:`/`test:`.
 - **Streaming en import/EPG**: nunca la lista completa en RAM; caps 30 MB (M3U) / 120 MB (XMLTV) en `ImportService`/`EpgService`.
 - **Urls de canal** pasan por `UrlPolicer.isAllowedHttpUrl` ANTES de tocar red o decoder. El parser M3U preserva URLs verbatim (incluye `acestream://`); el filtro de política es responsabilidad del caller.

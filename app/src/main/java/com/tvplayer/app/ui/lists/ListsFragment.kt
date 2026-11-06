@@ -1,5 +1,6 @@
 package com.tvplayer.app.ui.lists
 
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -9,6 +10,7 @@ import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -47,6 +49,10 @@ class ListsFragment : Fragment() {
         if (uri != null) addFromFile(uri)
     }
 
+    private val requestStorage = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        if (granted) showLocalBrowser() else fallbackPickers()
+    }
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         return inflater.inflate(R.layout.fragment_lists, container, false)
     }
@@ -83,12 +89,18 @@ class ListsFragment : Fragment() {
                 .show(parentFragmentManager, "add_list")
         }
         addFile.setOnClickListener {
-            // Fire TV: algunos gestores solo responden a OPEN_DOCUMENT; si no
-            // hay ninguno, aviso en vez de petar.
-            val opened = runCatching { pickFile.launch("*/*"); true }.getOrDefault(false) ||
-                runCatching { pickDoc.launch(arrayOf("*/*")); true }.getOrDefault(false)
-            if (!opened) {
-                Toast.makeText(requireContext(), R.string.lists_no_picker, Toast.LENGTH_LONG).show()
+            // Navegador propio en API ≤29 (permiso con sentido); en 30+ el
+            // permiso no da acceso a .m3u ajenos: picker del sistema.
+            if (android.os.Build.VERSION.SDK_INT <= 29) {
+                if (hasStoragePermission()) {
+                    showLocalBrowser()
+                } else {
+                    runCatching {
+                        requestStorage.launch(android.Manifest.permission.READ_EXTERNAL_STORAGE)
+                    }.onFailure { fallbackPickers() }
+                }
+            } else {
+                fallbackPickers()
             }
         }
 
@@ -144,6 +156,27 @@ class ListsFragment : Fragment() {
             Toast.makeText(requireContext(), safeMessage(result.message), Toast.LENGTH_LONG).show()
             if (!result.rejected) refreshEpgIfNeeded(listId)
             reload()
+        }
+    }
+
+    private fun hasStoragePermission(): Boolean =
+        ContextCompat.checkSelfPermission(
+            requireContext(),
+            android.Manifest.permission.READ_EXTERNAL_STORAGE,
+        ) == PackageManager.PERMISSION_GRANTED
+
+    private fun showLocalBrowser() {
+        LocalFileDialog { file ->
+            addFromFile(android.net.Uri.fromFile(file))
+        }.show(parentFragmentManager, "local_file")
+    }
+
+    private fun fallbackPickers() {
+        // Picker del sistema (doble intento); si no hay ninguno, aviso.
+        val opened = runCatching { pickFile.launch("*/*"); true }.getOrDefault(false) ||
+            runCatching { pickDoc.launch(arrayOf("*/*")); true }.getOrDefault(false)
+        if (!opened) {
+            Toast.makeText(requireContext(), R.string.lists_no_picker, Toast.LENGTH_LONG).show()
         }
     }
 

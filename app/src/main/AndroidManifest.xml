@@ -2,6 +2,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Navegador local de .m3u (ruling usuario): solo API ≤29; en 30+ el
+         permiso no da acceso a .m3u ajenos y no se declara. -->
+    <uses-permission
+        android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="29" />
 
     <!-- Visibilidad de paquetes (Android 11+): sin esto la app no ve ni puede
          abrir AceStream, y el auto-arranque del motor falla en silencio. -->

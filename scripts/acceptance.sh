@@ -29,9 +29,10 @@ if ! command -v apkanalyzer >/dev/null 2>&1; then
 fi
 command -v apkanalyzer >/dev/null 2>&1 || [ "$(type -t apkanalyzer)" = "function" ] || { echo "FAIL: apkanalyzer no en PATH"; exit 1; }
 
-echo "== 1. Permisos: INTERNET + librería WorkManager, nada más =="
-# WorkManager inyecta estos 5 (ver Task 16 ledger); cualquier otro es fallo.
-ALLOWED="android.permission.INTERNET android.permission.FOREGROUND_SERVICE android.permission.ACCESS_NETWORK_STATE android.permission.WAKE_LOCK android.permission.RECEIVE_BOOT_COMPLETED com.tvplayer.app.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+echo "== 1. Permisos: INTERNET + WorkManager + READ_EXTERNAL_STORAGE(maxSdk 29, ruling navegador local), nada más =="
+# WorkManager inyecta estos 5 (ver Task 16 ledger); READ_EXTERNAL_STORAGE es
+# ruling de usuario (navegador .m3u en Fire TV, inútil en 30+); otro = fallo.
+ALLOWED="android.permission.INTERNET android.permission.FOREGROUND_SERVICE android.permission.ACCESS_NETWORK_STATE android.permission.WAKE_LOCK android.permission.RECEIVE_BOOT_COMPLETED com.tvplayer.app.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION android.permission.READ_EXTERNAL_STORAGE"
 perms=$(apkanalyzer manifest permissions "$APK" | grep "^android.permission\|^com.tvplayer" || true)
 echo "$perms"
 echo "$perms" | while read -r p; do
@@ -41,7 +42,7 @@ echo "$perms" | while read -r p; do
   esac
 done
 # subshell del while no propaga exit con set -e en todos los sh: doble check
-extra=$(echo "$perms" | grep -vxF -e "android.permission.INTERNET" -e "android.permission.FOREGROUND_SERVICE" -e "android.permission.ACCESS_NETWORK_STATE" -e "android.permission.WAKE_LOCK" -e "android.permission.RECEIVE_BOOT_COMPLETED" -e "com.tvplayer.app.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" || true)
+extra=$(echo "$perms" | grep -vxF -e "android.permission.INTERNET" -e "android.permission.FOREGROUND_SERVICE" -e "android.permission.ACCESS_NETWORK_STATE" -e "android.permission.WAKE_LOCK" -e "android.permission.RECEIVE_BOOT_COMPLETED" -e "com.tvplayer.app.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" -e "android.permission.READ_EXTERNAL_STORAGE" || true)
 [ -z "$extra" ] && pass "permisos dentro de la lista cerrada" || { fail "permisos extra: $extra"; }
 
 echo "== 2. Manifest: sin cleartext estático, allowBackup=false =="
