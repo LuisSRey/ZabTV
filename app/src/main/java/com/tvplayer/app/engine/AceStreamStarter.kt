@@ -97,34 +97,82 @@ object AceStreamStarter {
      * AceServe no lo expone (verificado en dispositivo): va por UI manual.
      */
     fun servicePackages(pm: PackageManager): List<String> {
-        val resolvers = try {
-            pm.queryIntentServices(Intent(SERVICE_ACTION), PackageManager.MATCH_DEFAULT_ONLY)
-                ?.map { it.serviceInfo.packageName }.orEmpty().toSet()
-        } catch (_: Exception) {
-            emptySet()
-        }
+        val resolvers = serviceResolvers(pm)
         return orderedEnginePackages(pm).filter { it in resolvers }
     }
 
     /**
      * Bindea, arranca y espera el puerto HTTP del motor (defecto 6878).
-     * Prueba los candidatos en orden (AceServe primero); devuelve el puerto
+     * Prueba los candidatos en orden (AceServe primero): servicio bindeable
+     * si lo expone, si no revival por provider (sin UI). Devuelve el puerto
      * (>0) o 0 si ninguno fue posible. Siempre desbindea al salir.
      */
     suspend fun startAndWait(context: Context, timeoutMs: Long = 60_000): Int =
         withContext(Dispatchers.IO) {
-            val pkgs = servicePackages(context.packageManager).take(3)
+            val pkgs = orderedEnginePackages(context.packageManager).take(3)
             if (pkgs.isEmpty()) return@withContext 0
+            val resolvers = serviceResolvers(context.packageManager)
             val deadline = System.currentTimeMillis() + timeoutMs
             for (pkg in pkgs) {
                 val remaining = deadline - System.currentTimeMillis()
                 if (remaining <= 2_000) break
-                // Nunca más de 25 s por candidato: si AceServe no expone el
-                // servicio, se pasa al siguiente sin agotar el presupuesto.
-                val port = tryStart(context, pkg, minOf(remaining, 25_000))
+                // Nunca más de 25 s por candidato.
+                val budget = minOf(remaining, 25_000)
+                val port = if (pkg in resolvers) {
+                    tryStart(context, pkg, budget)
+                } else {
+                    tryRevive(context, pkg, budget)
+                }
                 if (port > 0) return@withContext port
             }
             0
+        }
+
+    /** Puerto local del proxy (todos los motores usan el 6878 por defecto). */
+    const val LOCAL_PROXY_PORT = 6878
+
+    private fun serviceResolvers(pm: PackageManager): Set<String> = try {
+        pm.queryIntentServices(Intent(SERVICE_ACTION), PackageManager.MATCH_DEFAULT_ONLY)
+            ?.map { it.serviceInfo.packageName }.orEmpty().toSet()
+    } catch (_: Exception) {
+        emptySet()
+    }
+
+    /**
+     * Revival sin UI: consultar un ContentProvider exportado instancia el
+     * proceso y su Application sin abrir ninguna actividad. Si el motor
+     * arranca en Application.onCreate (típico en apps "servidor" con
+     * autostart como AceServe), el proxy aparece solo. Devuelve 6878 si el
+     * proxy escucha tras el intento, o 0.
+     */
+    private suspend fun tryRevive(context: Context, pkg: String, timeoutMs: Long): Int =
+        withContext(Dispatchers.IO) {
+            val authorities = try {
+                context.packageManager.getPackageInfo(pkg, PackageManager.GET_PROVIDERS)
+                    ?.providers?.filter { it.exported }?.map { it.authority }.orEmpty()
+            } catch (_: Exception) {
+                emptyList()
+            }
+            if (authorities.isEmpty()) return@withContext 0
+            val deadline = System.currentTimeMillis() + timeoutMs
+            for (auth in authorities.take(2)) {
+                runCatching {
+                    context.contentResolver.query(
+                        android.net.Uri.parse("content://$auth"),
+                        null, null, null, null,
+                    )?.close()
+                }
+                // Hasta 10 s por provider para que el proceso levante el motor.
+                val sliceEnd = minOf(deadline, System.currentTimeMillis() + 10_000)
+                while (System.currentTimeMillis() < sliceEnd) {
+                    if (AceStreamEngine.isReachable("127.0.0.1", LOCAL_PROXY_PORT)) {
+                        return@withContext LOCAL_PROXY_PORT
+                    }
+                    delay(2_000)
+                }
+                if (System.currentTimeMillis() >= deadline) break
+            }
+            if (AceStreamEngine.isReachable("127.0.0.1", LOCAL_PROXY_PORT)) LOCAL_PROXY_PORT else 0
         }
 
     private suspend fun tryStart(context: Context, pkg: String, timeoutMs: Long): Int =
