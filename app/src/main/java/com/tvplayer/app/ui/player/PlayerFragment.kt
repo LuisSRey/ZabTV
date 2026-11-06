@@ -134,6 +134,7 @@ class PlayerFragment : Fragment() {
                     when (state) {
                         is PlayerState.Error -> {
                             progress.visibility = View.GONE
+                            android.util.Log.d("TvPlayer", "player error res=" + state.messageRes)
                             showError(state.messageRes)
                         }
                         PlayerState.Playing -> {
@@ -311,6 +312,7 @@ class PlayerFragment : Fragment() {
         val up = withContext(kotlinx.coroutines.Dispatchers.IO) {
             AceStreamEngine.isReachable(host, defaultPort)
         }
+        android.util.Log.d("TvPlayer", "ace reachable=$up host=$host port=$defaultPort")
         if (up) {
             dismissEngineDialog()
             return defaultPort
@@ -357,6 +359,7 @@ class PlayerFragment : Fragment() {
             }
         }
         engineDialog = runCatching { builder.show() }.getOrNull()
+        android.util.Log.d("TvPlayer", "engine dialog shown=" + (engineDialog != null))
     }
 
     private fun dismissEngineDialog() {
@@ -370,7 +373,9 @@ class PlayerFragment : Fragment() {
      */
     private suspend fun prepareCurrent(channel: ChannelEntity) {
         var proxy = com.tvplayer.app.data.AppContainer.DEFAULT_ACE_PROXY
-        if (channel.url.startsWith("acestream://", ignoreCase = true)) {
+        val isAce = channel.url.startsWith("acestream://", ignoreCase = true)
+        android.util.Log.d("TvPlayer", "prepare ace=$isAce url=" + channel.url.take(40))
+        if (isAce) {
             val port = ensureEngineRunning(channel.url)
             if (port == 0) return
             proxy = "127.0.0.1:$port"
