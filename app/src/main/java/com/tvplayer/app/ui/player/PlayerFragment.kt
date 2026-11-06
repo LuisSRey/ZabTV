@@ -22,7 +22,6 @@ import com.tvplayer.app.data.AppContainer
 import com.tvplayer.app.data.db.ChannelEntity
 import com.tvplayer.app.data.repo.FavouritesRepo
 import com.tvplayer.app.engine.AceStreamEngine
-import com.tvplayer.app.engine.AceStreamStarter
 import com.tvplayer.app.engine.Media3Engine
 import com.tvplayer.app.engine.PlaybackSource
 import com.tvplayer.app.engine.PlayerState
@@ -299,40 +298,19 @@ class PlayerFragment : Fragment() {
 
     /**
      * Motor AceStream: fast-path si el proxy ya escucha (vale cualquier
-     * motor: AceServe o AceStream); si no, arranca por servicio bindeado SIN
-     * abrir UIs y espera a que escuche. Devuelve el puerto o 0. Los avisos
-     * van en diálogo para no pisar la línea de guía (nowText).
+     * motor: AceServe o AceStream). Con el motor caído NO se arranca nada
+     * solo: se muestra el diálogo (Reintentar / Abrir motor / Cerrar) y la
+     * línea de guía queda intacta. "Abrir motor" prioriza AceServe.
      */
     private suspend fun ensureEngineRunning(aceUrl: String): Int {
         val (host, defaultPort) = AceStreamEngine.splitHostPort(com.tvplayer.app.data.AppContainer.DEFAULT_ACE_PROXY)
-        suspend fun reachable(port: Int): Boolean = withContext(kotlinx.coroutines.Dispatchers.IO) {
-            AceStreamEngine.isReachable(host, port)
+        val up = withContext(kotlinx.coroutines.Dispatchers.IO) {
+            AceStreamEngine.isReachable(host, defaultPort)
         }
-        if (reachable(defaultPort)) {
+        if (up) {
             dismissEngineDialog()
             return defaultPort
         }
-        // Solo el spinner: la línea de guía (nowText) no se toca.
-        progress.visibility = View.VISIBLE
-        overlay.visibility = View.VISIBLE
-        // 1) Vía servicio: sin salir de TVPlayer.
-        val port = AceStreamStarter.startAndWait(requireContext().applicationContext)
-        if (port > 0) {
-            repeat(30) {
-                kotlinx.coroutines.delay(2_000)
-                if (reachable(port)) {
-                    progress.visibility = View.GONE
-                    dismissEngineDialog()
-                    return port
-                }
-            }
-            if (reachable(defaultPort)) {
-                progress.visibility = View.GONE
-                dismissEngineDialog()
-                return defaultPort
-            }
-        }
-        // 2) Sin servicio bindeable (p. ej. AceServe): diálogo con apertura manual.
         progress.visibility = View.GONE
         needsPrepare = true
         showEngineDialog(R.string.engine_no_service, offerOpen = true, aceUrl = aceUrl)
