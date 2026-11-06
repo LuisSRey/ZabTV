@@ -27,4 +27,11 @@ for name, px in SIZES.items():
     import os
     os.makedirs(f"{out_root}/{name}", exist_ok=True)
     img.save(f"{out_root}/{name}/ic_launcher.png")
+    # Round legacy: misma composicion con mascara circular.
+    mask = Image.new("L", (px, px), 0)
+    md = ImageDraw.Draw(mask)
+    md.ellipse([0, 0, px, px], fill=255)
+    rounded = Image.new("RGBA", (px, px), (0, 0, 0, 0))
+    rounded.paste(img, (0, 0), mask)
+    rounded.save(f"{out_root}/{name}/ic_launcher_round.png")
     print(name, px)
