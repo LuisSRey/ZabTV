@@ -1,5 +1,6 @@
 package com.tvplayer.app.ui.channels
 
+import android.content.res.Configuration
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -49,6 +50,18 @@ class ChannelBrowserFragment : Fragment() {
         return inflater.inflate(R.layout.fragment_channel_browser, container, false)
     }
 
+    /** Rotación sin recrear (configChanges): reajusta columnas 1V/2H. */
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        val grid = view?.findViewById<RecyclerView>(R.id.channel_grid) ?: return
+        grid.layoutManager =
+            GridLayoutManager(requireContext(), spanCount(FocusScaleHelper.isTv(grid), newConfig.orientation))
+    }
+
+    /** 1 columna en vertical, 2 en horizontal y en TV. */
+    private fun spanCount(isTv: Boolean, orientation: Int): Int =
+        if (isTv || orientation == Configuration.ORIENTATION_LANDSCAPE) 2 else 1
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         val listId = arguments?.getLong(ARG_LIST_ID, -1L) ?: -1L
         if (listId < 0) {
@@ -69,14 +82,7 @@ class ChannelBrowserFragment : Fragment() {
             },
         )
         // 1 columna en vertical, 2 en horizontal y en TV.
-        val span = if (isTv) {
-            2
-        } else if (resources.configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE) {
-            2
-        } else {
-            1
-        }
-        grid.layoutManager = GridLayoutManager(requireContext(), span)
+        grid.layoutManager = GridLayoutManager(requireContext(), spanCount(isTv, resources.configuration.orientation))
         grid.adapter = gridAdapter
 
         // Tira Ahora/Siguiente (Task 14): un batch nowNext por pausa de scroll.
