@@ -1,15 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Fila de grupo (TV, Task 7): fila ancha; seleccionada = borde acento; foco D-pad escala. -->
+<!-- Fila de grupo (TV): altura flexible con mínimo (52dp fijos + Inter alta
+     recortaban la etiqueta); seleccionada = borde acento; foco D-pad escala. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="52dp"
+    android:layout_height="wrap_content"
     android:layout_marginBottom="8dp"
+    android:minHeight="52dp"
     android:background="@drawable/tile_focus_bg"
     android:focusable="true"
     android:gravity="center_vertical"
     android:orientation="horizontal"
     android:paddingStart="16dp"
-    android:paddingEnd="16dp">
+    android:paddingEnd="16dp"
+    android:paddingTop="8dp"
+    android:paddingBottom="8dp">
 
     <TextView
         android:id="@+id/group_label"
