@@ -140,7 +140,10 @@ class PlayerFragment : Fragment() {
                             progress.visibility = View.GONE
                             hideOverlayDelayed()
                         }
-                        PlayerState.Loading, PlayerState.Buffering -> progress.visibility = View.VISIBLE
+                        PlayerState.Loading, PlayerState.Buffering -> {
+                            overlay.visibility = View.VISIBLE
+                            progress.visibility = View.VISIBLE
+                        }
                         else -> progress.visibility = View.GONE
                     }
                 }
@@ -224,7 +227,8 @@ class PlayerFragment : Fragment() {
         overlayJob?.cancel()
         overlayJob = lifecycleScope.launch {
             kotlinx.coroutines.delay(5_000)
-            hideOverlay()
+            // Sin esto, un arranque P2P lento (>5 s) deja pantalla negra sin info.
+            if (ready() && engine.state.value == PlayerState.Playing) hideOverlay()
         }
     }
 

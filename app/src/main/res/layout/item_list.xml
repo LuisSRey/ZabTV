@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Fila de lista: nombre + subtítulo estado/canales + acciones (scroll horizontal). -->
+<!-- Fila de lista: en TV la raíz NO es focable (el foco va a los botones,
+     si no Actualizar/Borrar son inalcanzables con el mando); el tap abre igual. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginBottom="8dp"
     android:background="@drawable/tile_focus_bg"
-    android:focusable="true"
+    android:focusable="false"
     android:orientation="vertical"
     android:padding="16dp">
 
@@ -40,9 +41,19 @@
             android:orientation="horizontal">
 
             <Button
+                android:id="@+id/list_open"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/btn_ghost"
+                android:text="@string/lists_open"
+                android:textColor="@color/tp_text"
+                android:textSize="13sp" />
+
+            <Button
                 android:id="@+id/list_refresh"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
                 android:background="@drawable/btn_ghost"
                 android:text="@string/lists_refresh"
                 android:textColor="@color/tp_text"

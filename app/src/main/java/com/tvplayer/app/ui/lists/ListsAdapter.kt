@@ -31,11 +31,19 @@ class ListsAdapter(
     class Holder(root: View) : RecyclerView.ViewHolder(root) {
         val name: TextView = root.findViewById(R.id.list_name)
         val subtitle: TextView = root.findViewById(R.id.list_subtitle)
+        val open: Button = root.findViewById(R.id.list_open)
         val refresh: Button = root.findViewById(R.id.list_refresh)
         val delete: Button = root.findViewById(R.id.list_delete)
         val activate: Button = root.findViewById(R.id.list_activate)
         val edit: Button = root.findViewById(R.id.list_edit)
         val epg: Button = root.findViewById(R.id.list_epg)
+
+        init {
+            // Foco+escala por botón (TV); el attach de la raíz ya quitó el clip.
+            listOf(open, refresh, delete, activate, edit, epg).forEach {
+                FocusScaleHelper.attach(it)
+            }
+        }
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): Holder {
@@ -51,6 +59,7 @@ class ListsAdapter(
         holder.name.text = row.name
         holder.subtitle.text = row.subtitle
         holder.itemView.setOnClickListener { onOpen(row) }
+        holder.open.setOnClickListener { onOpen(row) }
         holder.refresh.setOnClickListener { onRefresh(row) }
         holder.delete.setOnClickListener { onDelete(row) }
         holder.activate.setOnClickListener { onActivate(row) }

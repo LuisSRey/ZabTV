@@ -91,6 +91,7 @@
     <string name="epg_refreshed">EPG updated: %1$d programs</string>
     <string name="epg_no_source">This playlist has no guide data</string>
     <string name="lists_epg">EPG</string>
+    <string name="lists_open">Open</string>
     <string name="lists_epg_hint">EPG guide URL (optional)</string>
     <string name="lists_no_picker">No file picker on this device: add the playlist by URL</string>
     <string name="settings_ace_title">AceStream: local engine</string>
