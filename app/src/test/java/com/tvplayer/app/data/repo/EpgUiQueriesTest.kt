@@ -109,6 +109,34 @@ class EpgUiQueriesTest {
     }
 
     @Test
+    fun `fallback calza tvg-ids estilo Elcano con EPG dobleM`() = runTest {
+        // Regresión lista Elcano: tvg-id "DAZN_1_1080p_" vs EPG "DAZN 1 HD".
+        db.epgDao().insertChannels(
+            listOf(
+                EpgChannelEntity(tvgId = "DAZN 1 HD", displayName = "DAZN 1 HD"),
+                EpgChannelEntity(tvgId = "M+ LaLiga HD", displayName = "M+ LaLiga HD"),
+                EpgChannelEntity(tvgId = "DAZN Baloncesto", displayName = "DAZN Baloncesto"),
+            ),
+        )
+        db.epgDao().insertBatch(
+            listOf(
+                EpgProgramEntity(tvgId = "DAZN 1 HD", startMillis = now - h, endMillis = now + h, title = "Ahora"),
+                EpgProgramEntity(tvgId = "M+ LaLiga HD", startMillis = now - h, endMillis = now + h, title = "Ahora"),
+                EpgProgramEntity(tvgId = "DAZN Baloncesto", startMillis = now - h, endMillis = now + h, title = "Ahora"),
+            ),
+        )
+        val m1 = matcher.match(channel("DAZN_1_1080p_", "DAZN 1 1080p **"))
+        assertEquals("DAZN 1 HD", m1!!.tvgId)
+        assertTrue(m1.approximate)
+        val m2 = matcher.match(channel("M_LaLiga_720p_", "M+ LaLiga 720p *"))
+        assertEquals("M+ LaLiga HD", m2!!.tvgId)
+        assertTrue(m2.approximate)
+        val m3 = matcher.match(channel("DAZN_Baloncesto_720p_", "DAZN Baloncesto 720p *"))
+        assertEquals("DAZN Baloncesto", m3!!.tvgId)
+        assertTrue(m3.approximate)
+    }
+
+    @Test
     fun `dayPrograms devuelve el rango del día ordenado`() = runTest {
         val start = now - 12 * h
         val end = now + 12 * h

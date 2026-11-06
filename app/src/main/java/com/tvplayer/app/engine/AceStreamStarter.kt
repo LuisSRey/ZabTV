@@ -31,8 +31,10 @@ object AceStreamStarter {
      * elección final es por versionCode: si hay varios, gana el más nuevo
      * (igual que el ServiceClient oficial).
      */
+    const val ACESERVE_PACKAGE = "org.free.aceserve"
+
     val KNOWN_PACKAGES = listOf(
-        "org.free.aceserve",
+        ACESERVE_PACKAGE,
         "org.acestream.media",
         "org.acestream.media.atv",
         "org.acestream.core",
@@ -41,6 +43,14 @@ object AceStreamStarter {
         "org.acestream.node",
         "org.acestream.node.web",
     )
+
+    /** Pura y testeable: AceServe primero si está; el resto por mayor versión. */
+    fun orderCandidates(versions: Map<String, Long>): List<String> {
+        val installed = versions.filter { it.value >= 0 }.keys
+        val rest = installed.filter { it != ACESERVE_PACKAGE }
+            .sortedByDescending { versions[it] }
+        return listOfNotNull(ACESERVE_PACKAGE.takeIf { it in installed }) + rest
+    }
 
     /** Pura y testeable: elige el candidato con mayor versión. */
     fun selectBest(candidates: List<String>, versionOf: (String) -> Long): String? {
@@ -60,14 +70,15 @@ object AceStreamStarter {
         return best?.takeIf { bestVer >= 0 }
     }
 
-    fun selectEnginePackage(pm: PackageManager): String? {
+    /** Orden de intento: AceServe primero si está; si no, el resto por versión. */
+    fun orderedEnginePackages(pm: PackageManager): List<String> {
         val dynamic = try {
             pm.queryIntentServices(Intent(SERVICE_ACTION), PackageManager.MATCH_DEFAULT_ONLY)
                 ?.map { it.serviceInfo.packageName }.orEmpty()
         } catch (_: Exception) {
             emptyList()
         }
-        return selectBest(KNOWN_PACKAGES + dynamic) { pkg ->
+        val versions = (KNOWN_PACKAGES + dynamic).distinct().associateWith { pkg ->
             try {
                 val info = pm.getPackageInfo(pkg, 0)
                 if (android.os.Build.VERSION.SDK_INT >= 28) info.longVersionCode else info.versionCode.toLong()
@@ -75,16 +86,35 @@ object AceStreamStarter {
                 -1L
             }
         }
+        return orderCandidates(versions)
     }
+
+    fun selectEnginePackage(pm: PackageManager): String? =
+        orderedEnginePackages(pm).firstOrNull()
 
     /**
      * Bindea, arranca y espera el puerto HTTP del motor (defecto 6878).
-     * Devuelve el puerto (>0) o 0 si no fue posible (sin motor, sin servicio
-     * o timeout). Siempre desbindea al salir.
+     * Prueba los candidatos en orden (AceServe primero); devuelve el puerto
+     * (>0) o 0 si ninguno fue posible. Siempre desbindea al salir.
      */
     suspend fun startAndWait(context: Context, timeoutMs: Long = 60_000): Int =
         withContext(Dispatchers.IO) {
-            val pkg = selectEnginePackage(context.packageManager) ?: return@withContext 0
+            val pkgs = orderedEnginePackages(context.packageManager).take(3)
+            if (pkgs.isEmpty()) return@withContext 0
+            val deadline = System.currentTimeMillis() + timeoutMs
+            for (pkg in pkgs) {
+                val remaining = deadline - System.currentTimeMillis()
+                if (remaining <= 2_000) break
+                // Nunca más de 25 s por candidato: si AceServe no expone el
+                // servicio, se pasa al siguiente sin agotar el presupuesto.
+                val port = tryStart(context, pkg, minOf(remaining, 25_000))
+                if (port > 0) return@withContext port
+            }
+            0
+        }
+
+    private suspend fun tryStart(context: Context, pkg: String, timeoutMs: Long): Int =
+        withContext(Dispatchers.IO) {
             val announced = AtomicInteger(0)
             var service: IAceStreamEngine? = null
             val callback = object : IAceStreamEngineCallback.Stub() {
