@@ -1,5 +1,6 @@
 package com.tvplayer.app
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.ImageView
@@ -51,6 +52,9 @@ class MainActivity : AppCompatActivity(), TvNavigator.NavHost {
         supportFragmentManager.executePendingTransactions()
         syncShell()
         refreshActiveEpg()
+        // "Abrir con" desde un gestor (solo creaciones frescas: con
+        // configChanges no hay recreación por rotación que duplique).
+        if (savedInstanceState == null) handleViewIntent(intent)
     }
 
     private fun goTab(tag: String) {
@@ -87,20 +91,62 @@ class MainActivity : AppCompatActivity(), TvNavigator.NavHost {
         lifecycleScope.launch { block() }
     }
 
+    /** EPG silenciosa (toast solo con programas): arranque y "abrir con". */
+    private suspend fun refreshEpgQuiet(listId: Long) {
+        val app = application as TpApp
+        val db = app.container.db
+        val epgUrl = db.listDao().get(listId)?.epgUrl
+        if (epgUrl.isNullOrBlank()) return
+        val res = runCatching {
+            com.tvplayer.app.data.repo.EpgService(applicationContext, db, app.container.okHttp)
+                .refresh(epgUrl)
+        }.getOrNull() ?: return
+        if (!res.rejected && res.inserted > 0) {
+            Toast.makeText(this, getString(R.string.epg_refreshed, res.inserted), Toast.LENGTH_SHORT).show()
+        }
+    }
+
     /** EPG de la lista activa al arrancar: silenciosa salvo éxito con programas. */
     private fun refreshActiveEpg() {
         lifecycleScopeLaunch {
+            val db = (application as TpApp).container.db
+            val listId = com.tvplayer.app.data.ActiveList.resolve(db) ?: return@lifecycleScopeLaunch
+            refreshEpgQuiet(listId)
+        }
+    }
+
+    /**
+     * "Abrir con" desde un gestor de archivos (Fire TV sin picker): importa
+     * la m3u como lista nueva y abre su browser. Sin permisos extra: el grant
+     * de lectura viene con el intent del gestor.
+     */
+    private fun handleViewIntent(intent: Intent) {
+        if (intent.action != Intent.ACTION_VIEW) return
+        val uri = intent.data ?: return
+        lifecycleScopeLaunch {
             val app = application as TpApp
             val db = app.container.db
-            val listId = com.tvplayer.app.data.ActiveList.resolve(db) ?: return@lifecycleScopeLaunch
-            val epgUrl = db.listDao().get(listId)?.epgUrl
-            if (epgUrl.isNullOrBlank()) return@lifecycleScopeLaunch
-            val res = runCatching {
-                com.tvplayer.app.data.repo.EpgService(applicationContext, db, app.container.okHttp)
-                    .refresh(epgUrl)
-            }.getOrNull() ?: return@lifecycleScopeLaunch
-            if (!res.rejected && res.inserted > 0) {
-                Toast.makeText(this, getString(R.string.epg_refreshed, res.inserted), Toast.LENGTH_SHORT).show()
+            if (db.listDao().all().size >= ListsFragment.MAX_LISTS) {
+                Toast.makeText(this, R.string.lists_max, Toast.LENGTH_LONG).show()
+                return@lifecycleScopeLaunch
+            }
+            val listId = db.listDao().upsert(
+                com.tvplayer.app.data.db.ListEntity(
+                    name = uri.lastPathSegment ?: "Archivo",
+                    sourceUrl = "", status = "importing",
+                ),
+            )
+            val result = com.tvplayer.app.data.repo.ImportService(
+                applicationContext, db, app.container.okHttp,
+            ).import(listId, com.tvplayer.app.data.repo.ImportSource.FileSource(uri))
+            Toast.makeText(
+                this,
+                result.message ?: getString(R.string.portal_import_error),
+                Toast.LENGTH_LONG,
+            ).show()
+            if (!result.rejected) {
+                refreshEpgQuiet(listId)
+                openBrowser(listId)
             }
         }
     }
