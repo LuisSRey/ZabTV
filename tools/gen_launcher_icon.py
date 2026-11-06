@@ -36,7 +36,22 @@ for name, px in SIZES.items():
     rounded.save(f"{out_root}/{name}/ic_launcher_round.png")
     print(name, px)
 
-# Banner TV 320x180 (el launcher de Fire OS no renderiza vectores como banner).
+# Foreground adaptativo en PNG (algunos launchers fallan con vectores con arcos):
+# pastilla + play centrados sobre transparente; el fondo lo pone el adaptive-icon.
+FG_SIZES = {"mipmap-mdpi": 108, "mipmap-hdpi": 162, "mipmap-xhdpi": 216,
+            "mipmap-xxhdpi": 324, "mipmap-xxxhdpi": 432}
+for name, px in FG_SIZES.items():
+    fg = Image.new("RGBA", (px, px), (0, 0, 0, 0))
+    d = ImageDraw.Draw(fg)
+    m = px * 0.25
+    r = px * 0.16
+    d.rounded_rectangle([m, m, px - m, px - m], radius=r, fill=BLUE)
+    cx, cy = px / 2, px / 2
+    s = px * 0.15
+    d.polygon([(cx - s * 0.6, cy - s), (cx - s * 0.6, cy + s),
+               (cx + s * 0.9, cy)], fill=WHITE)
+    fg.save(f"{out_root}/{name}/ic_launcher_foreground.png")
+    print("fg", name, px)
 W, H = 320, 180
 banner = Image.new("RGBA", (W, H), (0, 0, 0, 255))
 d = ImageDraw.Draw(banner)
