@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Marca de agua en azul interfaz con translucidez horneada. -->
+<!-- Derivado de ic_logo_mark.xml: misma geometría (viewport 48 + pathData verbatim), solo cambian tamaño y alfa. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="220dp"
     android:height="220dp"
-    android:viewportWidth="220"
-    android:viewportHeight="220">
+    android:viewportWidth="48"
+    android:viewportHeight="48">
     <path
         android:fillColor="#330A84FF"
-        android:pathData="M44,44h132a30,30 0 0 1 30,30v72a30,30 0 0 1 -30,30H88a30,30 0 0 1 -30,-30V74a30,30 0 0 1 30,-30z" />
+        android:pathData="M8,8h32a8,8 0 0 1 8,8v16a8,8 0 0 1 -8,8L16,40a8,8 0 0 1 -8,-8V16a8,8 0 0 1 8,-8z" />
     <path
         android:fillColor="#33FFFFFF"
-        android:pathData="M92,78 L92,142 L152,110z" />
+        android:pathData="M20,17 L20,31 L32,24z" />
 </vector>
