@@ -1,6 +1,7 @@
 package com.tvplayer.app.ui.player
 
 import android.os.Bundle
+import android.content.res.Configuration
 import android.view.LayoutInflater
 import android.view.SurfaceView
 import android.view.View
@@ -10,6 +11,8 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.core.os.bundleOf
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -47,6 +50,13 @@ class PlayerFragment : Fragment() {
         fun newInstance(listId: Long, position: Int) = PlayerFragment().apply {
             arguments = bundleOf(ARG_LIST_ID to listId, ARG_POSITION to position)
         }
+
+        /**
+         * S2: inmersivo solo en móvil apaisado. Pura (sin ventana) → test JVM.
+         * En TV y en vertical el chrome del sistema se deja intacto.
+         */
+        fun shouldUseImmersive(isTv: Boolean, orientation: Int): Boolean =
+            !isTv && orientation == Configuration.ORIENTATION_LANDSCAPE
     }
 
     private lateinit var engine: Media3Engine
@@ -71,6 +81,7 @@ class PlayerFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         val isTv = FocusScaleHelper.isTv(view)
         container = (requireActivity().application as TpApp).container
+        applyImmersiveIfNeeded()
 
         val playerView = view.findViewById<androidx.media3.ui.PlayerView>(R.id.player_view)
         // PlayerView 1.11 expone la surface como View (soporta surface/texture).
@@ -203,9 +214,22 @@ class PlayerFragment : Fragment() {
         }
     }
 
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        // El manifest evita la recreación al rotar: reevaluar aquí.
+        applyImmersiveIfNeeded()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        // S2: al pausar (PiP, diálogo del motor, Home) devolver el chrome.
+        restoreChrome()
+    }
+
     override fun onDestroyView() {
         overlayJob?.cancel()
         dismissEngineDialog()
+        restoreChrome()
         if (ready()) engine.release()
         super.onDestroyView()
     }
@@ -217,6 +241,8 @@ class PlayerFragment : Fragment() {
      */
     override fun onResume() {
         super.onResume()
+        // Re-afirmar inmersivo al volver (diálogo del motor, PiP, etc.).
+        applyImmersiveIfNeeded()
         if (engineDialog?.isShowing == true) {
             val channel = current
             if (channel != null && ready()) lifecycleScope.launch { prepareCurrent(channel) }
@@ -225,6 +251,31 @@ class PlayerFragment : Fragment() {
 
     /** El engine se crea en corrutina (lee el buffer de DAO); teclas tempranas se ignoran. */
     private fun ready(): Boolean = ::engine.isInitialized
+
+    /**
+     * S2: oculta las barras del sistema solo en móvil apaisado; en cualquier
+     * otro caso restaura el chrome (rotar a vertical saliendo del inmersivo).
+     */
+    private fun applyImmersiveIfNeeded() {
+        val activity = activity ?: return
+        val view = view ?: return
+        val controller = WindowInsetsControllerCompat(activity.window, view)
+        if (shouldUseImmersive(FocusScaleHelper.isTv(view), resources.configuration.orientation)) {
+            controller.hide(WindowInsetsCompat.Type.systemBars())
+            controller.systemBarsBehavior =
+                WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        } else {
+            controller.show(WindowInsetsCompat.Type.systemBars())
+        }
+    }
+
+    /** S2: al pausar/salir, devolver siempre el chrome del sistema. */
+    private fun restoreChrome() {
+        val activity = activity ?: return
+        val view = view ?: return
+        WindowInsetsControllerCompat(activity.window, view)
+            .show(WindowInsetsCompat.Type.systemBars())
+    }
 
     private fun showOverlay() {
         overlay.visibility = View.VISIBLE
@@ -433,7 +484,7 @@ class PlayerFragment : Fragment() {
         if (fm != null && fm.backStackEntryCount > 0) {
             fm.popBackStack()
         } else {
-            (activity as? TvNavigator.NavHost)?.open(
+            (activity as? TvNavigator.NavHost)?.openTab(
                 com.tvplayer.app.ui.home.HomeFragment(),
                 com.tvplayer.app.ui.home.HomeFragment.TAG,
             )
