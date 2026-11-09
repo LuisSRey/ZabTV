@@ -21,9 +21,9 @@ for name, px in SIZES.items():
     d.rounded_rectangle([m, m, px - m, px - m], radius=r, fill=BLUE)
     cx, cy = px / 2, px / 2
     s = px * 0.15
-    # triángulo play centrado ópticamente (ligeramente a la derecha)
-    d.polygon([(cx - s * 0.6, cy - s), (cx - s * 0.6, cy + s),
-               (cx + s * 0.9, cy)], fill=WHITE)
+    # triángulo play centrado geométricamente
+    d.polygon([(cx - s * 0.75, cy - s), (cx - s * 0.75, cy + s),
+               (cx + s * 0.75, cy)], fill=WHITE)
     import os
     os.makedirs(f"{out_root}/{name}", exist_ok=True)
     # WebP sin perdida: AAPT no lo recuantiza (el crunch pasaba el PNG a
@@ -50,8 +50,8 @@ for name, px in FG_SIZES.items():
     d.rounded_rectangle([m, m, px - m, px - m], radius=r, fill=BLUE)
     cx, cy = px / 2, px / 2
     s = px * 0.15
-    d.polygon([(cx - s * 0.6, cy - s), (cx - s * 0.6, cy + s),
-               (cx + s * 0.9, cy)], fill=WHITE)
+    d.polygon([(cx - s * 0.75, cy - s), (cx - s * 0.75, cy + s),
+               (cx + s * 0.75, cy)], fill=WHITE)
     fg.save(f"{out_root}/{name}/ic_launcher_foreground.webp", format="WEBP", lossless=True)
     print("fg", name, px)
 # Banner TV en 5 densidades (como los testigos que si se ven: RGB sin
@@ -69,8 +69,8 @@ for name, (W, H) in {"drawable-mdpi": (160, 90), "drawable-hdpi": (240, 135),
     d.rounded_rectangle([m, (H - s) // 2, m + s, (H + s) // 2], radius=r, fill=BLUE[:3])
     cx, cy = W / 2, H / 2
     t = H * 21 / 180
-    d.polygon([(cx - t * 0.6, cy - t), (cx - t * 0.6, cy + t),
-               (cx + t * 0.9, cy)], fill=WHITE[:3])
+    d.polygon([(cx - t * 0.75, cy - t), (cx - t * 0.75, cy + t),
+               (cx + t * 0.75, cy)], fill=WHITE[:3])
     os.makedirs(f"{out_root}/{name}", exist_ok=True)
     banner.save(f"{out_root}/{name}/banner.webp", format="WEBP", lossless=True)
     print("banner", name, W, H)
