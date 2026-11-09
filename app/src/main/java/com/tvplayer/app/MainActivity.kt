@@ -59,7 +59,7 @@ class MainActivity : AppCompatActivity(), TvNavigator.NavHost {
 
     private fun goTab(tag: String) {
         when (tag) {
-            HomeFragment.TAG -> open(HomeFragment(), HomeFragment.TAG)
+            HomeFragment.TAG -> openTab(HomeFragment(), HomeFragment.TAG)
             ChannelBrowserFragment.TAG -> openBrowserFirst()
             SearchFragment.TAG -> openSearchFirst()
             ListsFragment.TAG -> openLists()
@@ -71,7 +71,15 @@ class MainActivity : AppCompatActivity(), TvNavigator.NavHost {
         lifecycleScopeLaunch {
             val db = (application as TpApp).container.db
             val activeId = com.tvplayer.app.data.ActiveList.resolve(db)
-            if (activeId != null) openBrowser(activeId) else openLists()
+            // Tab: purga la pila (openTab), no apila flow.
+            if (activeId != null) {
+                openTab(
+                    ChannelBrowserFragment.newInstance(activeId),
+                    ChannelBrowserFragment.TAG,
+                )
+            } else {
+                openLists()
+            }
         }
     }
 
@@ -80,7 +88,7 @@ class MainActivity : AppCompatActivity(), TvNavigator.NavHost {
             val db = (application as TpApp).container.db
             val activeId = com.tvplayer.app.data.ActiveList.resolve(db)
             if (activeId != null) {
-                open(SearchFragment.newInstance(activeId), SearchFragment.TAG)
+                openTab(SearchFragment.newInstance(activeId), SearchFragment.TAG)
             } else {
                 openLists()
             }
@@ -185,47 +193,58 @@ class MainActivity : AppCompatActivity(), TvNavigator.NavHost {
         else -> R.id.nav_settings_icon
     }
 
-    override fun open(fragment: androidx.fragment.app.Fragment, tag: String) {
+    /**
+     * Tab (I1): purga la pila y reemplaza SIN apilar. BACK en raíz sale.
+     */
+    override fun openTab(fragment: androidx.fragment.app.Fragment, tag: String) {
+        supportFragmentManager.popBackStackImmediate(
+            null,
+            androidx.fragment.app.FragmentManager.POP_BACK_STACK_INCLUSIVE,
+        )
         supportFragmentManager.beginTransaction()
             .replace(R.id.container, fragment, tag)
             .commitAllowingStateLoss()
-        // open() no toca el back stack → el listener no dispara: sincronizar a mano.
+        // openTab no toca el back stack → el listener no dispara: sincronizar a mano.
         supportFragmentManager.executePendingTransactions()
         syncShell()
     }
 
-    override fun openPlayer(listId: Long, position: Int) {
+    /**
+     * Flow (I2): máx 1 entrada — pop previo si hay flow — + reemplazo apilado.
+     * BACK en flow hace pop.
+     */
+    override fun pushFlow(fragment: androidx.fragment.app.Fragment, tag: String) {
+        if (supportFragmentManager.backStackEntryCount > 0) {
+            supportFragmentManager.popBackStackImmediate()
+        }
         supportFragmentManager.beginTransaction()
-            .replace(R.id.container, PlayerFragment.newInstance(listId, position), PlayerFragment.TAG)
-            .addToBackStack(PlayerFragment.TAG)
+            .replace(R.id.container, fragment, tag)
+            .addToBackStack(tag)
             .commitAllowingStateLoss()
+        supportFragmentManager.executePendingTransactions()
     }
 
-    override fun openBrowser(listId: Long) {
-        supportFragmentManager.beginTransaction()
-            .replace(R.id.container, ChannelBrowserFragment.newInstance(listId), ChannelBrowserFragment.TAG)
-            .addToBackStack(ChannelBrowserFragment.TAG)
-            .commitAllowingStateLoss()
-    }
+    @Deprecated("Usa openTab", ReplaceWith("openTab(fragment, tag)"))
+    override fun open(fragment: androidx.fragment.app.Fragment, tag: String) =
+        openTab(fragment, tag)
 
-    override fun openLists() {
-        supportFragmentManager.beginTransaction()
-            .replace(R.id.container, ListsFragment(), ListsFragment.TAG)
-            .addToBackStack(ListsFragment.TAG)
-            .commitAllowingStateLoss()
-    }
+    override fun openPlayer(listId: Long, position: Int) =
+        pushFlow(PlayerFragment.newInstance(listId, position), PlayerFragment.TAG)
 
-    override fun openSettings() {
-        supportFragmentManager.beginTransaction()
-            .replace(R.id.container, SettingsFragment(), SettingsFragment.TAG)
-            .addToBackStack(SettingsFragment.TAG)
-            .commitAllowingStateLoss()
-    }
+    override fun openBrowser(listId: Long) =
+        pushFlow(ChannelBrowserFragment.newInstance(listId), ChannelBrowserFragment.TAG)
+
+    override fun openLists() = openTab(ListsFragment(), ListsFragment.TAG)
+
+    override fun openSettings() = openTab(SettingsFragment(), SettingsFragment.TAG)
 }
 
 interface TvNavigator {
     interface NavHost {
+        @Deprecated("Usa openTab", ReplaceWith("openTab(fragment, tag)"))
         fun open(fragment: androidx.fragment.app.Fragment, tag: String)
+        fun openTab(fragment: androidx.fragment.app.Fragment, tag: String)
+        fun pushFlow(fragment: androidx.fragment.app.Fragment, tag: String)
         fun openPlayer(listId: Long, position: Int)
         fun openBrowser(listId: Long)
         fun openLists()

@@ -64,7 +64,7 @@ class ChannelBrowserFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         val listId = arguments?.getLong(ARG_LIST_ID, -1L) ?: -1L
         if (listId < 0) {
-            (activity as? TvNavigator.NavHost)?.open(HomeFragment(), HomeFragment.TAG)
+            (activity as? TvNavigator.NavHost)?.openTab(HomeFragment(), HomeFragment.TAG)
             return
         }
 
