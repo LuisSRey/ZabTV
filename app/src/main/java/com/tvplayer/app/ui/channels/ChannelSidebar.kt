@@ -29,6 +29,30 @@ object ChannelSidebar {
         data class Group(val name: String, val label: String, val count: Int) : Row
     }
 
+    /** Playlists para el dropdown móvil (el rail móvil solo lleva filtros). */
+    fun buildPlaylistRows(
+        lists: List<ListEntity>,
+        activeId: Long?,
+    ): List<Row.Playlist> =
+        lists.map { Row.Playlist(it.id, it.name, it.id == activeId) }
+
+    /** Filtros + grupos para el rail (móvil y TV comparten este bloque). */
+    fun buildFilterRows(
+        groups: List<GroupNameCount>,
+        allLabel: String,
+        historyLabel: String,
+        noGroupLabel: String,
+        historyCount: Int = 0,
+    ): List<Row> {
+        val rows = ArrayList<Row>(groups.size + 2)
+        rows += Row.All(allLabel, groups.sumOf { it.count })
+        rows += Row.History(historyLabel, historyCount)
+        for (group in groups) {
+            rows += Row.Group(group.group, group.group.ifBlank { noGroupLabel }, group.count)
+        }
+        return rows
+    }
+
     fun buildRows(
         lists: List<ListEntity>,
         activeId: Long?,
@@ -37,16 +61,7 @@ object ChannelSidebar {
         historyLabel: String,
         noGroupLabel: String,
         historyCount: Int = 0,
-    ): List<Row> {
-        val rows = ArrayList<Row>(lists.size + groups.size + 2)
-        for (list in lists) {
-            rows += Row.Playlist(list.id, list.name, list.id == activeId)
-        }
-        rows += Row.All(allLabel, groups.sumOf { it.count })
-        rows += Row.History(historyLabel, historyCount)
-        for (group in groups) {
-            rows += Row.Group(group.group, group.group.ifBlank { noGroupLabel }, group.count)
-        }
-        return rows
-    }
+    ): List<Row> =
+        buildPlaylistRows(lists, activeId) +
+            buildFilterRows(groups, allLabel, historyLabel, noGroupLabel, historyCount)
 }
