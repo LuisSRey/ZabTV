@@ -30,7 +30,7 @@ class AppContainer(private val appContext: Context) {
 
     val db: AppDatabase by lazy {
         Room.databaseBuilder(appContext, AppDatabase::class.java, "tvplayer.db")
-            .addMigrations(com.tvplayer.app.data.db.MIGRATION_1_2)
+            .addMigrations(com.tvplayer.app.data.db.MIGRATION_1_2, com.tvplayer.app.data.db.MIGRATION_2_3)
             .build()
     }
 
@@ -39,6 +39,8 @@ class AppContainer(private val appContext: Context) {
         val allowHttp: Boolean = false,
         val proxy: ProxyConfig = ProxyConfig(),
         val doh: DohConfig = DohConfig.System,
+        /** Reproductor externo global (S4, default OFF). */
+        val externalGlobal: Boolean = false,
     )
 
     @Volatile
@@ -131,7 +133,7 @@ class AppContainer(private val appContext: Context) {
             dao.get(DohConfig.KEY_CUSTOM_URL, ""),
         )
         allowHttp = allow
-        currentPolicy = NetPolicy(allowHttp = allow, proxy = proxy, doh = doh)
+        currentPolicy = NetPolicy(allowHttp = allow, proxy = proxy, doh = doh, externalGlobal = dao.get(KEY_EXTERNAL_GLOBAL, "false") == "true")
         rebuildOkHttp(auth)
     }
 
@@ -146,6 +148,8 @@ class AppContainer(private val appContext: Context) {
     companion object {
         const val KEY_ALLOW_HTTP = "allow_http"
         const val KEY_ACE_PROXY = "acestream_proxy"
+        /** Reproductor externo global (S4, default OFF). */
+        const val KEY_EXTERNAL_GLOBAL = "external_global"
         /** Proxy del motor AceStream (app AceStream en el propio dispositivo). */
         const val DEFAULT_ACE_PROXY = "127.0.0.1:6878"
     }

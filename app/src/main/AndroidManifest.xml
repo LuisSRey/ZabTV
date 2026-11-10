@@ -27,6 +27,15 @@
         <intent>
             <action android:name="org.acestream.engine.service.v0.IAceStreamEngine" />
         </intent>
+        <!-- S4: resolución de reproductores externos (VIEW http/https). -->
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="http" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="https" />
+        </intent>
     </queries>
 
     <uses-feature android:name="android.software.leanback" android:required="false" />

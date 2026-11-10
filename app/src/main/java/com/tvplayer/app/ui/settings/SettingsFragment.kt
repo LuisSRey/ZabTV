@@ -112,6 +112,24 @@ class SettingsFragment : Fragment() {
         }
         wireProxySection(view, container)
         wireDohSection(view, container)
+        wireExternalSection(view, container)
+    }
+
+    /**
+     * S4: toggle global del reproductor externo (key external_global, default
+     * OFF) + advertencia de que el externo no hereda proxy/DNS.
+     */
+    private fun wireExternalSection(view: View, container: AppContainer) {
+        val global = view.findViewById<android.widget.Switch>(R.id.settings_external_global)
+        lifecycleScope.launch {
+            global.isChecked = container.currentPolicy.externalGlobal
+        }
+        global.setOnCheckedChangeListener { _, checked ->
+            lifecycleScope.launch {
+                container.db.settingsDao().put(AppContainer.KEY_EXTERNAL_GLOBAL, checked.toString())
+                container.refreshNetPolicy()
+            }
+        }
     }
 
     private fun container() = (requireActivity().application as TpApp).container

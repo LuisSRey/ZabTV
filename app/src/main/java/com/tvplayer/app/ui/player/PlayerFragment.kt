@@ -25,6 +25,8 @@ import com.tvplayer.app.data.AppContainer
 import com.tvplayer.app.data.db.ChannelEntity
 import com.tvplayer.app.data.repo.FavouritesRepo
 import com.tvplayer.app.engine.AceStreamEngine
+import com.tvplayer.app.engine.ExternalGate
+import com.tvplayer.app.engine.ExternalOpener
 import com.tvplayer.app.engine.Media3Engine
 import com.tvplayer.app.engine.PlaybackSource
 import com.tvplayer.app.engine.PlayerState
@@ -104,6 +106,11 @@ class PlayerFragment : Fragment() {
         rew?.setOnClickListener { if (ready()) engine.seekBy(-10_000) }
         ff?.setOnClickListener { if (ready()) engine.seekBy(10_000) }
         playPause?.setOnClickListener { togglePlay() }
+        // S4: reproductor externo (opt-in Global/Siempre/Nunca; función separada de PiP).
+        view.findViewById<ImageView>(R.id.player_external)?.let { ext ->
+            ext.setOnClickListener { openExternal() }
+            if (isTv) FocusScaleHelper.attach(ext)
+        }
         if (isTv) {
             listOfNotNull(rew, playPause, ff).forEach { FocusScaleHelper.attach(it) }
         }
@@ -298,6 +305,42 @@ class PlayerFragment : Fragment() {
     private fun hideOverlay() {
         overlay.visibility = View.GONE
         overlayJob = null
+    }
+
+    /**
+     * S4: abre el canal actual en reproductor externo (opt-in Global/Siempre/
+     * Nunca). Nunca lanza: vetado o sin receptor → toast. El externo NO hereda
+     * proxy/DNS (advertido en Settings y en la ficha del canal). Función
+     * separada del PiP (S3) aunque vivan en el mismo overlay.
+     */
+    private fun openExternal() {
+        val channel = current ?: return
+        lifecycleScope.launch {
+            val fresh = container.db.channelDao().channelByKey(channel.listId, channel.stableKey) ?: channel
+            val proxy = com.tvplayer.app.data.AppContainer.DEFAULT_ACE_PROXY
+            val engineTarget = AceStreamEngine.engineProxyFor(fresh.url, proxy)
+            val source = try {
+                PlaybackSource.forUrl(fresh.url, allowCleartext = container.allowHttp, aceStreamProxy = proxy)
+            } catch (_: IllegalArgumentException) {
+                null
+            }
+            val policy = container.currentPolicy
+            val opened = ExternalOpener.openChannel(
+                requireContext(), fresh.url, source, container.allowHttp,
+                engineTarget, fresh.allowExternal, policy.externalGlobal,
+            )
+            if (!opened) {
+                val blocked = !ExternalGate.canExport(
+                    fresh.url, container.allowHttp, engineTarget,
+                    fresh.allowExternal, policy.externalGlobal,
+                ) && !fresh.url.startsWith("acestream://", ignoreCase = true)
+                Toast.makeText(
+                    requireContext(),
+                    if (blocked) R.string.player_external_blocked else R.string.player_no_external,
+                    Toast.LENGTH_SHORT,
+                ).show()
+            }
+        }
     }
 
     private fun togglePlay() {

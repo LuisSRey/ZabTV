@@ -1,0 +1,94 @@
+package com.tvplayer.app.engine
+
+import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.net.Uri
+import com.tvplayer.app.core.UrlPolicer
+
+/**
+ * Reproductor externo (S4, opt-in). La política efectiva por canal es
+ * `override ?: global`: override null = Global, true = Siempre, false = Nunca.
+ *
+ * VETOS de [ExternalGate.canExport] (puros, testeables sin Android):
+ * acestream:// (tiene vía propia), loopback-ace proxificado (el externo no
+ * alcanza al proxy local), esquema no-http(s), http con cleartext OFF, y
+ * `!(override ?: global)`.
+ *
+ * ADVERTENCIA (también en UI): el reproductor externo NO hereda el proxy ni
+ * el DoH de TVPlayer; sale con la red y el DNS del sistema.
+ */
+object ExternalGate {
+
+    /**
+     * @param engineProxyFor resultado de `AceStreamEngine.engineProxyFor(url)` o null.
+     * @param override override del canal: null = Global, true = Siempre, false = Nunca.
+     */
+    fun canExport(
+        rawUrl: String,
+        allowHttp: Boolean,
+        engineProxyFor: String?,
+        override: Boolean?,
+        global: Boolean,
+    ): Boolean {
+        if (rawUrl.startsWith("acestream://", ignoreCase = true)) return false
+        if (engineProxyFor != null) return false
+        if (!UrlPolicer.isAllowedHttpUrl(rawUrl)) return false
+        if (rawUrl.startsWith("http://", ignoreCase = true) && !allowHttp) return false
+        return effectiveAllow(override, global)
+    }
+
+    /** Resolución Global/Siempre/Nunca. */
+    fun effectiveAllow(override: Boolean?, global: Boolean): Boolean = override ?: global
+}
+
+/** Intents VIEW + resolución (necesita PackageManager; el gate puro está arriba). */
+object ExternalOpener {
+
+    fun buildIntent(rawUrl: String, mimeType: String?): Intent {
+        val uri = Uri.parse(rawUrl)
+        return Intent(Intent.ACTION_VIEW, uri).apply {
+            if (mimeType != null) setDataAndType(uri, mimeType)
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+    }
+
+    fun canResolve(pm: PackageManager, intent: Intent): Boolean =
+        pm.queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY).isNotEmpty()
+
+    /**
+     * Abre con selector del sistema. Devuelve false si no hay app que lo
+     * resuelva o si el start falla (nunca lanza).
+     */
+    fun openWithChooser(context: Context, intent: Intent): Boolean = runCatching {
+        val chooser = Intent.createChooser(intent, null).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        if (!canResolve(context.packageManager, intent)) return false
+        context.startActivity(chooser)
+        true
+    }.getOrDefault(false)
+
+    /**
+     * Vía externa completa para un canal:
+     * - `acestream://` → integración oficial (Ace Player, sin proxy): [AceStreamEngine.startContentIntent].
+     * - http(s) permitido por [ExternalGate] → VIEW + chooser.
+     * Devuelve false si está vetado o no hay receptor.
+     */
+    fun openChannel(
+        context: Context,
+        rawUrl: String,
+        source: PlaybackSource?,
+        allowHttp: Boolean,
+        engineProxyFor: String?,
+        override: Boolean?,
+        global: Boolean,
+    ): Boolean {
+        if (rawUrl.startsWith("acestream://", ignoreCase = true)) {
+            return runCatching {
+                context.startActivity(AceStreamEngine.startContentIntent(rawUrl))
+                true
+            }.getOrDefault(false)
+        }
+        if (!ExternalGate.canExport(rawUrl, allowHttp, engineProxyFor, override, global)) return false
+        return openWithChooser(context, buildIntent(rawUrl, source?.mimeType()))
+    }
+}

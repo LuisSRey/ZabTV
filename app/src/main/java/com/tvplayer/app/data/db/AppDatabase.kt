@@ -18,6 +18,17 @@ val MIGRATION_1_2 = object : Migration(1, 2) {
     }
 }
 
+/**
+ * Migración 2→3 (S4): override de reproductor externo por canal
+ * (`channels.allowExternal`, null = Global). Columna anulable sin default:
+ * las filas existentes quedan en Global sin tocar nada más.
+ */
+val MIGRATION_2_3 = object : Migration(2, 3) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE `channels` ADD COLUMN `allowExternal` INTEGER")
+    }
+}
+
 @Database(
     entities = [
         ListEntity::class,
@@ -27,7 +38,7 @@ val MIGRATION_1_2 = object : Migration(1, 2) {
         EpgChannelEntity::class,
         SettingEntity::class,
     ],
-    version = 2,
+    version = 3,
     exportSchema = true,
 )
 abstract class AppDatabase : RoomDatabase() {

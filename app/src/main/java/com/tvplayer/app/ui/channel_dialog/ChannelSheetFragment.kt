@@ -96,6 +96,38 @@ class ChannelSheetFragment : DialogFragment() {
                 dismiss()
                 (activity as? TvNavigator.NavHost)?.openPlayer(channel.listId, channel.position)
             }
+            // S4: override de reproductor externo (Global/Siempre/Nunca).
+            val extGlobal = view.findViewById<Button>(R.id.sheet_ext_global)
+            val extAlways = view.findViewById<Button>(R.id.sheet_ext_always)
+            val extNever = view.findViewById<Button>(R.id.sheet_ext_never)
+            fun paintExtRow(value: Boolean?) {
+                extGlobal.alpha = if (value == null) 1f else 0.45f
+                extAlways.alpha = if (value == true) 1f else 0.45f
+                extNever.alpha = if (value == false) 1f else 0.45f
+            }
+            var extValue: Boolean? = channel.allowExternal
+            paintExtRow(extValue)
+            extGlobal.setOnClickListener {
+                lifecycleScope.launch {
+                    db.channelDao().setAllowExternal(channel.listId, channel.stableKey, null)
+                    extValue = null
+                    paintExtRow(null)
+                }
+            }
+            extAlways.setOnClickListener {
+                lifecycleScope.launch {
+                    db.channelDao().setAllowExternal(channel.listId, channel.stableKey, true)
+                    extValue = true
+                    paintExtRow(true)
+                }
+            }
+            extNever.setOnClickListener {
+                lifecycleScope.launch {
+                    db.channelDao().setAllowExternal(channel.listId, channel.stableKey, false)
+                    extValue = false
+                    paintExtRow(false)
+                }
+            }
             refreshFavLabel(fav, channel)
             fav.setOnClickListener {
                 lifecycleScope.launch {

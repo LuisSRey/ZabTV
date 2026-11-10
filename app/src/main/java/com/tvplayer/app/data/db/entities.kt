@@ -45,6 +45,11 @@ data class ChannelEntity(
     val url: String,
     val stableKey: String,
     val position: Int = 0,
+    /**
+     * Override de reproductor externo (S4): null = Global (sigue el ajuste),
+     * true = Siempre, false = Nunca. Sobrevive reimports (no lo toca ImportService).
+     */
+    val allowExternal: Boolean? = null,
 )
 
 @Entity(tableName = "favourites", primaryKeys = ["listId", "channelKey"])

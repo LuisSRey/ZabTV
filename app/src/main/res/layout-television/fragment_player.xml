@@ -115,6 +115,17 @@
                 android:padding="10dp"
                 android:src="@drawable/ic_ff" />
 
+            <!-- S4: reproductor externo (opt-in). -->
+            <ImageView
+                android:id="@+id/player_external"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:layout_marginStart="12dp"
+                android:contentDescription="@string/player_external"
+                android:focusable="true"
+                android:padding="10dp"
+                android:src="@drawable/ic_external" />
+
             <TextView
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"

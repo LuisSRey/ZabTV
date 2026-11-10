@@ -75,6 +75,60 @@
 
         </LinearLayout>
 
+        <!-- S4: override de reproductor externo por canal. -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="@string/sheet_external_title"
+            android:textAppearance="@style/TextAppearance_TVPlayer_Meta"
+            android:textSize="14sp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/sheet_ext_global"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:background="@drawable/btn_ghost"
+                android:text="@string/sheet_ext_global"
+                android:textColor="@color/tp_text" />
+
+            <Button
+                android:id="@+id/sheet_ext_always"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_weight="1"
+                android:background="@drawable/btn_ghost"
+                android:text="@string/sheet_ext_always"
+                android:textColor="@color/tp_text" />
+
+            <Button
+                android:id="@+id/sheet_ext_never"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_weight="1"
+                android:background="@drawable/btn_ghost"
+                android:text="@string/sheet_ext_never"
+                android:textColor="@color/tp_text" />
+
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="@string/external_nowarn"
+            android:textAppearance="@style/TextAppearance_TVPlayer_Meta"
+            android:textSize="12sp" />
+
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/sheet_programs"
             android:layout_width="match_parent"

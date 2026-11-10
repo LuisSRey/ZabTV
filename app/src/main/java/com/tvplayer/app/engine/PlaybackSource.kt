@@ -10,9 +10,24 @@ import com.tvplayer.app.core.UrlPolicer
  */
 sealed interface PlaybackSource {
 
-    data class Hls(val url: String) : PlaybackSource
-    data class Dash(val url: String) : PlaybackSource
-    data class Progressive(val url: String) : PlaybackSource
+    data class Hls(val url: String) : PlaybackSource {
+        override fun rawUrl(): String = url
+        override fun mimeType(): String = "application/vnd.apple.mpegurl"
+    }
+    data class Dash(val url: String) : PlaybackSource {
+        override fun rawUrl(): String = url
+        override fun mimeType(): String = "application/dash+xml"
+    }
+    data class Progressive(val url: String) : PlaybackSource {
+        override fun rawUrl(): String = url
+        override fun mimeType(): String? = null
+    }
+
+    /** URL original tal cual (para Intents externos). */
+    fun rawUrl(): String
+
+    /** MIME para el Intent VIEW externo; null = el receptor lo deduce. */
+    fun mimeType(): String?
 
     companion object {
 

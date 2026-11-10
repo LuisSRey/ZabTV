@@ -138,4 +138,14 @@
         <item>Google (dns.google)</item>
         <item>Custom</item>
     </string-array>
+    <string name="player_external">Open in external app</string>
+    <string name="player_no_external">No app can open this channel</string>
+    <string name="player_external_blocked">External player not allowed for this channel</string>
+    <string name="sheet_external_title">External player</string>
+    <string name="sheet_ext_global">Global</string>
+    <string name="sheet_ext_always">Always</string>
+    <string name="sheet_ext_never">Never</string>
+    <string name="external_nowarn">The external player does not inherit TVPlayer proxy or DNS.</string>
+    <string name="settings_external_title">External player</string>
+    <string name="settings_external_global">Allow external player (global)</string>
 </resources>

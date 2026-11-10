@@ -102,6 +102,16 @@
                 android:padding="8dp"
                 android:src="@drawable/ic_ff" />
 
+            <!-- S4: reproductor externo (opt-in). En TV también existe (mismo id). -->
+            <ImageView
+                android:id="@+id/player_external"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginStart="8dp"
+                android:contentDescription="@string/player_external"
+                android:padding="8dp"
+                android:src="@drawable/ic_external" />
+
             <TextView
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"

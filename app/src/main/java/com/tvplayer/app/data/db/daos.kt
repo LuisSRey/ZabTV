@@ -62,6 +62,10 @@ interface ChannelDao {
     @Query("SELECT * FROM channels WHERE listId = :listId AND stableKey = :stableKey LIMIT 1")
     suspend fun channelByKey(listId: Long, stableKey: String): ChannelEntity?
 
+    /** Override de reproductor externo por canal (S4): null = Global. */
+    @Query("UPDATE channels SET allowExternal = :value WHERE listId = :listId AND stableKey = :stableKey")
+    suspend fun setAllowExternal(listId: Long, stableKey: String, value: Boolean?)
+
     /** Siguiente / previo en el orden de la lista (zapping arriba/abajo, Task 8). */
     @Query("SELECT * FROM channels WHERE listId = :listId AND position > :pos ORDER BY position ASC LIMIT 1")
     suspend fun nextInList(listId: Long, pos: Int): ChannelEntity?
