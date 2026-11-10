@@ -13,7 +13,8 @@ android {
         targetSdk = 36
         // Subir a mano en cada release que cambie icono/banner (invalida
         // cachés del launcher que ignoran la fecha).
-        versionCode = 80
+        // 81: proxy + DoH + reproductor externo + PiP (una entrega).
+        versionCode = 81
         versionName = "0.2.0"
     }
 
