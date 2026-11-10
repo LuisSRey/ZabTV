@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
+import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.core.app.ApplicationProvider
@@ -97,5 +98,54 @@ class ChannelBrowserTvParityTest {
         // principal (abajo) es la grilla, siempre visible (el hero puede
         // estar GONE, así que nada lo apunta como único camino).
         assertNotEquals(R.id.browser_list_selector, selector.nextFocusDownId)
+    }
+
+    @Test
+    fun `S2 tv fila vertical focable con cabecera y timeline`() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val parent = LinearLayout(context).apply { orientation = LinearLayout.VERTICAL }
+        val root = LayoutInflater.from(context).inflate(R.layout.item_channel, parent, false) as LinearLayout
+        assertEquals(LinearLayout.VERTICAL, root.orientation)
+        assertTrue(root.isFocusable)
+        assertTrue(root.background != null)
+        assertTrue(root.findViewById<View>(R.id.channel_number) != null)
+        val logo = root.findViewById<android.widget.ImageView>(R.id.channel_logo)
+        assertEquals(dp(context, 96), logo.layoutParams.width)
+        assertEquals(dp(context, 56), logo.layoutParams.height)
+        assertTrue(root.findViewById<TextView>(R.id.channel_name) != null)
+        assertTrue(root.findViewById<TextView>(R.id.channel_epg) != null)
+        val strip = root.findViewById<LinearLayout>(R.id.channel_timeline)
+        assertTrue(strip != null)
+        assertEquals(LinearLayout.HORIZONTAL, strip.orientation)
+    }
+
+    @Test
+    fun `S2 tv celda timeline peso igual 60dp end 2 lineas no focable`() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val parent = LinearLayout(context).apply { orientation = LinearLayout.HORIZONTAL }
+        val cell = LayoutInflater.from(context)
+            .inflate(R.layout.item_channel_timeline, parent, false) as TextView
+        val lp = cell.layoutParams as LinearLayout.LayoutParams
+        assertEquals(0, lp.width)
+        assertEquals(1f, lp.weight, 0.001f)
+        assertEquals(dp(context, 60), lp.height)
+        assertEquals(android.text.TextUtils.TruncateAt.END, cell.ellipsize)
+        assertEquals(2, cell.maxLines)
+        assertEquals(false, cell.isFocusable)
+        val expected = android.util.TypedValue.applyDimension(
+            android.util.TypedValue.COMPLEX_UNIT_SP, 11f, context.resources.displayMetrics,
+        )
+        assertEquals(expected, cell.textSize, 1.0f)
+    }
+
+    @Test
+    fun `S2 tv adapter infla 6 celdas sin tocar codigo`() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val adapter = ChannelGridAdapter(onClick = {})
+        val parent = RecyclerView(context)
+        parent.layoutManager = androidx.recyclerview.widget.LinearLayoutManager(context)
+        val holder = adapter.onCreateViewHolder(parent, 0)
+        // El adapter intacto (6 vía DEFAULT_SLOT_COUNT) ahora pinta tira en TV.
+        assertEquals(6, holder.timeline?.childCount)
     }
 }

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Celda del timeline (TV, paridad D1+D2): un corte de 30 min con el título
+     del programa en el aire; 6 celdas a peso igual (0dp/weight1) x 60dp, sin
+     foco ni marquee. Vacía sin guía en ese corte (el adapter pinta Sin datos). -->
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/timeline_cell"
+    android:layout_width="0dp"
+    android:layout_height="60dp"
+    android:layout_weight="1"
+    android:background="@color/tp_surface2"
+    android:ellipsize="end"
+    android:focusable="false"
+    android:gravity="center_vertical"
+    android:maxLines="2"
+    android:padding="6dp"
+    android:textColor="@color/tp_text_secondary"
+    android:textSize="11sp" />
