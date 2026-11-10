@@ -108,4 +108,22 @@
     <string name="sheet_fav">★ Favorito</string>
     <string name="sheet_unfav">Quitar favorito</string>
     <string name="sheet_approx">Guía aproximada (por nombre)</string>
+    <string name="settings_proxy_title">Proxy de red (opcional)</string>
+    <string name="settings_proxy_enable">Usar proxy</string>
+    <string name="settings_proxy_host">Servidor (ej. 192.168.1.10)</string>
+    <string name="settings_proxy_port">Puerto (ej. 8080)</string>
+    <string name="settings_proxy_user">Usuario del proxy (opcional)</string>
+    <string name="settings_proxy_pass">Contraseña del proxy (opcional)</string>
+    <string name="settings_proxy_save">Guardar proxy</string>
+    <string name="settings_proxy_saved">Proxy guardado</string>
+    <string name="settings_proxy_test_url">URL para probar (https://…)</string>
+    <string name="settings_proxy_test">Probar</string>
+    <string name="settings_proxy_ok">OK (código %1$d)</string>
+    <string name="settings_proxy_code">Respuesta: código %1$d</string>
+    <string name="settings_proxy_error">Error: %1$s</string>
+    <string name="settings_proxy_bypass_warn">El motor AceStream local (127.0.0.1) nunca pasa por el proxy.</string>
+    <string-array name="proxy_types">
+        <item>HTTP</item>
+        <item>SOCKS</item>
+    </string-array>
 </resources>

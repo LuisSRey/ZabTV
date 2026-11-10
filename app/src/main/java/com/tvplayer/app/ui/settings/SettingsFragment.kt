@@ -110,9 +110,121 @@ class SettingsFragment : Fragment() {
                 Toast.makeText(requireContext(), R.string.settings_buffer_saved, Toast.LENGTH_SHORT).show()
             }
         }
+        wireProxySection(view, container)
     }
 
     private fun container() = (requireActivity().application as TpApp).container
+
+    /**
+     * S1: sección proxy. Guarda host/puerto/tipo en SettingsDao y las
+     * credenciales en ProxyCreds (cifrado); al guardar se reconstruye el
+     * OkHttp único. Probar hace un GET con timeout de 8 s sobre la política
+     * en vigor y muestra OK/código/error SIN loguear credenciales.
+     */
+    private fun wireProxySection(view: View, container: AppContainer) {
+        val enable = view.findViewById<android.widget.Switch>(R.id.settings_proxy_enable)
+        val host = view.findViewById<android.widget.EditText>(R.id.settings_proxy_host)
+        val port = view.findViewById<android.widget.EditText>(R.id.settings_proxy_port)
+        val type = view.findViewById<android.widget.Spinner>(R.id.settings_proxy_type)
+        val user = view.findViewById<android.widget.EditText>(R.id.settings_proxy_user)
+        val pass = view.findViewById<android.widget.EditText>(R.id.settings_proxy_pass)
+        val testUrl = view.findViewById<android.widget.EditText>(R.id.settings_proxy_test_url)
+        val testBtn = view.findViewById<Button>(R.id.settings_proxy_test)
+        val saveBtn = view.findViewById<Button>(R.id.settings_proxy_save)
+        val result = view.findViewById<TextView>(R.id.settings_proxy_result)
+        listOf(testBtn, saveBtn).forEach { FocusScaleHelper.attach(it) }
+
+        lifecycleScope.launch {
+            val policy = container.currentPolicy.proxy
+            enable.isChecked = policy.enabled
+            host.setText(policy.host)
+            port.setText(policy.port.toString())
+            type.setSelection(if (policy.type == com.tvplayer.app.data.net.ProxyType.SOCKS) 1 else 0)
+            val creds = runCatching { container.proxyCreds.load() }.getOrNull()
+            user.setText(creds?.first.orEmpty())
+            // La contraseña no se rellena: solo se sobrescribe si se escribe una nueva.
+        }
+        saveBtn.setOnClickListener {
+            lifecycleScope.launch {
+                persistProxy(container, enable.isChecked, host.text.toString(), port.text.toString(),
+                    if (type.selectedItemPosition == 1) "SOCKS" else "HTTP",
+                    user.text.toString(), pass.text.toString())
+                pass.text.clear()
+                Toast.makeText(requireContext(), R.string.settings_proxy_saved, Toast.LENGTH_SHORT).show()
+            }
+        }
+        testBtn.setOnClickListener {
+            result.visibility = View.VISIBLE
+            result.text = getString(R.string.lists_refreshing)
+            lifecycleScope.launch {
+                persistProxy(container, enable.isChecked, host.text.toString(), port.text.toString(),
+                    if (type.selectedItemPosition == 1) "SOCKS" else "HTTP",
+                    user.text.toString(), pass.text.toString())
+                val url = testUrl.text.toString().trim()
+                if (url.isEmpty() || (!url.startsWith("http://") && !url.startsWith("https://"))) {
+                    result.text = getString(R.string.settings_proxy_error, "URL http(s) inválida")
+                    return@launch
+                }
+                result.text = probeUrl(container, url)
+            }
+        }
+    }
+
+    private suspend fun persistProxy(
+        container: AppContainer,
+        enabled: Boolean,
+        host: String,
+        port: String,
+        type: String,
+        user: String,
+        pass: String,
+    ) {
+        val dao = container.db.settingsDao()
+        dao.put(com.tvplayer.app.data.net.ProxyConfig.KEY_ENABLED, enabled.toString())
+        dao.put(com.tvplayer.app.data.net.ProxyConfig.KEY_HOST, host.trim())
+        dao.put(com.tvplayer.app.data.net.ProxyConfig.KEY_PORT, (port.toIntOrNull() ?: 8080).toString())
+        dao.put(com.tvplayer.app.data.net.ProxyConfig.KEY_TYPE, type)
+        val u = user.trim()
+        if (u.isNotEmpty() || pass.isNotEmpty()) {
+            runCatching { container.proxyCreds.save(u, pass) }
+        } else if (u.isEmpty()) {
+            runCatching { container.proxyCreds.clear() }
+        }
+        container.refreshNetPolicy()
+        runCatching { coil.Coil.setImageLoader(container.imageLoader) }
+    }
+
+    /** GET con timeout de 8 s. Devuelve el mensaje a mostrar; nunca loguea credenciales. */
+    private suspend fun probeUrl(container: AppContainer, url: String): String =
+        kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            try {
+                val client = container.okHttp.newBuilder()
+                    .connectTimeout(8, java.util.concurrent.TimeUnit.SECONDS)
+                    .readTimeout(8, java.util.concurrent.TimeUnit.SECONDS)
+                    .callTimeout(8, java.util.concurrent.TimeUnit.SECONDS)
+                    .build()
+                client.newCall(okhttp3.Request.Builder().url(url).head().build()).execute().use { resp ->
+                    if (resp.isSuccessful) getString(R.string.settings_proxy_ok, resp.code)
+                    else getString(R.string.settings_proxy_code, resp.code)
+                }
+            } catch (_: Exception) {
+                // HEAD puede no estar permitido: reintentar con GET acotado.
+                try {
+                    val client = container.okHttp.newBuilder()
+                        .connectTimeout(8, java.util.concurrent.TimeUnit.SECONDS)
+                        .readTimeout(8, java.util.concurrent.TimeUnit.SECONDS)
+                        .callTimeout(8, java.util.concurrent.TimeUnit.SECONDS)
+                        .build()
+                    client.newCall(okhttp3.Request.Builder().url(url).build()).execute().use { resp ->
+                        resp.close()
+                        if (resp.isSuccessful) getString(R.string.settings_proxy_ok, resp.code)
+                        else getString(R.string.settings_proxy_code, resp.code)
+                    }
+                } catch (e: Exception) {
+                    getString(R.string.settings_proxy_error, e.javaClass.simpleName)
+                }
+            }
+        }
 
     /** Confirmación antes de cualquier borrado. */
     private fun confirm(itemName: String, onYes: () -> Unit) {

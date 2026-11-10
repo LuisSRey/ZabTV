@@ -15,9 +15,13 @@ class TpApp : Application() {
         super.onCreate()
         // Logos SIEMPRE por el único transporte (OkHttp compartido + CleartextGate, spec F8)
         Coil.setImageLoader(container.imageLoader)
-        // Política de cleartext desde SettingsDao (default OFF) al hilo IO
+        // Política de red (cleartext + proxy + DoH) desde SettingsDao (defaults OFF/System) al hilo IO
         CoroutineScope(Dispatchers.IO).launch {
-            runCatching { container.refreshCleartextPolicy() }
+            runCatching {
+                container.refreshNetPolicy()
+                // El transporte se reconstruyó: el singleton de Coil debe envolver el nuevo cliente
+                Coil.setImageLoader(container.imageLoader)
+            }
         }
         // EPG periódica cada 6 h (Task 13; KEEP para no duplicar)
         runCatching { com.tvplayer.app.data.work.EpgWorker.schedule(this) }
