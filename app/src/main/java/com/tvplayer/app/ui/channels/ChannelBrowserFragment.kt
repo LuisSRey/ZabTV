@@ -167,6 +167,7 @@ class ChannelBrowserFragment : Fragment() {
         // el rail queda solo para filtros. TV usa diálogo D-pad, móvil
         // PopupMenu.
         view.findViewById<TextView>(R.id.browser_list_selector)?.let { selector ->
+            FocusScaleHelper.attach(selector)
             selector.setOnClickListener {
                 if (isTv) showListDialog() else showListMenu(selector)
             }
