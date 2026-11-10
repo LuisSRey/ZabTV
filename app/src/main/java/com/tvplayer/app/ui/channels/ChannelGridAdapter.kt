@@ -76,21 +76,25 @@ class ChannelGridAdapter(
     }
 
     class Holder(root: View) : RecyclerView.ViewHolder(root) {
-        val number: TextView = root.findViewById(R.id.channel_number)
+        // Nulables null-safe: el layout TV no trae number ni timeline.
+        val number: TextView? = root.findViewById(R.id.channel_number)
         val logo: ImageView = root.findViewById(R.id.channel_logo)
         val name: TextView = root.findViewById(R.id.channel_name)
         val epg: TextView? = root.findViewById(R.id.channel_epg)
-        val timeline: LinearLayout = root.findViewById(R.id.channel_timeline)
+        val timeline: LinearLayout? = root.findViewById(R.id.channel_timeline)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): Holder {
         val v = LayoutInflater.from(parent.context).inflate(R.layout.item_channel, parent, false)
         FocusScaleHelper.attach(v)
         val holder = Holder(v)
-        val inflater = LayoutInflater.from(parent.context)
-        val slots = GuideWindow.DEFAULT_SLOT_COUNT
-        repeat(slots) {
-            inflater.inflate(R.layout.item_channel_timeline, holder.timeline, true)
+        // Solo el layout con tira lleva celdas (TV sin timeline = 0 celdas).
+        if (holder.timeline != null) {
+            val inflater = LayoutInflater.from(parent.context)
+            val slots = GuideWindow.DEFAULT_SLOT_COUNT
+            repeat(slots) {
+                inflater.inflate(R.layout.item_channel_timeline, holder.timeline, true)
+            }
         }
         return holder
     }
@@ -114,7 +118,7 @@ class ChannelGridAdapter(
     private fun onBind(holder: Holder, position: Int, full: Boolean) {
         val channel = getItem(position) ?: return
         if (full) {
-            holder.number.text = (channel.position + 1).toString()
+            holder.number?.text = (channel.position + 1).toString()
             holder.name.text = channel.displayName
             holder.logo.setImageDrawable(null) // reciclado: sin logo fantasma
             val radiusPx = 8f * holder.itemView.resources.displayMetrics.density
@@ -141,17 +145,23 @@ class ChannelGridAdapter(
     }
 
     private fun bindTimeline(holder: Holder, position: Int) {
+        // Sin tira (TV) no hay nada que pintar: se sale sin tocar nada.
+        val strip = holder.timeline ?: return
         val w = window
-        // Sin ventana (rail de Favoritos en Home) no hay timeline: se oculta.
+        // Sin ventana (rail de Favoritos/Buscar en Home) no hay timeline.
         if (w == null) {
-            holder.timeline.visibility = View.GONE
+            strip.visibility = View.GONE
             return
         }
-        holder.timeline.visibility = View.VISIBLE
+        // Con ventana la tira va SIEMPRE visible; el hueco sin guía usa el
+        // string existente de vacío (browser_empty), nunca "—".
+        strip.visibility = View.VISIBLE
         val channel = getItem(position) ?: return
+        val emptyLabel = holder.itemView.context.getString(R.string.browser_empty)
         val titles = cellTitles(timeline[channel.stableKey].orEmpty(), w)
-        for (i in 0 until holder.timeline.childCount) {
-            (holder.timeline.getChildAt(i) as? TextView)?.text = titles.getOrElse(i) { "" }
+        for (i in 0 until strip.childCount) {
+            (strip.getChildAt(i) as? TextView)?.text =
+                titles.getOrElse(i) { "" }.ifBlank { emptyLabel }
         }
     }
 }

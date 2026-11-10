@@ -19,6 +19,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -95,12 +96,12 @@ class ChannelGridAdapterTest {
         parent.layoutManager = LinearLayoutManager(context)
         val holder = adapter.onCreateViewHolder(parent, 0)
         adapter.onBindViewHolder(holder, 0)
-        assertEquals("5", holder.number.text.toString())
+        assertEquals("5", holder.number?.text.toString())
         assertEquals("Uno", holder.name.text.toString())
         val cells = (holder.timeline as LinearLayout)
         assertEquals(6, cells.childCount)
         assertEquals("Ahora", (cells.getChildAt(0) as android.widget.TextView).text.toString())
-        assertEquals("", (cells.getChildAt(1) as android.widget.TextView).text.toString())
+        assertEquals(context.getString(com.tvplayer.app.R.string.browser_empty), (cells.getChildAt(1) as android.widget.TextView).text.toString())
     }
 
     @Test
@@ -117,7 +118,59 @@ class ChannelGridAdapterTest {
         parent.layoutManager = LinearLayoutManager(context)
         val holder = adapter.onCreateViewHolder(parent, 0)
         adapter.onBindViewHolder(holder, 0)
-        assertEquals(android.view.View.GONE, holder.timeline.visibility)
+        assertEquals(android.view.View.GONE, holder.timeline?.visibility)
+    }
+
+    @Test
+    fun `timeline visible con placeholder sin datos cuando no hay guia`() = runTest {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val adapter = ChannelGridAdapter(onClick = {})
+        adapter.submitData(PagingData.from(listOf(channel())))
+        withContext(Dispatchers.IO) {
+            withTimeout(10_000) {
+                while (adapter.itemCount != 1) kotlinx.coroutines.delay(50)
+            }
+        }
+        // Ventana presente pero sin programas: visible y placeholder existente.
+        adapter.submitTimeline(mapOf("c1" to emptyList()), window)
+        val parent = RecyclerView(context)
+        parent.layoutManager = LinearLayoutManager(context)
+        val holder = adapter.onCreateViewHolder(parent, 0)
+        adapter.onBindViewHolder(holder, 0)
+        assertEquals(android.view.View.VISIBLE, holder.timeline?.visibility)
+        val cells = holder.timeline as LinearLayout
+        // Placeholder = string existente de vacío (es "Sin datos"), nunca "—".
+        val placeholder = context.getString(com.tvplayer.app.R.string.browser_empty)
+        assertEquals(placeholder, (cells.getChildAt(0) as android.widget.TextView).text.toString())
+        for (i in 0 until cells.childCount) {
+            val text = (cells.getChildAt(i) as android.widget.TextView).text.toString()
+            assertTrue(!text.contains("—"))
+        }
+    }
+
+    @Test
+    fun `holder sin numero ni timeline no crashea (protege TV)`() = runTest {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val adapter = ChannelGridAdapter(onClick = {})
+        adapter.submitData(PagingData.from(listOf(channel())))
+        withContext(Dispatchers.IO) {
+            withTimeout(10_000) {
+                while (adapter.itemCount != 1) kotlinx.coroutines.delay(50)
+            }
+        }
+        // Vista estilo TV: sin channel_number ni channel_timeline.
+        val root = LinearLayout(context)
+        val logo = android.widget.ImageView(context)
+        logo.id = com.tvplayer.app.R.id.channel_logo
+        root.addView(logo)
+        val name = android.widget.TextView(context)
+        name.id = com.tvplayer.app.R.id.channel_name
+        root.addView(name)
+        val holder = ChannelGridAdapter.Holder(root)
+        adapter.onBindViewHolder(holder, 0)
+        // Sin ventana (Home) y con ventana: nunca crashea sin timeline.
+        adapter.submitTimeline(mapOf("c1" to emptyList()), window)
+        adapter.onBindViewHolder(holder, 0)
     }
 
     @Test
