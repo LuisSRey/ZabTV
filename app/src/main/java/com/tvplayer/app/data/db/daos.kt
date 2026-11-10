@@ -72,6 +72,17 @@ interface ChannelDao {
 
     @Query("SELECT * FROM channels WHERE listId = :listId AND position < :pos ORDER BY position DESC LIMIT 1")
     suspend fun prevInList(listId: Long, pos: Int): ChannelEntity?
+
+    /**
+     * Poda VOD del portal (solo Live en P1): grupos cuyo nombre contiene
+     * vod/movie/serie (case-insensitive, cubre VOD/MOVIES/SERIES y singulares).
+     * Solo la llama XtreamRepository tras importar un portal; nunca en listas M3U.
+     */
+    @Query(
+        "DELETE FROM channels WHERE listId = :listId AND " +
+            "(LOWER(groupName) LIKE '%vod%' OR LOWER(groupName) LIKE '%movie%' OR LOWER(groupName) LIKE '%serie%')",
+    )
+    suspend fun deleteVodGroups(listId: Long): Int
 }
 
 data class GroupNameCount(val group: String, val count: Int)

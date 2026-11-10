@@ -20,7 +20,7 @@ import com.tvplayer.app.TpApp
 import com.tvplayer.app.TvNavigator
 import com.tvplayer.app.data.db.ListEntity
 import com.tvplayer.app.data.portal.SecureCredentials
-import com.tvplayer.app.data.portal.XtreamLogin
+import com.tvplayer.app.data.portal.XtreamRepository
 import com.tvplayer.app.data.repo.ImportService
 import com.tvplayer.app.data.repo.ImportSource
 import com.tvplayer.app.ui.common.FocusScaleHelper
@@ -207,7 +207,11 @@ class ListsFragment : Fragment() {
         }
     }
 
-    /** Portal Xtream (Task 12): single request; 401 → mensaje específico; creds a Keystore. */
+    /**
+     * Portal Xtream: auth contra player_api + playlist get.php (m3u_plus/ts) vía
+     * [XtreamRepository] sobre el OkHttp compartido (mismo CleartextGate);
+     * 401/creds malas → mensaje específico sin tocar nada; Live solo (poda VOD).
+     */
     private fun addFromPortal(name: String, host: String, username: String, password: String) {
         lifecycleScope.launch {
             val db = container().db
@@ -215,33 +219,11 @@ class ListsFragment : Fragment() {
                 Toast.makeText(requireContext(), R.string.lists_max, Toast.LENGTH_LONG).show()
                 return@launch
             }
-            val playlistUrl: String
-            val epgUrl: String?
-            try {
-                playlistUrl = XtreamLogin.playlistUrl(host, username, password)
-                epgUrl = XtreamLogin.epgUrl(host, username, password)
-            } catch (_: IllegalArgumentException) {
-                Toast.makeText(requireContext(), R.string.portal_invalid_host, Toast.LENGTH_LONG).show()
-                return@launch
-            }
-            val listId = db.listDao().upsert(
-                ListEntity(
-                    name = name.ifBlank { host },
-                    sourceUrl = "",
-                    epgUrl = epgUrl,
-                    portalHost = host,
-                    status = "importing",
-                ),
-            )
-            // Credenciales cifradas ANTES de cualquier red (nunca a logs ni Toasts)
-            SecureCredentials.createEncrypted(requireContext().applicationContext).save(listId, username, password)
-            reload()
-            val result = ImportService(
-                requireContext().applicationContext, db, container().okHttp,
-            ).import(listId, ImportSource.HttpSource(playlistUrl, null))
-            val shown = portalMessage(result.message)
-            Toast.makeText(requireContext(), shown, Toast.LENGTH_LONG).show()
-            if (!result.rejected) refreshEpgIfNeeded(listId)
+            val appCtx = requireContext().applicationContext
+            val repo = XtreamRepository(db, container().okHttp, appCtx, SecureCredentials.createEncrypted(appCtx))
+            val result = repo.importPortal(null, name, host, username, password)
+            Toast.makeText(requireContext(), safeMessage(result.message), Toast.LENGTH_LONG).show()
+            if (!result.rejected) refreshEpgIfNeeded(result.listId)
             reload()
         }
     }
@@ -297,8 +279,6 @@ class ListsFragment : Fragment() {
         if (message.contains("401")) return getString(R.string.portal_invalid)
         return message
     }
-
-    private fun portalMessage(message: String?): String? = safeMessage(message)
 
     /** Editar lista existente (nombre/URL/UA o datos del portal + reimport si cambió el origen). */
     private fun edit(listId: Long) {
@@ -362,45 +342,25 @@ class ListsFragment : Fragment() {
             }
             is AddListInput.Portal -> {
                 lifecycleScope.launch {
-                    val playlistUrl: String
-                    val epgUrl: String?
-                    try {
-                        playlistUrl = com.tvplayer.app.data.portal.XtreamLogin.playlistUrl(input.host, input.username, input.password)
-                        epgUrl = com.tvplayer.app.data.portal.XtreamLogin.epgUrl(input.host, input.username, input.password)
-                    } catch (_: IllegalArgumentException) {
-                        Toast.makeText(requireContext(), R.string.portal_invalid_host, Toast.LENGTH_LONG).show()
-                        return@launch
-                    }
                     val db = container().db
-                    val creds = com.tvplayer.app.data.portal.SecureCredentials
-                        .createEncrypted(requireContext().applicationContext).load(listId)
+                    val appCtx = requireContext().applicationContext
+                    val secure = SecureCredentials.createEncrypted(appCtx)
+                    val creds = secure.load(listId)
                     val changed = input.host != old.portalHost ||
                         input.username != (creds?.first.orEmpty()) ||
                         input.password != (creds?.second.orEmpty())
-                    db.listDao().upsert(
-                        old.copy(
-                            name = input.name.ifBlank { old.name },
-                            epgUrl = epgUrl,
-                            portalHost = input.host,
-                            status = if (changed) "importing" else old.status,
-                        ),
-                    )
-                    if (changed) {
-                        com.tvplayer.app.data.portal.SecureCredentials
-                            .createEncrypted(requireContext().applicationContext)
-                            .save(listId, input.username, input.password)
-                    }
-                    reload()
-                    if (changed) {
-                        val result = com.tvplayer.app.data.repo.ImportService(
-                            requireContext().applicationContext, db, container().okHttp,
-                        ).import(listId, com.tvplayer.app.data.repo.ImportSource.HttpSource(playlistUrl, null))
-                        Toast.makeText(requireContext(), safeMessage(result.message), Toast.LENGTH_LONG).show()
-                        if (!result.rejected) refreshEpgIfNeeded(listId)
+                    if (!changed) {
+                        db.listDao().upsert(old.copy(name = input.name.ifBlank { old.name }))
                         reload()
-                    } else {
                         Toast.makeText(requireContext(), R.string.lists_updated, Toast.LENGTH_SHORT).show()
+                        return@launch
                     }
+                    // Reimport del portal (auth + Live solo) con el OkHttp único.
+                    val repo = XtreamRepository(db, container().okHttp, appCtx, secure)
+                    val result = repo.importPortal(listId, input.name, input.host, input.username, input.password)
+                    Toast.makeText(requireContext(), safeMessage(result.message), Toast.LENGTH_LONG).show()
+                    if (!result.rejected) refreshEpgIfNeeded(listId)
+                    reload()
                 }
             }
         }
@@ -410,6 +370,18 @@ class ListsFragment : Fragment() {
         lifecycleScope.launch {
             val db = container().db
             val entity = db.listDao().get(listId) ?: return@launch
+            // Portal Xtream: reimport con host + creds guardadas (auth player_api
+            // + poda Live), mismo OkHttp compartido. Listas M3U: reimport HTTP.
+            if (entity.portalHost != null) {
+                Toast.makeText(requireContext(), R.string.lists_refreshing, Toast.LENGTH_SHORT).show()
+                val appCtx = requireContext().applicationContext
+                val repo = XtreamRepository(db, container().okHttp, appCtx, SecureCredentials.createEncrypted(appCtx))
+                val result = repo.reimport(listId, entity.userAgent)
+                Toast.makeText(requireContext(), safeMessage(result.message), Toast.LENGTH_LONG).show()
+                if (!result.rejected) refreshEpgIfNeeded(listId)
+                reload()
+                return@launch
+            }
             if (entity.sourceUrl.isBlank()) {
                 Toast.makeText(requireContext(), R.string.lists_refresh_file, Toast.LENGTH_LONG).show()
                 return@launch
@@ -432,6 +404,9 @@ class ListsFragment : Fragment() {
                 lifecycleScope.launch {
                     val db = container().db
                     db.channelDao().deleteForList(listId)
+                    db.favouriteDao().deleteForList(listId)
+                    db.recentDao().clearForList(listId)
+                    SecureCredentials.createEncrypted(requireContext().applicationContext).clear(listId)
                     db.listDao().delete(listId)
                     com.tvplayer.app.data.ActiveList.clearIf(db, listId)
                     reload()
