@@ -23,7 +23,38 @@ BLUE = (10, 132, 255)
 GRAY = (152, 152, 157)
 WHITE = (255, 255, 255)
 
-out_root = sys.argv[1]
+# Margen minimo de la zona segura del adaptive icon (2026-11-10): la mascara
+# del launcher recorta todo lo que quede a menos de 18dp del borde del lienzo
+# de 108dp. El marco azul a sangre quedaba a 35/256*108 = 14.76dp y el Nothing
+# lo cortaba.
+SAFE_MARGIN_DP = 18.0
+
+# Tamanos por densidad (datos puros; los bucles que generan viven en __main__).
+SIZES = {"mipmap-mdpi": 48, "mipmap-hdpi": 72, "mipmap-xhdpi": 96,
+         "mipmap-xxhdpi": 144, "mipmap-xxxhdpi": 192}
+FG_SIZES = {"mipmap-mdpi": 108, "mipmap-hdpi": 162, "mipmap-xhdpi": 216,
+            "mipmap-xxhdpi": 324, "mipmap-xxxhdpi": 432}
+BANNERS = {"drawable-mdpi": (160, 90), "drawable-hdpi": (240, 135),
+           "drawable-xhdpi": (320, 180), "drawable-xxhdpi": (480, 270),
+           "drawable-xxxhdpi": (640, 360)}
+
+
+def compute_safe_box(px):
+    """(ox, oy, s) puros para dibujar el grupo completo dentro de la caja segura.
+
+    Escala uniforme k = 166/186 ~= 0.892 sobre el centro del diseno (128,128):
+    el marco (ancho 186u: x35..221) queda en 166u -> margenes de rect
+    (256-166)/2 = 45u = 19.0dp; vertical 63.9u = 27.0dp.
+    El 170/186 ideal (43u = 18.14dp) no basta: el outline de Pillow con ancho
+    par pinta +1px en los bordes trailing (derecha/abajo) y el margen derecho
+    medido caia a ~17.1dp; con 166/186 el bbox visible medido queda >=18dp en
+    los 4 lados y 5 densidades (mdpi-derecha clava 18.0 por cuantizacion).
+    Vale para with_bg=True y with_bg=False (identico posicionamiento).
+    """
+    k = 166.0 / 186.0
+    s = (px / 256.0) * k
+    o = (px - 256.0 * s) / 2.0
+    return o, o, s
 
 
 def cubic(p0, p1, p2, p3, n=24):
@@ -74,62 +105,62 @@ def draw_mark(d, ox, oy, s, with_bg=True):
     d.polygon([(X(x), Y(y)) for x, y in PLAY_POLY], fill=BLACK)
 
 
-# Icono legacy cuadrado (API 23-25; en 26+ manda el adaptive icon).
-SIZES = {"mipmap-mdpi": 48, "mipmap-hdpi": 72, "mipmap-xhdpi": 96,
-         "mipmap-xxhdpi": 144, "mipmap-xxxhdpi": 192}
-for name, px in SIZES.items():
-    img = Image.new("RGBA", (px, px), BLACK + (255,))
-    d = ImageDraw.Draw(img)
-    draw_mark(d, 0, 0, px / 256, with_bg=True)
-    os.makedirs(f"{out_root}/{name}", exist_ok=True)
-    img.save(f"{out_root}/{name}/ic_launcher.webp", format="WEBP", lossless=True)
-    mask = Image.new("L", (px, px), 0)
-    ImageDraw.Draw(mask).ellipse([0, 0, px, px], fill=255)
-    rounded = Image.new("RGBA", (px, px), (0, 0, 0, 0))
-    rounded.paste(img, (0, 0), mask)
-    rounded.save(f"{out_root}/{name}/ic_launcher_round.webp", format="WEBP", lossless=True)
-    print(name, px)
+# Generacion CLI: python tools/gen_launcher_icon.py <out_root>
+# (bajo main guard para que compute_safe_box/draw_mark sean importables
+# sin efectos laterales; el comportamiento CLI no cambia).
+if __name__ == "__main__":
+    out_root = sys.argv[1]
 
-# Foreground adaptativo: marca completa a sangre sobre transparente
-# (el fondo negro lo pone el XML del adaptive-icon).
-FG_SIZES = {"mipmap-mdpi": 108, "mipmap-hdpi": 162, "mipmap-xhdpi": 216,
-            "mipmap-xxhdpi": 324, "mipmap-xxxhdpi": 432}
-for name, px in FG_SIZES.items():
-    fg = Image.new("RGBA", (px, px), (0, 0, 0, 0))
-    d = ImageDraw.Draw(fg)
-    draw_mark(d, 0, 0, px / 256, with_bg=True)
-    fg.save(f"{out_root}/{name}/ic_launcher_foreground.webp", format="WEBP", lossless=True)
-    print("fg", name, px)
+    # Icono legacy cuadrado (API 23-25; en 26+ manda el adaptive icon).
+    for name, px in SIZES.items():
+        img = Image.new("RGBA", (px, px), BLACK + (255,))
+        d = ImageDraw.Draw(img)
+        draw_mark(d, 0, 0, px / 256, with_bg=True)
+        os.makedirs(f"{out_root}/{name}", exist_ok=True)
+        img.save(f"{out_root}/{name}/ic_launcher.webp", format="WEBP", lossless=True)
+        mask = Image.new("L", (px, px), 0)
+        ImageDraw.Draw(mask).ellipse([0, 0, px, px], fill=255)
+        rounded = Image.new("RGBA", (px, px), (0, 0, 0, 0))
+        rounded.paste(img, (0, 0), mask)
+        rounded.save(f"{out_root}/{name}/ic_launcher_round.webp", format="WEBP", lossless=True)
+        print(name, px)
 
-# Banner TV en 5 densidades: fondo negro + marca a la izquierda +
-# texto "TVPlayer" blanco en negrita (Inter empaquetada). Si la fuente
-# falla, marca centrada sin texto.
-BANNERS = {"drawable-mdpi": (160, 90), "drawable-hdpi": (240, 135),
-           "drawable-xhdpi": (320, 180), "drawable-xxhdpi": (480, 270),
-           "drawable-xxxhdpi": (640, 360)}
-font_dir = os.path.join(out_root, "font")
-print("fonts:", sorted(os.listdir(font_dir)) if os.path.isdir(font_dir) else "SIN DIR FONT")
-for name, (W, H) in BANNERS.items():
-    banner = Image.new("RGB", (W, H), BLACK)
-    d = ImageDraw.Draw(banner)
-    try:
-        fp = os.path.join(font_dir, "inter_bold.otf")
-        size = int(H * 0.34)
-        font = ImageFont.truetype(fp, size)
-        side = int(H * 0.72)
-        ox, oy = int(H * 0.10), (H - side) // 2
-        draw_mark(d, ox, oy, side / 256, with_bg=True)
-        gap = int(H * 0.08)
-        avail = W - (ox + side + gap) - int(H * 0.06)
-        while font.getbbox("TVPlayer")[2] > avail and size > 8:
-            size -= 1
+    # Foreground adaptativo: grupo completo (fondo+marco+TvP) escalado
+    # uniformemente dentro de la caja segura de 72dp (ver compute_safe_box).
+    # El fondo negro del XML del adaptive-icon sigue aportando el negro base.
+    for name, px in FG_SIZES.items():
+        fg = Image.new("RGBA", (px, px), (0, 0, 0, 0))
+        d = ImageDraw.Draw(fg)
+        draw_mark(d, *compute_safe_box(px), with_bg=True)
+        fg.save(f"{out_root}/{name}/ic_launcher_foreground.webp", format="WEBP", lossless=True)
+        print("fg", name, px)
+
+    # Banner TV en 5 densidades: fondo negro + marca a la izquierda +
+    # texto "TVPlayer" blanco en negrita (Inter empaquetada). Si la fuente
+    # falla, marca centrada sin texto.
+    font_dir = os.path.join(out_root, "font")
+    print("fonts:", sorted(os.listdir(font_dir)) if os.path.isdir(font_dir) else "SIN DIR FONT")
+    for name, (W, H) in BANNERS.items():
+        banner = Image.new("RGB", (W, H), BLACK)
+        d = ImageDraw.Draw(banner)
+        try:
+            fp = os.path.join(font_dir, "inter_bold.otf")
+            size = int(H * 0.34)
             font = ImageFont.truetype(fp, size)
-        d.text((ox + side + gap, H / 2), "TVPlayer", font=font,
-               fill=WHITE, anchor="lm")
-        print("banner", name, W, H, "font_size", size)
-    except Exception as e:
-        print("banner", name, W, H, "SIN FUENTE:", e, "-> marca centrada")
-        side = int(H * 0.76)
-        draw_mark(d, (W - side) // 2, (H - side) // 2, side / 256, with_bg=True)
-    os.makedirs(f"{out_root}/{name}", exist_ok=True)
-    banner.save(f"{out_root}/{name}/banner.webp", format="WEBP", lossless=True)
+            side = int(H * 0.72)
+            ox, oy = int(H * 0.10), (H - side) // 2
+            draw_mark(d, ox, oy, side / 256, with_bg=True)
+            gap = int(H * 0.08)
+            avail = W - (ox + side + gap) - int(H * 0.06)
+            while font.getbbox("TVPlayer")[2] > avail and size > 8:
+                size -= 1
+                font = ImageFont.truetype(fp, size)
+            d.text((ox + side + gap, H / 2), "TVPlayer", font=font,
+                   fill=WHITE, anchor="lm")
+            print("banner", name, W, H, "font_size", size)
+        except Exception as e:
+            print("banner", name, W, H, "SIN FUENTE:", e, "-> marca centrada")
+            side = int(H * 0.76)
+            draw_mark(d, (W - side) // 2, (H - side) // 2, side / 256, with_bg=True)
+        os.makedirs(f"{out_root}/{name}", exist_ok=True)
+        banner.save(f"{out_root}/{name}/banner.webp", format="WEBP", lossless=True)

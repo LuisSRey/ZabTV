@@ -13,7 +13,7 @@ android {
         targetSdk = 36
         // Subir a mano en cada release que cambie icono/banner (invalida
         // cachés del launcher que ignoran la fecha).
-        versionCode = 77
+        versionCode = 78
         versionName = "0.1.0"
     }
 
