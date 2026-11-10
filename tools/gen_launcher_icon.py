@@ -27,7 +27,14 @@ WHITE = (255, 255, 255)
 # del launcher recorta todo lo que quede a menos de 18dp del borde del lienzo
 # de 108dp. El marco azul a sangre quedaba a 35/256*108 = 14.76dp y el Nothing
 # lo cortaba.
+# ANALYSIS2 (2026-11-10): el gate lateral no basta. La mascara circle/teardrop
+# recorta por RADIO desde el centro: todo el marco exterior (stroke incluido)
+# debe quedar dentro del circulo seguro de radio 33dp (78.22u). Las esquinas
+# exteriores del marco estan a 108.42u del centro (cota 109u), asi que
+# k <= 78.22/109 = 0.7176, menos ~1dp de holgura -> k = 0.69 (esquinas a
+# 31.6-31.7dp, ~1.3dp de holgura).
 SAFE_MARGIN_DP = 18.0
+SAFE_RADIUS_DP = 33.0
 
 # Tamanos por densidad (datos puros; los bucles que generan viven en __main__).
 SIZES = {"mipmap-mdpi": 48, "mipmap-hdpi": 72, "mipmap-xhdpi": 96,
@@ -40,18 +47,25 @@ BANNERS = {"drawable-mdpi": (160, 90), "drawable-hdpi": (240, 135),
 
 
 def compute_safe_box(px):
-    """(ox, oy, s) puros para dibujar el grupo completo dentro de la caja segura.
+    """(ox, oy, s) puros para dibujar el grupo completo dentro del circulo seguro.
 
-    Escala uniforme k = 166/186 ~= 0.892 sobre el centro del diseno (128,128):
-    el marco (ancho 186u: x35..221) queda en 166u -> margenes de rect
-    (256-166)/2 = 45u = 19.0dp; vertical 63.9u = 27.0dp.
-    El 170/186 ideal (43u = 18.14dp) no basta: el outline de Pillow con ancho
-    par pinta +1px en los bordes trailing (derecha/abajo) y el margen derecho
-    medido caia a ~17.1dp; con 166/186 el bbox visible medido queda >=18dp en
-    los 4 lados y 5 densidades (mdpi-derecha clava 18.0 por cuantizacion).
-    Vale para with_bg=True y with_bg=False (identico posicionamiento).
+    Escala uniforme k = 0.69 sobre el centro del diseno (128,128):
+    - Radial (ANALYSIS2, vinculante): la esquina exterior del marco (rect
+      x35..221 y57..199 rx33 + stroke 10 centrado -> borde exterior
+      [30,52,226,204] r38, arco sup-izq centro (68,90) -> 108.42u del centro,
+      cota 109u) queda a 109*0.69 = 75.2u = 31.7dp del centro, ~1.3dp de
+      holgura dentro del circulo seguro de radio 33dp (78.22u).
+      k <= 78.22/109 = 0.7176 (al borde); k <= 75.85/109 = 0.6959 (a 32dp).
+    - Lateral (se mantiene): el marco (ancho 186u) queda en 128.3u ->
+      margenes de rect (256-128.3)/2 = 63.8u = 26.9dp en L/R (>=18dp);
+      vertical 63.8u+ -> ~27dp en T/B. El gate lateral sigue pasando.
+    El k anterior (166/186 ~= 0.892) daba falso verde: laterales >=18dp pero
+    esquinas a ~40.8dp del centro, fuera del circulo de 33dp (el Nothing las
+    mordia). Vale para with_bg=True y with_bg=False (identico
+    posicionamiento). Solo lo usa el bucle foreground; legacy/banner usan sus
+    args actuales y quedan byte-identicos.
     """
-    k = 166.0 / 186.0
+    k = 0.69
     s = (px / 256.0) * k
     o = (px - 256.0 * s) / 2.0
     return o, o, s
