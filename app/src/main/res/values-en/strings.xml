@@ -8,6 +8,13 @@
     <string name="browser_groups_all">All</string>
     <string name="browser_no_group">No group</string>
     <string name="browser_channel_logo">Channel logo</string>
+    <string name="browser_history">History</string>
+    <string name="browser_empty">No data</string>
+    <string name="browser_next">Next: %1$s</string>
+    <string name="guide_title">Guide</string>
+    <string name="guide_history">History</string>
+    <string name="guide_empty">No channels in this view</string>
+    <string name="guide_next">Next: %1$s</string>
     <string name="player_coming">Player available in the next release</string>
     <string name="player_logo">Channel logo</string>
     <string name="player_now_placeholder">No guide for this channel</string>
