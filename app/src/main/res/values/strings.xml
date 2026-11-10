@@ -11,10 +11,6 @@
     <string name="browser_history">Historial</string>
     <string name="browser_empty">Sin datos</string>
     <string name="browser_next">Después: %1$s</string>
-    <string name="guide_title">Guía</string>
-    <string name="guide_history">Historial</string>
-    <string name="guide_empty">Sin canales en esta vista</string>
-    <string name="guide_next">Después: %1$s</string>
     <string name="player_coming">Reproductor disponible en la próxima versión</string>
     <string name="player_logo">Logotipo del canal</string>
     <string name="player_now_placeholder">Sin guía para este canal</string>
