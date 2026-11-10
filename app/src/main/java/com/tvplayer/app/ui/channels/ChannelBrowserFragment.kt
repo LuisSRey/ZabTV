@@ -70,7 +70,7 @@ class ChannelBrowserFragment : Fragment() {
 
         val isTv = FocusScaleHelper.isTv(view)
         val container = (requireActivity().application as TpApp).container
-        viewModel = ChannelBrowserViewModel(container.db.channelDao(), listId)
+        viewModel = ChannelBrowserViewModel(listId, container.db.channelDao(), container.db.epgDao(), container.db.recentDao())
 
         val grid = view.findViewById<RecyclerView>(R.id.channel_grid)
         val gridAdapter = ChannelGridAdapter(
@@ -116,7 +116,7 @@ class ChannelBrowserFragment : Fragment() {
         lateinit var railAdapter: ChannelRailAdapter
         railAdapter = ChannelRailAdapter { row ->
             railAdapter.selected = row.group
-            viewModel.select(row.group)
+            viewModel.select(ChannelSidebar.Selection.Group(row.group))
             grid.scrollToPosition(0)
         }
         rail.layoutManager = LinearLayoutManager(
