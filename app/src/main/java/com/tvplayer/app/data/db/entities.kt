@@ -87,3 +87,14 @@ data class SettingEntity(
     @PrimaryKey val key: String,
     val value: String,
 )
+
+/**
+ * Historial por lista (guía S1): últimos canales reproducidos de cada lista.
+ * PK compuesta (listId, stableKey); el cap 20 lo impone [com.tvplayer.app.data.db.RecentDao].
+ */
+@Entity(tableName = "recent_watches", primaryKeys = ["listId", "stableKey"])
+data class RecentWatchEntity(
+    val listId: Long = 0,
+    val stableKey: String = "",
+    val watchedAt: Long = 0,
+)

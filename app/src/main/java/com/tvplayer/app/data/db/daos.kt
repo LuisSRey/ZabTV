@@ -102,6 +102,10 @@ interface FavouriteDao {
     @Query("DELETE FROM favourites WHERE listId = :listId AND channelKey = :channelKey")
     suspend fun delete(listId: Long, channelKey: String)
 
+    /** Limpieza al borrar la lista (la guía/ficha también limpian recent + creds). */
+    @Query("DELETE FROM favourites WHERE listId = :listId")
+    suspend fun deleteForList(listId: Long)
+
     @Query("DELETE FROM favourites")
     suspend fun clearAll()
 
@@ -143,6 +147,16 @@ interface EpgDao {
     @Query("SELECT * FROM epg_programs WHERE tvgId = :tvgId AND startMillis >= :startInclMillis AND startMillis <= :endInclMillis ORDER BY startMillis")
     suspend fun dayPrograms(tvgId: String, startInclMillis: Long, endInclMillis: Long): List<EpgProgramEntity>
 
+    /**
+     * Programas que solapan la ventana de la guía (S1): el timeline pide un batch
+     * por los visibles y reparte por tvgId en el ViewModel. Orden determinista.
+     */
+    @Query(
+        "SELECT * FROM epg_programs WHERE tvgId IN (:tvgIds) AND endMillis > :startMillis " +
+            "AND startMillis < :endMillis ORDER BY tvgId, startMillis",
+    )
+    suspend fun programsInRange(tvgIds: List<String>, startMillis: Long, endMillis: Long): List<EpgProgramEntity>
+
     @Query("DELETE FROM epg_programs WHERE endMillis < :beforeMillis")
     suspend fun pruneBefore(beforeMillis: Long): Int
 
@@ -158,6 +172,42 @@ interface EpgDao {
 
     @Query("SELECT EXISTS(SELECT 1 FROM epg_programs WHERE tvgId = :tvgId LIMIT 1)")
     suspend fun hasPrograms(tvgId: String): Boolean
+}
+
+@Dao
+interface RecentDao {
+    companion object {
+        /** Cap del historial por lista (guía S1). */
+        const val MAX_PER_LIST = 20
+    }
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsert(watch: RecentWatchEntity)
+
+    @Query("SELECT * FROM recent_watches WHERE listId = :listId ORDER BY watchedAt DESC LIMIT :limit")
+    suspend fun recentForList(listId: Long, limit: Int = MAX_PER_LIST): List<RecentWatchEntity>
+
+    @Query("SELECT COUNT(*) FROM recent_watches WHERE listId = :listId")
+    suspend fun countForList(listId: Long): Int
+
+    @Query(
+        "DELETE FROM recent_watches WHERE listId = :listId AND stableKey NOT IN " +
+            "(SELECT stableKey FROM recent_watches WHERE listId = :listId ORDER BY watchedAt DESC LIMIT :keep)",
+    )
+    suspend fun prune(listId: Long, keep: Int = MAX_PER_LIST)
+
+    /** Registra un visionado y poda al cap en la misma transacción. */
+    @Transaction
+    suspend fun recordWatch(listId: Long, stableKey: String, watchedAt: Long = System.currentTimeMillis()) {
+        upsert(RecentWatchEntity(listId, stableKey, watchedAt))
+        prune(listId)
+    }
+
+    @Query("DELETE FROM recent_watches WHERE listId = :listId")
+    suspend fun clearForList(listId: Long)
+
+    @Query("DELETE FROM recent_watches")
+    suspend fun clearAll()
 }
 
 @Dao

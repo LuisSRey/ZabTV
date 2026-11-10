@@ -30,7 +30,11 @@ class AppContainer(private val appContext: Context) {
 
     val db: AppDatabase by lazy {
         Room.databaseBuilder(appContext, AppDatabase::class.java, "tvplayer.db")
-            .addMigrations(com.tvplayer.app.data.db.MIGRATION_1_2, com.tvplayer.app.data.db.MIGRATION_2_3)
+            .addMigrations(
+                com.tvplayer.app.data.db.MIGRATION_1_2,
+                com.tvplayer.app.data.db.MIGRATION_2_3,
+                com.tvplayer.app.data.db.MIGRATION_3_4,
+            )
             .build()
     }
 

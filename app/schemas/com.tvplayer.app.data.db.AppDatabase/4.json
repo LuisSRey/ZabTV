@@ -1,0 +1,363 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 4,
+    "identityHash": "70fc5e442e7d1b35db7b59c13e01aae1",
+    "entities": [
+      {
+        "tableName": "lists",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `sourceUrl` TEXT NOT NULL, `epgUrl` TEXT, `userAgent` TEXT, `portalHost` TEXT, `portalUsernameEnc` TEXT, `portalPasswordEnc` TEXT, `lastImportedAt` INTEGER NOT NULL, `status` TEXT NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sourceUrl",
+            "columnName": "sourceUrl",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "epgUrl",
+            "columnName": "epgUrl",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "userAgent",
+            "columnName": "userAgent",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "portalHost",
+            "columnName": "portalHost",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "portalUsernameEnc",
+            "columnName": "portalUsernameEnc",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "portalPasswordEnc",
+            "columnName": "portalPasswordEnc",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "lastImportedAt",
+            "columnName": "lastImportedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "status",
+            "columnName": "status",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "channels",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`rowid` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `listId` INTEGER NOT NULL, `tvgId` TEXT, `displayName` TEXT NOT NULL, `normName` TEXT NOT NULL, `groupName` TEXT NOT NULL, `logoUrl` TEXT, `url` TEXT NOT NULL, `stableKey` TEXT NOT NULL, `position` INTEGER NOT NULL, `allowExternal` INTEGER)",
+        "fields": [
+          {
+            "fieldPath": "rowid",
+            "columnName": "rowid",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "listId",
+            "columnName": "listId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tvgId",
+            "columnName": "tvgId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "displayName",
+            "columnName": "displayName",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "normName",
+            "columnName": "normName",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "groupName",
+            "columnName": "groupName",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "logoUrl",
+            "columnName": "logoUrl",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "url",
+            "columnName": "url",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "stableKey",
+            "columnName": "stableKey",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "position",
+            "columnName": "position",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "allowExternal",
+            "columnName": "allowExternal",
+            "affinity": "INTEGER"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "rowid"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_channels_listId_groupName",
+            "unique": false,
+            "columnNames": [
+              "listId",
+              "groupName"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_channels_listId_groupName` ON `${TABLE_NAME}` (`listId`, `groupName`)"
+          },
+          {
+            "name": "index_channels_tvgId",
+            "unique": false,
+            "columnNames": [
+              "tvgId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_channels_tvgId` ON `${TABLE_NAME}` (`tvgId`)"
+          },
+          {
+            "name": "index_channels_normName",
+            "unique": false,
+            "columnNames": [
+              "normName"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_channels_normName` ON `${TABLE_NAME}` (`normName`)"
+          },
+          {
+            "name": "index_channels_listId_stableKey",
+            "unique": true,
+            "columnNames": [
+              "listId",
+              "stableKey"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_channels_listId_stableKey` ON `${TABLE_NAME}` (`listId`, `stableKey`)"
+          }
+        ]
+      },
+      {
+        "tableName": "favourites",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`listId` INTEGER NOT NULL, `channelKey` TEXT NOT NULL, `addedAtMillis` INTEGER NOT NULL, PRIMARY KEY(`listId`, `channelKey`))",
+        "fields": [
+          {
+            "fieldPath": "listId",
+            "columnName": "listId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "channelKey",
+            "columnName": "channelKey",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "addedAtMillis",
+            "columnName": "addedAtMillis",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "listId",
+            "channelKey"
+          ]
+        }
+      },
+      {
+        "tableName": "epg_programs",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`rowid` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `tvgId` TEXT NOT NULL, `startMillis` INTEGER NOT NULL, `endMillis` INTEGER NOT NULL, `title` TEXT NOT NULL, `description` TEXT)",
+        "fields": [
+          {
+            "fieldPath": "rowid",
+            "columnName": "rowid",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tvgId",
+            "columnName": "tvgId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "startMillis",
+            "columnName": "startMillis",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "endMillis",
+            "columnName": "endMillis",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "title",
+            "columnName": "title",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "description",
+            "columnName": "description",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "rowid"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_epg_programs_tvgId_startMillis",
+            "unique": true,
+            "columnNames": [
+              "tvgId",
+              "startMillis"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_epg_programs_tvgId_startMillis` ON `${TABLE_NAME}` (`tvgId`, `startMillis`)"
+          }
+        ]
+      },
+      {
+        "tableName": "epg_channels",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`tvgId` TEXT NOT NULL, `displayName` TEXT, PRIMARY KEY(`tvgId`))",
+        "fields": [
+          {
+            "fieldPath": "tvgId",
+            "columnName": "tvgId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "displayName",
+            "columnName": "displayName",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "tvgId"
+          ]
+        }
+      },
+      {
+        "tableName": "recent_watches",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`listId` INTEGER NOT NULL, `stableKey` TEXT NOT NULL, `watchedAt` INTEGER NOT NULL, PRIMARY KEY(`listId`, `stableKey`))",
+        "fields": [
+          {
+            "fieldPath": "listId",
+            "columnName": "listId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "stableKey",
+            "columnName": "stableKey",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "watchedAt",
+            "columnName": "watchedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "listId",
+            "stableKey"
+          ]
+        }
+      },
+      {
+        "tableName": "settings",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`key` TEXT NOT NULL, `value` TEXT NOT NULL, PRIMARY KEY(`key`))",
+        "fields": [
+          {
+            "fieldPath": "key",
+            "columnName": "key",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "value",
+            "columnName": "value",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "key"
+          ]
+        }
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '70fc5e442e7d1b35db7b59c13e01aae1')"
+    ]
+  }
+}

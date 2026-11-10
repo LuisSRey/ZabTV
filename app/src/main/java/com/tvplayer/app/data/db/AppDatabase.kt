@@ -29,6 +29,20 @@ val MIGRATION_2_3 = object : Migration(2, 3) {
     }
 }
 
+/**
+ * Migración 3→4 (guía S1): historial por lista (`recent_watches`). Tabla nueva,
+ * sin pérdida de datos (las demás tablas no se tocan).
+ */
+val MIGRATION_3_4 = object : Migration(3, 4) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            "CREATE TABLE IF NOT EXISTS `recent_watches` " +
+                "(`listId` INTEGER NOT NULL, `stableKey` TEXT NOT NULL, `watchedAt` INTEGER NOT NULL, " +
+                "PRIMARY KEY(`listId`, `stableKey`))",
+        )
+    }
+}
+
 @Database(
     entities = [
         ListEntity::class,
@@ -36,9 +50,10 @@ val MIGRATION_2_3 = object : Migration(2, 3) {
         FavouriteEntity::class,
         EpgProgramEntity::class,
         EpgChannelEntity::class,
+        RecentWatchEntity::class,
         SettingEntity::class,
     ],
-    version = 3,
+    version = 4,
     exportSchema = true,
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -46,5 +61,6 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun channelDao(): ChannelDao
     abstract fun favouriteDao(): FavouriteDao
     abstract fun epgDao(): EpgDao
+    abstract fun recentDao(): RecentDao
     abstract fun settingsDao(): SettingsDao
 }

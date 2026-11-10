@@ -197,4 +197,15 @@ class AppDatabaseSchemaTest {
         assertEquals("true", db.settingsDao().get("allow_http", null))
         assertEquals("default", db.settingsDao().get("no_existe", default = "default"))
     }
+
+    @Test
+    fun borrarListaLimpiaSoloSusFavoritos() = runTest {
+        val a = db.listDao().upsert(ListEntity(name = "A", sourceUrl = "http://a.m3u8"))
+        val b = db.listDao().upsert(ListEntity(name = "B", sourceUrl = "http://b.m3u8"))
+        db.favouriteDao().toggle(a, "k1")
+        db.favouriteDao().toggle(b, "k2")
+        db.favouriteDao().deleteForList(a)
+        assertFalse(db.favouriteDao().exists(a, "k1"))
+        assertTrue(db.favouriteDao().exists(b, "k2"))
+    }
 }
