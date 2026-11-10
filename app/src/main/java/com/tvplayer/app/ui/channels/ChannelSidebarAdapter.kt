@@ -11,7 +11,7 @@ import com.tvplayer.app.ui.common.FocusScaleHelper
 /**
  * Sidebar del browser (playlists + Todos + Historial + grupos) sobre
  * `item_group`: seleccionado = pastilla `state_activated` + etiqueta en
- * blanco; foco TV con escala 1.1 vía [FocusScaleHelper] + marquee.
+ * blanco; foco TV con escala 1.1 vía [FocusScaleHelper] + ellipsize end.
  *
  * Fusión Guía→Canales (S1): renombre de GuideSidebarAdapter sin cambio de
  * comportamiento.
@@ -86,8 +86,6 @@ class ChannelSidebarAdapter(
                 is ChannelSidebar.Row.Group -> onSelection(ChannelSidebar.Selection.Group(row.name))
             }
         }
-        FocusScaleHelper.attach(holder.itemView) { _, focused ->
-            holder.label.isSelected = focused
-        }
+        FocusScaleHelper.attach(holder.itemView)
     }
 }

@@ -148,4 +148,15 @@ class ChannelBrowserTvParityTest {
         // El adapter intacto (6 vía DEFAULT_SLOT_COUNT) ahora pinta tira en TV.
         assertEquals(6, holder.timeline?.childCount)
     }
+
+    @Test
+    fun `S3 tv grupo end maxLines1 sin marquee`() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val parent = LinearLayout(context).apply { orientation = LinearLayout.VERTICAL }
+        val root = LayoutInflater.from(context).inflate(R.layout.item_group, parent, false)
+        val label = root.findViewById<TextView>(R.id.group_label)
+        assertEquals(android.text.TextUtils.TruncateAt.END, label.ellipsize)
+        assertEquals(1, label.maxLines)
+        assertTrue(root.findViewById<TextView>(R.id.group_count) != null)
+    }
 }
