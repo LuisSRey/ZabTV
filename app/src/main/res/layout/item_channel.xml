@@ -1,10 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Fila de canal con timeline (fusión Guía→Canales S2): nº + logo +
      nombre/tira + 6 celdas de item_channel_timeline (scroll horizontal en
-     pantallas estrechas); focus/touch = tile_focus_bg. -->
+     pantallas estrechas); focus/touch = tile_focus_bg. Móvil: raíz fija 72dp
+     para que la cadena de alturas sea determinista (sin match_parent en
+     cadena wrap_content). -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
+    android:layout_height="72dp"
     android:layout_margin="3dp"
     android:background="@drawable/tile_focus_bg"
     android:focusable="true"
