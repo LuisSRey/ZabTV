@@ -33,7 +33,8 @@ echo "== 1. Permisos: INTERNET + WorkManager + READ_EXTERNAL_STORAGE(maxSdk 29, 
 # WorkManager inyecta estos 5 (ver Task 16 ledger); READ_EXTERNAL_STORAGE es
 # ruling de usuario (navegador .m3u en Fire TV, inútil en 30+); otro = fallo.
 ALLOWED="android.permission.INTERNET android.permission.FOREGROUND_SERVICE android.permission.ACCESS_NETWORK_STATE android.permission.WAKE_LOCK android.permission.RECEIVE_BOOT_COMPLETED com.tvplayer.app.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION android.permission.READ_EXTERNAL_STORAGE"
-perms=$(apkanalyzer manifest permissions "$APK" | grep "^android.permission\|^com.tvplayer" || true)
+# apkanalyzer nuevo imprime atributos inline (READ_EXTERNAL_STORAGE' maxSdkVersion='29): se recortan.
+perms=$(apkanalyzer manifest permissions "$APK" | grep "^android.permission\|^com.tvplayer" | sed "s/[ '].*//" || true)
 echo "$perms"
 echo "$perms" | while read -r p; do
   case " $ALLOWED " in
@@ -59,12 +60,30 @@ echo "== 3. Exported: ningún componente PROPIO salvo MainActivity (launcher) ==
 own_exported=$(echo "$manifest" | grep -B2 'android:exported="true"' | grep 'android:name="com.tvplayer.app' | grep -v "MainActivity" || true)
 [ -z "$own_exported" ] && pass "solo MainActivity exportado (librerías: diff manual)" || fail "exportado propio: $own_exported"
 
-echo "== 4. Dex: sin WebView/DexClassLoader; con CleartextGate =="
-dexdump=$(unzip -p "$APK" 'classes*.dex')
-for bad in 'Landroid/webkit/WebView;' 'Ldalvik/system/DexClassLoader;' 'Ldalvik/system/PathClassLoader;'; do
-  echo "$dexdump" | grep -qF "$bad" && fail "referencia prohibida: $bad" || pass "ausente: $bad"
+echo "== 4. Dex: sin DexClassLoader; con CleartextGate; WebView solo transitiva =="
+# Sin variable intermedia: el dex lleva null bytes y `$(...)*/echo la truncan
+# o avisan según el bash (falsos negativos/positivos). Tubería directa.
+dex() { unzip -p "$APK" 'classes*.dex'; }
+for bad in 'Ldalvik/system/DexClassLoader;' 'Ldalvik/system/PathClassLoader;'; do
+  dex | grep -qF "$bad" && fail "referencia prohibida: $bad" || pass "ausente: $bad"
 done
-echo "$dexdump" | grep -qF 'Lcom/tvplayer/app/data/net/CleartextGate;' && pass "CleartextGate en el dex" || fail "CleartextGate ausente"
+dex | grep -qF 'Lcom/tvplayer/app/data/net/CleartextGate;' && pass "CleartextGate en el dex" || fail "CleartextGate ausente"
+# WebView: desde la migración a PlayerView (post-v0.1) el dex trae el renderer
+# de subtítulos de media3-ui (WebViewSubtitleOutput, vía SubtitleView.setViewType).
+# Es código de librería, dormido (PlayerView usa subtítulos canvas y jamás se
+# llama a setViewType) y R8 lo conserva por las consumer rules de media3.
+# Gate en dos niveles: (1) nuestro código no la menciona (estricto);
+# (2) la ref transitiva se informa sin tumbar (ver ledger S6 fusión Guía→Canales).
+if grep -r -q -F --include='*.kt' --include='*.java' --include='*.xml' -e "WebView" -e "webkit" -e "setViewType" app/src/main 2>/dev/null; then
+  fail "WebView referenciada en código propio"
+else
+  pass "código propio sin WebView"
+fi
+if dex | grep -qF 'Landroid/webkit/WebView;'; then
+  echo "INFO: ref transitiva a WebView (media3-ui WebViewSubtitleOutput, dormida)"
+else
+  pass "sin refs a WebView en el dex"
+fi
 
 echo "== 5. SHA-256 =="
 (sha256sum "$APK" 2>/dev/null || shasum -a 256 "$APK")
