@@ -79,4 +79,10 @@ class ChannelBrowserLayoutTest {
         assertEquals(true, root.findViewById<androidx.recyclerview.widget.RecyclerView>(R.id.browser_grid) != null)
         assertEquals(true, root.findViewById<TextView>(R.id.browser_empty) != null)
     }
+
+    @Test
+    fun `reintento timeline acotado 200ms max 2`() {
+        assertEquals(2, ChannelBrowserFragment.TIMELINE_MAX_RETRY)
+        assertEquals(200L, ChannelBrowserFragment.TIMELINE_RETRY_DELAY_MS)
+    }
 }

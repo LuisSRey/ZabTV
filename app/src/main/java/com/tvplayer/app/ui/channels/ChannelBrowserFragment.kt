@@ -6,6 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.PopupMenu
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.core.os.bundleOf
@@ -36,7 +37,9 @@ import kotlinx.coroutines.launch
 
 /**
  * Browser de canales fusionado con la guía (S3): sidebar (playlists + Todos
- * + Historial + grupos) que cambia la [ActiveList] global, hero del destacado
+ * + Historial + grupos) que cambia la [ActiveList] global (en móvil las
+ * playlists viven en el dropdown `browser_list_selector` y el rail queda
+ * solo para filtros), hero del destacado
  * con "ahora" + progreso + siguiente, cabecera del timeline (3 h en cortes de
  * 30 min, [GuideWindow]) y filas con tira ahora/siguiente + timeline.
  * Room es el único estado: todo se lee de DB por ciclo.
@@ -51,6 +54,12 @@ class ChannelBrowserFragment : Fragment() {
     companion object {
         const val TAG = "browser"
         const val ARG_LIST_ID = "listId"
+
+        /** Reintento acotado del timeline: tope de reintentos tras grid vacía. */
+        const val TIMELINE_MAX_RETRY = 2
+
+        /** Espera entre reintentos del timeline. */
+        const val TIMELINE_RETRY_DELAY_MS = 200L
 
         fun newInstance(listId: Long) = ChannelBrowserFragment().apply {
             arguments = bundleOf(ARG_LIST_ID to listId)
@@ -109,35 +118,23 @@ class ChannelBrowserFragment : Fragment() {
             }
         })
         // Vacío en All/Group por estado de carga (Historial lo resuelve en
-        // reloadContent: loadState no emite para PagingData.from en tests).
+        // reloadContent: loadState no emite para PagingData.from en tests). Con
+        // datos (NotLoading + items) se pinta el timeline tras el submit.
         gridAdapter.addLoadStateListener { states ->
             if (selection is Selection.History) return@addLoadStateListener
+            if (states.refresh !is LoadState.NotLoading) return@addLoadStateListener
             val empty = view.findViewById<TextView>(R.id.browser_empty)
-            empty.visibility =
-                if (states.refresh is LoadState.NotLoading && gridAdapter.itemCount == 0) {
-                    View.VISIBLE
-                } else {
-                    View.GONE
-                }
+            if (gridAdapter.itemCount == 0) {
+                empty.visibility = View.VISIBLE
+            } else {
+                empty.visibility = View.GONE
+                grid.post { fillTimeline() }
+            }
         }
 
         sidebarAdapter = ChannelSidebarAdapter(
-            onPlaylist = { id ->
-                lifecycleScope.launch {
-                    ActiveList.set(container.db, id)
-                    listId = id
-                    viewModel.setListId(id)
-                    selection = Selection.All
-                    viewModel.select(Selection.All)
-                    reloadAll()
-                }
-            },
-            onSelection = { sel ->
-                selection = sel
-                viewModel.select(sel)
-                sidebarAdapter.updateSelection(sel)
-                reloadContent()
-            },
+            onPlaylist = ::onListPicked,
+            onSelection = ::onFilterPicked,
         )
         val sidebar = view.findViewById<RecyclerView>(R.id.browser_sidebar)
         sidebar.layoutManager = LinearLayoutManager(
@@ -146,6 +143,12 @@ class ChannelBrowserFragment : Fragment() {
             false,
         )
         sidebar.adapter = sidebarAdapter
+
+        // Móvil: el dropdown de playlists vive en el selector de 48dp; el
+        // rail queda solo para filtros. TV no trae el selector (null).
+        view.findViewById<TextView>(R.id.browser_list_selector)?.let { selector ->
+            selector.setOnClickListener { showListMenu(selector) }
+        }
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -167,6 +170,51 @@ class ChannelBrowserFragment : Fragment() {
         }
     }
 
+    /**
+     * Cambio de playlist: mueve la [ActiveList] global, resetea el filtro a
+     * Todos y recarga todo (sidebar + hero + cortes + contenido).
+     */
+    private fun onListPicked(id: Long) {
+        lifecycleScope.launch {
+            val db = (requireActivity().application as TpApp).container.db
+            ActiveList.set(db, id)
+            listId = id
+            viewModel.setListId(id)
+            selection = Selection.All
+            viewModel.select(Selection.All)
+            reloadAll()
+        }
+    }
+
+    /**
+     * Cambio de filtro: no toca la lista, solo re-selecciona y recarga el
+     * contenido paginado.
+     */
+    private fun onFilterPicked(sel: Selection) {
+        selection = sel
+        viewModel.select(sel)
+        sidebarAdapter.updateSelection(sel)
+        reloadContent()
+    }
+
+    /** Dropdown framework con las playlists (móvil; el rail es de filtros). */
+    private fun showListMenu(anchor: View) {
+        lifecycleScope.launch {
+            val db = (requireActivity().application as TpApp).container.db
+            val lists = db.listDao().all()
+            if (lists.isEmpty()) return@launch
+            val popup = PopupMenu(requireContext(), anchor)
+            lists.forEachIndexed { index, list ->
+                popup.menu.add(0, index, index, list.name.ifBlank { getString(R.string.lists_name) })
+            }
+            popup.setOnMenuItemClickListener { item ->
+                onListPicked(lists[item.itemId].id)
+                true
+            }
+            popup.show()
+        }
+    }
+
     private fun reloadAll() {
         lifecycleScope.launch {
             val view = view ?: return@launch
@@ -175,17 +223,28 @@ class ChannelBrowserFragment : Fragment() {
             val lists = db.listDao().all()
             val groups = viewModel.groups()
             val historyCount = db.recentDao().countForList(listId)
+            val filterRows = ChannelSidebar.buildFilterRows(
+                groups,
+                getString(R.string.browser_groups_all),
+                getString(R.string.browser_history),
+                getString(R.string.browser_no_group),
+                historyCount,
+            )
             sidebarAdapter.activeListId = listId
             sidebarAdapter.updateSelection(selection)
-            sidebarAdapter.submit(
-                ChannelSidebar.buildRows(
-                    lists, listId, groups,
-                    getString(R.string.browser_groups_all),
-                    getString(R.string.browser_history),
-                    getString(R.string.browser_no_group),
-                    historyCount,
-                ),
-            )
+            // Móvil (hay selector): el rail lleva solo filtros y la playlist
+            // activa se muestra en el dropdown. TV: rail completo (equivale
+            // al buildRows de siempre).
+            val selector = view.findViewById<TextView>(R.id.browser_list_selector)
+            if (selector == null) {
+                sidebarAdapter.submit(ChannelSidebar.buildPlaylistRows(lists, listId) + filterRows)
+            } else {
+                sidebarAdapter.submit(filterRows)
+                val activeName = lists.find { it.id == listId }?.name
+                    ?.ifBlank { getString(R.string.lists_name) }
+                    ?: getString(R.string.lists_name)
+                selector.text = "$activeName ▾"
+            }
             // Hero: destacado + ahora + progreso + siguiente.
             val hero = viewModel.hero()
             featured = hero?.channel
@@ -215,11 +274,14 @@ class ChannelBrowserFragment : Fragment() {
             } else {
                 heroBox.visibility = View.GONE
             }
-            // Cabecera del timeline: 6 cortes de 30 min desde el anchor.
+            // Cabecera del timeline: 6 cortes de 30 min desde el anchor, con la
+            // misma ventana que las filas y siempre visible (S6).
             window = GuideWindow.now()
             val fmt = SimpleDateFormat("HH:mm", Locale.getDefault())
-            view.findViewById<TextView>(R.id.browser_slots).text =
+            val slotsView = view.findViewById<TextView>(R.id.browser_slots)
+            slotsView.text =
                 window.slots().joinToString("  ·  ") { fmt.format(Date(it)) }
+            slotsView.visibility = View.VISIBLE
             reloadContent()
         }
     }
@@ -244,18 +306,31 @@ class ChannelBrowserFragment : Fragment() {
     /**
      * Doble batch sobre los visibles → líneas "▶ ahora · después" (submitEpg)
      * + programas de la ventana por canal (submitTimeline). Clave: stableKey.
+     * Si la grilla aún no resolvió visibles (submit recién hecho), reintento
+     * acotado con postDelayed de 200 ms hasta 2 veces.
      */
-    private fun fillTimeline() {
+    private fun fillTimeline(attempt: Int = 0) {
         val grid = view?.findViewById<RecyclerView>(R.id.browser_grid) ?: return
         val layout = grid.layoutManager as? GridLayoutManager ?: return
         val first = layout.findFirstVisibleItemPosition()
         val last = layout.findLastVisibleItemPosition()
-        if (first < 0 || last < first) return
+        if (first < 0 || last < first) {
+            if (attempt < TIMELINE_MAX_RETRY) {
+                grid.postDelayed({ fillTimeline(attempt + 1) }, TIMELINE_RETRY_DELAY_MS)
+            }
+            return
+        }
         lifecycleScope.launch {
             val db = (requireActivity().application as TpApp).container.db
             val ids = (first..last).mapNotNull { gridAdapter.peek(it)?.tvgId?.takeIf { t -> t.isNotBlank() } }
                 .distinct()
-            if (ids.isEmpty()) return@launch
+            // Paging aún resolviendo el peek con grilla cargada: reintenta.
+            if (ids.isEmpty()) {
+                if (gridAdapter.itemCount > 0 && attempt < TIMELINE_MAX_RETRY) {
+                    grid.postDelayed({ fillTimeline(attempt + 1) }, TIMELINE_RETRY_DELAY_MS)
+                }
+                return@launch
+            }
             val now = System.currentTimeMillis()
             val nn = db.epgDao().nowNext(ids, now)
             val lines = mutableMapOf<String, String>()
