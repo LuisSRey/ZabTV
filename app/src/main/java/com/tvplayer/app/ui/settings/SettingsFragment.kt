@@ -118,17 +118,144 @@ class SettingsFragment : Fragment() {
     /**
      * S4: toggle global del reproductor externo (key external_global, default
      * OFF) + advertencia de que el externo no hereda proxy/DNS.
+     *
+     * Debajo del toggle va el selector de reproductor preferido
+     * (key external_player_package, "" = Preguntar siempre): lista con
+     * icono+nombre de cada app detectada. Con el global en OFF se oculta;
+     * al volver a ON reaparece con la selección guardada. Sin apps
+     * detectadas se muestra un texto informativo en vez de lista vacía.
      */
     private fun wireExternalSection(view: View, container: AppContainer) {
         val global = view.findViewById<android.widget.Switch>(R.id.settings_external_global)
+        val label = view.findViewById<TextView>(R.id.settings_external_player_label)
+        val spinner = view.findViewById<android.widget.Spinner>(R.id.settings_external_player)
+        val empty = view.findViewById<TextView>(R.id.settings_external_player_empty)
+        FocusScaleHelper.attach(spinner)
+
+        fun paintSelector(enabled: Boolean, players: List<com.tvplayer.app.engine.ExternalPlayerInfo>) {
+            val visible = if (enabled) View.VISIBLE else View.GONE
+            label.visibility = visible
+            if (!enabled || players.isEmpty()) {
+                spinner.visibility = View.GONE
+            } else {
+                spinner.visibility = View.VISIBLE
+            }
+            empty.visibility = if (enabled && players.isEmpty()) View.VISIBLE else View.GONE
+        }
+
+        var players: List<com.tvplayer.app.engine.ExternalPlayerInfo> = emptyList()
+        var loading = true
         lifecycleScope.launch {
+            val dao = container.db.settingsDao()
             global.isChecked = container.currentPolicy.externalGlobal
+            players = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                com.tvplayer.app.engine.ExternalPlayers.listVideoPlayers(requireContext())
+            }
+            val saved = com.tvplayer.app.engine.ExternalPlayers.getPreferred(
+                dao, AppContainer.KEY_EXTERNAL_PLAYER_PACKAGE,
+            )
+            spinner.adapter = ExternalPlayerAdapter(requireContext(), players)
+            spinner.setSelection(indexOfPackage(players, saved))
+            paintSelector(global.isChecked, players)
+            loading = false
         }
         global.setOnCheckedChangeListener { _, checked ->
             lifecycleScope.launch {
                 container.db.settingsDao().put(AppContainer.KEY_EXTERNAL_GLOBAL, checked.toString())
                 container.refreshNetPolicy()
+                paintSelector(checked, players)
             }
+        }
+        spinner.onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(
+                parent: android.widget.AdapterView<*>?, v: View?, position: Int, id: Long,
+            ) {
+                if (loading) return
+                lifecycleScope.launch {
+                    com.tvplayer.app.engine.ExternalPlayers.setPreferred(
+                        container.db.settingsDao(),
+                        AppContainer.KEY_EXTERNAL_PLAYER_PACKAGE,
+                        packageAtPosition(players, position),
+                    )
+                    container.refreshNetPolicy()
+                }
+            }
+
+            override fun onNothingSelected(parent: android.widget.AdapterView<*>?) = Unit
+        }
+    }
+
+    /** Posición 0 = "Preguntar siempre" (null); el resto sigue [players]. */
+    private fun indexOfPackage(
+        players: List<com.tvplayer.app.engine.ExternalPlayerInfo>,
+        saved: String?,
+    ): Int {
+        if (saved.isNullOrBlank()) return 0
+        val i = players.indexOfFirst { it.packageName == saved }
+        return if (i < 0) 0 else i + 1
+    }
+
+    private fun packageAtPosition(
+        players: List<com.tvplayer.app.engine.ExternalPlayerInfo>,
+        position: Int,
+    ): String? = if (position <= 0) null else players.getOrNull(position - 1)?.packageName
+
+    /** Filas del selector: "Preguntar siempre" + icono+nombre por app. */
+    private class ExternalPlayerAdapter(
+        context: android.content.Context,
+        private val players: List<com.tvplayer.app.engine.ExternalPlayerInfo>,
+    ) : android.widget.BaseAdapter() {
+        private val inflater = android.view.LayoutInflater.from(context)
+        private val askText = context.getString(R.string.settings_external_ask)
+        private val density = context.resources.displayMetrics.density
+
+        override fun getCount(): Int = players.size + 1
+        override fun getItem(position: Int): Any? = null
+        override fun getItemId(position: Int): Long = position.toLong()
+
+        override fun getView(position: Int, convertView: View?, parent: android.view.ViewGroup?): View =
+            row(position, convertView, parent, compact = true)
+
+        override fun getDropDownView(position: Int, convertView: View?, parent: android.view.ViewGroup?): View =
+            row(position, convertView, parent, compact = false)
+
+        private fun row(
+            position: Int,
+            convertView: View?,
+            parent: android.view.ViewGroup?,
+            compact: Boolean,
+        ): View {
+            val root = (convertView as? android.widget.LinearLayout) ?: android.widget.LinearLayout(
+                inflater.context,
+            ).apply {
+                orientation = android.widget.LinearLayout.HORIZONTAL
+                gravity = android.view.Gravity.CENTER_VERTICAL
+                val pad = (12 * density).toInt()
+                setPadding(pad, if (compact) pad / 2 else pad, pad, if (compact) pad / 2 else pad)
+                addView(android.widget.ImageView(context).apply {
+                    layoutParams = android.widget.LinearLayout.LayoutParams(
+                        (24 * density).toInt(), (24 * density).toInt(),
+                    ).apply { marginEnd = (12 * density).toInt() }
+                })
+                addView(TextView(context).apply {
+                    setTextColor(context.getColor(R.color.tp_text))
+                    textSize = 15f
+                })
+            }
+            val icon = root.getChildAt(0) as android.widget.ImageView
+            val text = root.getChildAt(1) as TextView
+            if (position == 0) {
+                icon.setImageDrawable(null)
+                icon.visibility = View.INVISIBLE
+                text.text = askText
+            } else {
+                val info = players[position - 1]
+                icon.visibility = View.VISIBLE
+                icon.setImageDrawable(info.icon)
+                icon.contentDescription = info.label
+                text.text = info.label
+            }
+            return root
         }
     }
 

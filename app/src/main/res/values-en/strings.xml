@@ -151,4 +151,8 @@
     <string name="external_nowarn">The external player does not inherit TVPlayer proxy or DNS.</string>
     <string name="settings_external_title">External player</string>
     <string name="settings_external_global">Allow external player (global)</string>
+    <string name="settings_external_player">Preferred player</string>
+    <string name="settings_external_ask">Ask every time</string>
+    <string name="settings_external_empty">No video player found on this device.</string>
+    <string name="settings_external_gone">The chosen player is no longer installed. Pick an app to open the channel.</string>
 </resources>

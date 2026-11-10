@@ -151,4 +151,8 @@
     <string name="external_nowarn">El reproductor externo no hereda el proxy ni el DNS de TVPlayer.</string>
     <string name="settings_external_title">Reproductor externo</string>
     <string name="settings_external_global">Permitir reproductor externo (global)</string>
+    <string name="settings_external_player">Reproductor preferido</string>
+    <string name="settings_external_ask">Preguntar siempre</string>
+    <string name="settings_external_empty">No se detectó ningún reproductor de vídeo en este dispositivo.</string>
+    <string name="settings_external_gone">El reproductor elegido ya no está instalado. Elige una app para abrir el canal.</string>
 </resources>

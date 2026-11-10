@@ -358,6 +358,31 @@
             android:textSize="15sp" />
 
         <TextView
+            android:id="@+id/settings_external_player_label"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="@string/settings_external_player"
+            android:textColor="@color/tp_text"
+            android:textSize="15sp" />
+
+        <Spinner
+            android:id="@+id/settings_external_player"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp" />
+
+        <TextView
+            android:id="@+id/settings_external_player_empty"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="@string/settings_external_empty"
+            android:textColor="@color/tp_text_secondary"
+            android:textSize="13sp"
+            android:visibility="gone" />
+
+        <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"

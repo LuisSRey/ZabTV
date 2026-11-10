@@ -396,9 +396,23 @@ class PlayerFragment : Fragment() {
                 null
             }
             val policy = container.currentPolicy
+            val preferred = com.tvplayer.app.engine.ExternalPlayers.getPreferred(
+                container.db.settingsDao(), com.tvplayer.app.data.AppContainer.KEY_EXTERNAL_PLAYER_PACKAGE,
+            )
+            val viewIntent = ExternalOpener.buildIntent(fresh.url, source?.mimeType())
+            if (!preferred.isNullOrBlank() &&
+                !com.tvplayer.app.engine.ExternalPlayers.isPreferredUsable(
+                    requireContext().packageManager, preferred, viewIntent,
+                )
+            ) {
+                Toast.makeText(
+                    requireContext(), R.string.settings_external_gone, Toast.LENGTH_LONG,
+                ).show()
+            }
             val opened = ExternalOpener.openChannel(
                 requireContext(), fresh.url, source, container.allowHttp,
                 engineTarget, fresh.allowExternal, policy.externalGlobal,
+                preferredPackage = preferred,
             )
             if (!opened) {
                 val blocked = !ExternalGate.canExport(

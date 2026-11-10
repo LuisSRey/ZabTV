@@ -41,6 +41,8 @@ class AppContainer(private val appContext: Context) {
         val doh: DohConfig = DohConfig.System,
         /** Reproductor externo global (S4, default OFF). */
         val externalGlobal: Boolean = false,
+        /** Paquete preferido del reproductor externo; null = Preguntar siempre. */
+        val externalPlayerPackage: String? = null,
     )
 
     @Volatile
@@ -141,7 +143,7 @@ class AppContainer(private val appContext: Context) {
             dao.get(DohConfig.KEY_CUSTOM_URL, ""),
         )
         allowHttp = allow
-        currentPolicy = NetPolicy(allowHttp = allow, proxy = proxy, doh = doh, externalGlobal = dao.get(KEY_EXTERNAL_GLOBAL, "false") == "true")
+        currentPolicy = NetPolicy(allowHttp = allow, proxy = proxy, doh = doh, externalGlobal = dao.get(KEY_EXTERNAL_GLOBAL, "false") == "true", externalPlayerPackage = dao.get(KEY_EXTERNAL_PLAYER_PACKAGE, "")?.ifBlank { null })
         rebuildOkHttp(auth)
     }
 
@@ -158,6 +160,8 @@ class AppContainer(private val appContext: Context) {
         const val KEY_ACE_PROXY = "acestream_proxy"
         /** Reproductor externo global (S4, default OFF). */
         const val KEY_EXTERNAL_GLOBAL = "external_global"
+        /** Paquete preferido del reproductor externo ("" = Preguntar siempre). */
+        const val KEY_EXTERNAL_PLAYER_PACKAGE = "external_player_package"
         /** Proxy del motor AceStream (app AceStream en el propio dispositivo). */
         const val DEFAULT_ACE_PROXY = "127.0.0.1:6878"
     }

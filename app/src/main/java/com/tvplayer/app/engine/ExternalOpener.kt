@@ -68,9 +68,21 @@ object ExternalOpener {
     }.getOrDefault(false)
 
     /**
+     * Abre directo en el paquete preferido (intent explícito, sin chooser).
+     * Devuelve false si el paquete ya no resuelve (el caller cae al chooser).
+     */
+    fun openDirect(context: Context, intent: Intent, packageName: String): Boolean = runCatching {
+        val explicit = Intent(intent).setPackage(packageName).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        if (!ExternalPlayers.isPreferredUsable(context.packageManager, packageName, intent)) return false
+        context.startActivity(explicit)
+        true
+    }.getOrDefault(false)
+
+    /**
      * Vía externa completa para un canal:
      * - `acestream://` → integración oficial (Ace Player, sin proxy): [AceStreamEngine.startContentIntent].
-     * - http(s) permitido por [ExternalGate] → VIEW + chooser.
+     * - http(s) permitido por [ExternalGate] → preferido directo si
+     *   [preferredPackage] sigue instalado, si no chooser como antes.
      * Devuelve false si está vetado o no hay receptor.
      */
     fun openChannel(
@@ -81,6 +93,7 @@ object ExternalOpener {
         engineProxyFor: String?,
         override: Boolean?,
         global: Boolean,
+        preferredPackage: String? = null,
     ): Boolean {
         if (rawUrl.startsWith("acestream://", ignoreCase = true)) {
             return runCatching {
@@ -89,6 +102,12 @@ object ExternalOpener {
             }.getOrDefault(false)
         }
         if (!ExternalGate.canExport(rawUrl, allowHttp, engineProxyFor, override, global)) return false
-        return openWithChooser(context, buildIntent(rawUrl, source?.mimeType()))
+        val intent = buildIntent(rawUrl, source?.mimeType())
+        if (!preferredPackage.isNullOrBlank() &&
+            ExternalPlayers.isPreferredUsable(context.packageManager, preferredPackage, intent)
+        ) {
+            return openDirect(context, intent, preferredPackage)
+        }
+        return openWithChooser(context, intent)
     }
 }
