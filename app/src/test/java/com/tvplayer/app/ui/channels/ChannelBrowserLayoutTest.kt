@@ -49,4 +49,34 @@ class ChannelBrowserLayoutTest {
         // La tira existe en móvil (el adapter la protege en TV con null-safe).
         assertEquals(true, strip != null)
     }
+
+    @Test
+    fun `browser movil lleva selector dropdown 48dp`() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val parent = android.widget.FrameLayout(context)
+        val root = LayoutInflater.from(context).inflate(R.layout.fragment_channel_browser, parent, false)
+        val selector = root.findViewById<TextView>(R.id.browser_list_selector)
+        assertEquals(true, selector != null)
+        assertEquals(dp(context, 48), selector.layoutParams.height)
+    }
+
+    @Test
+    fun `rail movil 40dp solo filtros`() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val parent = android.widget.FrameLayout(context)
+        val root = LayoutInflater.from(context).inflate(R.layout.fragment_channel_browser, parent, false)
+        val sidebar = root.findViewById<androidx.recyclerview.widget.RecyclerView>(R.id.browser_sidebar)
+        assertEquals(dp(context, 40), sidebar.layoutParams.height)
+    }
+
+    @Test
+    fun `resto de ids del browser intactos`() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val parent = android.widget.FrameLayout(context)
+        val root = LayoutInflater.from(context).inflate(R.layout.fragment_channel_browser, parent, false)
+        assertEquals(true, root.findViewById<android.view.View>(R.id.browser_hero) != null)
+        assertEquals(true, root.findViewById<TextView>(R.id.browser_slots) != null)
+        assertEquals(true, root.findViewById<androidx.recyclerview.widget.RecyclerView>(R.id.browser_grid) != null)
+        assertEquals(true, root.findViewById<TextView>(R.id.browser_empty) != null)
+    }
 }
