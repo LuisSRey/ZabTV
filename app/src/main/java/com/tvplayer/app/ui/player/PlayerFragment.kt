@@ -59,6 +59,21 @@ class PlayerFragment : Fragment() {
          */
         fun shouldUseImmersive(isTv: Boolean, orientation: Int): Boolean =
             !isTv && orientation == Configuration.ORIENTATION_LANDSCAPE
+
+        /**
+         * S3: PiP opt-in solo en móvil con feature del sistema (SDK 26+).
+         * Pura → test JVM. NUNCA auto-enter: la entrada es solo por tap
+         * explícito en `player_pip` (botón que el layout TV ni siquiera trae).
+         */
+        fun pipAllowed(sdkInt: Int, hasFeature: Boolean, isTv: Boolean): Boolean =
+            sdkInt >= android.os.Build.VERSION_CODES.O && hasFeature && !isTv
+
+        /** Visibilidad del botón PiP según la política (TV: el botón no existe, null-seguro). */
+        fun pipButtonVisibility(allowed: Boolean): Int =
+            if (allowed) View.VISIBLE else View.GONE
+
+        /** En PiP el overlay estorba a la ventana flotante: se oculta (el engine sigue). Pura. */
+        fun shouldHideOverlayInPip(inPip: Boolean): Boolean = inPip
     }
 
     private lateinit var engine: Media3Engine
@@ -71,6 +86,8 @@ class PlayerFragment : Fragment() {
     private lateinit var progress: ProgressBar
 
     private var current: ChannelEntity? = null
+    /** True en ventana flotante (PiP): overlay oculto, engine en marcha. */
+    private var inPip = false
     /** True si el canal aún no llegó a engine.prepare (motor sin arrancar o error). */
     private var needsPrepare = true
     private var overlayJob: kotlinx.coroutines.Job? = null
@@ -110,6 +127,12 @@ class PlayerFragment : Fragment() {
         view.findViewById<ImageView>(R.id.player_external)?.let { ext ->
             ext.setOnClickListener { openExternal() }
             if (isTv) FocusScaleHelper.attach(ext)
+        }
+        // S3: PiP opt-in SOLO móvil (el layout TV no trae player_pip → null, no-op).
+        // NUNCA auto-enter: solo este tap explícito llama a enterPip().
+        view.findViewById<ImageView>(R.id.player_pip)?.let { pip ->
+            pip.visibility = pipButtonVisibility(isPipSupported())
+            pip.setOnClickListener { enterPip() }
         }
         if (isTv) {
             listOfNotNull(rew, playPause, ff).forEach { FocusScaleHelper.attach(it) }
@@ -225,6 +248,54 @@ class PlayerFragment : Fragment() {
         super.onConfigurationChanged(newConfig)
         // El manifest evita la recreación al rotar: reevaluar aquí.
         applyImmersiveIfNeeded()
+    }
+
+    /**
+     * S3: PiP. Al entrar: overlay GONE + tap-catcher deshabilitado (el engine
+     * sigue sonando). Al salir: se restaura el tap-catcher y el overlay.
+     * NUNCA se entra automáticamente (sin auto-enter en onPause ni en zapping).
+     */
+    override fun onPictureInPictureModeChanged(isInPictureInPictureMode: Boolean) {
+        super.onPictureInPictureModeChanged(isInPictureInPictureMode)
+        applyPipMode(isInPictureInPictureMode)
+    }
+
+    private fun applyPipMode(inPipMode: Boolean) {
+        inPip = inPipMode
+        val root = view ?: return
+        val tap = root.findViewById<View>(R.id.player_tap) ?: return
+        if (shouldHideOverlayInPip(inPipMode)) {
+            overlayJob?.cancel()
+            overlayJob = null
+            if (::overlay.isInitialized) overlay.visibility = View.GONE
+            tap.isEnabled = false
+        } else {
+            tap.isEnabled = true
+            if (::overlay.isInitialized) showOverlay()
+        }
+    }
+
+    /** ¿Soporta PiP este dispositivo ahora? TV → false siempre. */
+    private fun isPipSupported(): Boolean {
+        val tv = view?.let { FocusScaleHelper.isTv(it) } ?: false
+        val hasFeature = try {
+            requireContext().packageManager.hasSystemFeature(
+                android.content.pm.PackageManager.FEATURE_PICTURE_IN_PICTURE,
+            )
+        } catch (_: Exception) {
+            false
+        }
+        return pipAllowed(android.os.Build.VERSION.SDK_INT, hasFeature, tv)
+    }
+
+    /** Entrada manual a PiP 16:9. Solo por botón; nunca automática. */
+    private fun enterPip() {
+        if (!isPipSupported() || inPip) return
+        if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.O) return
+        val params = android.app.PictureInPictureParams.Builder()
+            .setAspectRatio(android.util.Rational(16, 9))
+            .build()
+        runCatching { requireActivity().enterPictureInPictureMode(params) }
     }
 
     override fun onPause() {

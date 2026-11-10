@@ -139,6 +139,7 @@
         <item>Personalizado</item>
     </string-array>
     <string name="player_external">Abrir en app externa</string>
+    <string name="player_pip">Ventana flotante</string>
     <string name="player_no_external">Ninguna app puede abrir este canal</string>
     <string name="player_external_blocked">Reproductor externo no permitido para este canal</string>
     <string name="sheet_external_title">Reproductor externo</string>
