@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Celda del timeline (fusión Guía→Canales S2): un corte de 30 min con el
+     título del programa en el aire; vacía sin guía en ese corte. -->
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/timeline_cell"
+    android:layout_width="110dp"
+    android:layout_height="match_parent"
+    android:background="@color/tp_surface2"
+    android:ellipsize="end"
+    android:gravity="center_vertical"
+    android:maxLines="2"
+    android:padding="6dp"
+    android:textColor="@color/tp_text_secondary"
+    android:textSize="11sp" />
