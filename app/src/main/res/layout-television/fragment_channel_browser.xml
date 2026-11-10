@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Browser fusionado TV (safe area 56dp): sidebar playlists/filtros/grupos a
-     la izquierda + hero con progreso + cabecera de cortes + filas con
-     timeline a la derecha, foco D-pad. -->
+<!-- Browser fusionado TV (safe area 56dp, paridad D1+D2): título + selector
+     de playlist (dropdown 48dp bajo el título, en la columna derecha) +
+     sidebar de filtros/grupos a la izquierda (260dp) + hero con progreso +
+     cabecera de cortes + filas con timeline a la derecha. Foco D-pad con
+     nextFocus explícitos; ninguna salida apunta al hero (puede estar GONE). -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -26,7 +28,8 @@
             android:id="@+id/browser_sidebar"
             android:layout_width="260dp"
             android:layout_height="match_parent"
-            android:orientation="vertical" />
+            android:orientation="vertical"
+            android:nextFocusRight="@id/browser_list_selector" />
 
         <LinearLayout
             android:layout_width="0dp"
@@ -35,10 +38,32 @@
             android:layout_weight="1"
             android:orientation="vertical">
 
+            <!-- Selector de playlist (dropdown framework 48dp con tokens
+                 propios, como en móvil): el rail queda solo para filtros. -->
+            <TextView
+                android:id="@+id/browser_list_selector"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:background="@drawable/tile_focus_bg"
+                android:clickable="true"
+                android:ellipsize="end"
+                android:focusable="true"
+                android:gravity="center_vertical"
+                android:maxLines="1"
+                android:nextFocusDown="@id/browser_grid"
+                android:nextFocusLeft="@id/browser_sidebar"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:text="@string/lists_name"
+                android:textColor="@color/tp_text"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
             <LinearLayout
                 android:id="@+id/browser_hero"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
                 android:background="@drawable/tile_focus_bg"
                 android:orientation="vertical"
                 android:padding="20dp"
@@ -76,6 +101,9 @@
                     android:layout_marginTop="12dp"
                     android:background="@drawable/btn_primary"
                     android:focusable="true"
+                    android:nextFocusDown="@id/browser_grid"
+                    android:nextFocusLeft="@id/browser_sidebar"
+                    android:nextFocusUp="@id/browser_list_selector"
                     android:text="@string/sheet_play"
                     android:textColor="@color/tp_text" />
             </LinearLayout>
@@ -94,7 +122,9 @@
                 android:layout_height="0dp"
                 android:layout_marginTop="12dp"
                 android:layout_weight="1"
-                android:clipToPadding="false" />
+                android:clipToPadding="false"
+                android:nextFocusLeft="@id/browser_sidebar"
+                android:nextFocusUp="@id/browser_list_selector" />
 
             <TextView
                 android:id="@+id/browser_empty"
