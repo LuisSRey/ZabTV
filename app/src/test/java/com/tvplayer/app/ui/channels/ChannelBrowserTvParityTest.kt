@@ -159,4 +159,25 @@ class ChannelBrowserTvParityTest {
         assertEquals(1, label.maxLines)
         assertTrue(root.findViewById<TextView>(R.id.group_count) != null)
     }
+
+    @Test
+    fun `S4 dialogo TV mapea nombres con fallback lists_name`() {
+        val lists = listOf(
+            com.tvplayer.app.data.db.ListEntity(id = 1, name = "Casa", sourceUrl = "http://x/a.m3u"),
+            com.tvplayer.app.data.db.ListEntity(id = 2, name = "", sourceUrl = ""),
+        )
+        assertEquals(
+            listOf("Casa", "Nombre"),
+            ChannelBrowserFragment.listDialogLabels(lists, "Nombre").toList(),
+        )
+    }
+
+    @Test
+    fun `S4 movil conserva PopupMenu y TV usa dialogo`() {
+        // El wiring existe en ambos caminos: showListMenu (móvil) y
+        // showListDialog (TV, AlertDialog con el mismo onListPicked).
+        val names = ChannelBrowserFragment::class.java.declaredMethods.map { it.name }
+        assertTrue(names.contains("showListMenu"))
+        assertTrue(names.contains("showListDialog"))
+    }
 }

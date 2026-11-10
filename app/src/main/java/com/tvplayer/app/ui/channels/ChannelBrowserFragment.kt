@@ -1,5 +1,6 @@
 package com.tvplayer.app.ui.channels
 
+import android.app.AlertDialog
 import android.content.res.Configuration
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -25,6 +26,7 @@ import com.tvplayer.app.core.xmltv.GuideWindow
 import com.tvplayer.app.data.ActiveList
 import com.tvplayer.app.data.db.ChannelEntity
 import com.tvplayer.app.data.db.EpgProgramEntity
+import com.tvplayer.app.data.db.ListEntity
 import com.tvplayer.app.ui.channel_dialog.ChannelSheetFragment
 import com.tvplayer.app.ui.channels.ChannelSidebar.Selection
 import com.tvplayer.app.ui.common.FocusScaleHelper
@@ -69,6 +71,14 @@ class ChannelBrowserFragment : Fragment() {
             val fmt = java.text.SimpleDateFormat("HH:mm", locale)
             return window.slots().joinToString("  ·  ") { fmt.format(java.util.Date(it)) }
         }
+
+        /**
+         * Etiquetas del diálogo de playlists (TV): nombre de cada lista,
+         * con fallback a `lists_name` si viene en blanco. Puro para test
+         * directo.
+         */
+        fun listDialogLabels(lists: List<ListEntity>, fallback: String): Array<String> =
+            lists.map { it.name.ifBlank { fallback } }.toTypedArray()
 
         fun newInstance(listId: Long) = ChannelBrowserFragment().apply {
             arguments = bundleOf(ARG_LIST_ID to listId)
@@ -153,10 +163,13 @@ class ChannelBrowserFragment : Fragment() {
         )
         sidebar.adapter = sidebarAdapter
 
-        // Móvil: el dropdown de playlists vive en el selector de 48dp; el
-        // rail queda solo para filtros. TV no trae el selector (null).
+        // El dropdown de playlists vive en el selector de 48dp (móvil y TV);
+        // el rail queda solo para filtros. TV usa diálogo D-pad, móvil
+        // PopupMenu.
         view.findViewById<TextView>(R.id.browser_list_selector)?.let { selector ->
-            selector.setOnClickListener { showListMenu(selector) }
+            selector.setOnClickListener {
+                if (isTv) showListDialog() else showListMenu(selector)
+            }
         }
 
         viewLifecycleOwner.lifecycleScope.launch {
@@ -224,6 +237,20 @@ class ChannelBrowserFragment : Fragment() {
         }
     }
 
+    /** Diálogo D-pad con las playlists (TV; mismo onListPicked que el móvil). */
+    private fun showListDialog() {
+        lifecycleScope.launch {
+            val db = (requireActivity().application as TpApp).container.db
+            val lists = db.listDao().all()
+            if (lists.isEmpty()) return@launch
+            AlertDialog.Builder(requireContext())
+                .setItems(listDialogLabels(lists, getString(R.string.lists_name))) { _, which ->
+                    onListPicked(lists[which].id)
+                }
+                .show()
+        }
+    }
+
     private fun reloadAll() {
         lifecycleScope.launch {
             val view = view ?: return@launch
@@ -241,17 +268,22 @@ class ChannelBrowserFragment : Fragment() {
             )
             sidebarAdapter.activeListId = listId
             sidebarAdapter.updateSelection(selection)
-            // Móvil (hay selector): el rail lleva solo filtros y la playlist
-            // activa se muestra en el dropdown. TV: rail completo (equivale
-            // al buildRows de siempre).
+            // Rail solo filtros + playlist activa en el selector (TV y móvil
+            // con selector); sin selector, rail completo (fallback).
             val selector = view.findViewById<TextView>(R.id.browser_list_selector)
-            if (selector == null) {
+            val activeName = lists.find { it.id == listId }?.name
+                ?.ifBlank { getString(R.string.lists_name) }
+                ?: getString(R.string.lists_name)
+            if (FocusScaleHelper.isTv(view) && selector != null) {
+                // TV: rail solo filtros y playlist en el selector.
+                sidebarAdapter.submit(filterRows)
+                selector.text = "$activeName ▾"
+            } else if (selector == null) {
+                // Fallback sin selector: rail completo, como siempre.
                 sidebarAdapter.submit(ChannelSidebar.buildPlaylistRows(lists, listId) + filterRows)
             } else {
+                // Móvil como hoy: rail solo filtros y playlist en el dropdown.
                 sidebarAdapter.submit(filterRows)
-                val activeName = lists.find { it.id == listId }?.name
-                    ?.ifBlank { getString(R.string.lists_name) }
-                    ?: getString(R.string.lists_name)
                 selector.text = "$activeName ▾"
             }
             // Hero: destacado + ahora + progreso + siguiente.
