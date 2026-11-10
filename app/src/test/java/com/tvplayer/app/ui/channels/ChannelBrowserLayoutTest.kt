@@ -7,6 +7,7 @@ import android.widget.TextView
 import androidx.test.core.app.ApplicationProvider
 import com.tvplayer.app.R
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -84,5 +85,17 @@ class ChannelBrowserLayoutTest {
     fun `reintento timeline acotado 200ms max 2`() {
         assertEquals(2, ChannelBrowserFragment.TIMELINE_MAX_RETRY)
         assertEquals(200L, ChannelBrowserFragment.TIMELINE_RETRY_DELAY_MS)
+    }
+
+    @Test
+    fun `slots 6 cortes HH-mm misma ventana`() {
+        val anchor = com.tvplayer.app.core.xmltv.GuideWindow.anchorFor(1_794_294_600_000L)
+        val window = com.tvplayer.app.core.xmltv.GuideWindow(anchor)
+        val text = ChannelBrowserFragment.slotsText(window)
+        val parts = text.split("  ·  ")
+        assertEquals(6, parts.size)
+        for (part in parts) {
+            assertTrue(part.matches(Regex("\\d{2}:\\d{2}")))
+        }
     }
 }

@@ -29,9 +29,6 @@ import com.tvplayer.app.ui.channel_dialog.ChannelSheetFragment
 import com.tvplayer.app.ui.channels.ChannelSidebar.Selection
 import com.tvplayer.app.ui.common.FocusScaleHelper
 import com.tvplayer.app.ui.home.HomeFragment
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
@@ -60,6 +57,18 @@ class ChannelBrowserFragment : Fragment() {
 
         /** Espera entre reintentos del timeline. */
         const val TIMELINE_RETRY_DELAY_MS = 200L
+
+        /**
+         * Cabecera del timeline: 6 cortes "HH:mm" de la misma [window] que
+         * las filas (S6). Puro para test directo.
+         */
+        fun slotsText(
+            window: GuideWindow,
+            locale: java.util.Locale = java.util.Locale.getDefault(),
+        ): String {
+            val fmt = java.text.SimpleDateFormat("HH:mm", locale)
+            return window.slots().joinToString("  ·  ") { fmt.format(java.util.Date(it)) }
+        }
 
         fun newInstance(listId: Long) = ChannelBrowserFragment().apply {
             arguments = bundleOf(ARG_LIST_ID to listId)
@@ -277,10 +286,8 @@ class ChannelBrowserFragment : Fragment() {
             // Cabecera del timeline: 6 cortes de 30 min desde el anchor, con la
             // misma ventana que las filas y siempre visible (S6).
             window = GuideWindow.now()
-            val fmt = SimpleDateFormat("HH:mm", Locale.getDefault())
             val slotsView = view.findViewById<TextView>(R.id.browser_slots)
-            slotsView.text =
-                window.slots().joinToString("  ·  ") { fmt.format(Date(it)) }
+            slotsView.text = slotsText(window)
             slotsView.visibility = View.VISIBLE
             reloadContent()
         }
