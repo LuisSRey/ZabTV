@@ -165,23 +165,31 @@ class SettingsFragment : Fragment() {
         }
         saveBtn.setOnClickListener {
             lifecycleScope.launch {
-                persistProxy(container, enable.isChecked, host.text.toString(), port.text.toString(),
+                val ok = persistProxy(container, enable.isChecked, host.text.toString(), port.text.toString(),
                     if (type.selectedItemPosition == 1) "SOCKS" else "HTTP",
                     user.text.toString(), pass.text.toString())
                 pass.text.clear()
-                Toast.makeText(requireContext(), R.string.settings_proxy_saved, Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    requireContext(),
+                    if (ok) R.string.settings_proxy_saved else R.string.settings_proxy_invalid,
+                    if (ok) Toast.LENGTH_SHORT else Toast.LENGTH_LONG,
+                ).show()
             }
         }
         testBtn.setOnClickListener {
             result.visibility = View.VISIBLE
             result.text = getString(R.string.lists_refreshing)
             lifecycleScope.launch {
-                persistProxy(container, enable.isChecked, host.text.toString(), port.text.toString(),
+                val ok = persistProxy(container, enable.isChecked, host.text.toString(), port.text.toString(),
                     if (type.selectedItemPosition == 1) "SOCKS" else "HTTP",
                     user.text.toString(), pass.text.toString())
+                if (!ok) {
+                    result.text = getString(R.string.settings_proxy_error, getString(R.string.settings_proxy_invalid))
+                    return@launch
+                }
                 val url = testUrl.text.toString().trim()
-                if (url.isEmpty() || (!url.startsWith("http://") && !url.startsWith("https://"))) {
-                    result.text = getString(R.string.settings_proxy_error, "URL http(s) inválida")
+                if (!com.tvplayer.app.data.net.ProxyProbeGate.isProbeAllowed(url, container.allowHttp)) {
+                    result.text = probeBlockedMessage(url)
                     return@launch
                 }
                 result.text = probeUrl(container, url)
@@ -189,6 +197,13 @@ class SettingsFragment : Fragment() {
         }
     }
 
+    /**
+     * LOW 1: valida antes de persistir. Si se pide habilitar con host vacío
+     * o puerto fuera de 1-65535, NO habilita (proxy_enabled=false) y devuelve
+     * false para que el llamador avise con mensaje accionable. Nunca deja
+     * una config inválida habilitada (evita fail-open a DIRECT en silencio
+     * en AppProxySelector) ni reconstruye el transporte con ella.
+     */
     private suspend fun persistProxy(
         container: AppContainer,
         enabled: Boolean,
@@ -197,11 +212,14 @@ class SettingsFragment : Fragment() {
         type: String,
         user: String,
         pass: String,
-    ) {
+    ): Boolean {
         val dao = container.db.settingsDao()
-        dao.put(com.tvplayer.app.data.net.ProxyConfig.KEY_ENABLED, enabled.toString())
-        dao.put(com.tvplayer.app.data.net.ProxyConfig.KEY_HOST, host.trim())
-        dao.put(com.tvplayer.app.data.net.ProxyConfig.KEY_PORT, (port.toIntOrNull() ?: 8080).toString())
+        val trimmedHost = host.trim()
+        val parsedPort = com.tvplayer.app.data.net.ProxyConfig.parsePort(port)
+        val effectiveEnabled = enabled && parsedPort != null && trimmedHost.isNotEmpty()
+        dao.put(com.tvplayer.app.data.net.ProxyConfig.KEY_ENABLED, effectiveEnabled.toString())
+        dao.put(com.tvplayer.app.data.net.ProxyConfig.KEY_HOST, trimmedHost)
+        dao.put(com.tvplayer.app.data.net.ProxyConfig.KEY_PORT, (parsedPort ?: 8080).toString())
         dao.put(com.tvplayer.app.data.net.ProxyConfig.KEY_TYPE, type)
         val u = user.trim()
         if (u.isNotEmpty() || pass.isNotEmpty()) {
@@ -211,6 +229,17 @@ class SettingsFragment : Fragment() {
         }
         container.refreshNetPolicy()
         runCatching { coil.Coil.setImageLoader(container.imageLoader) }
+        return !enabled || effectiveEnabled
+    }
+
+    /** Mensaje accionable cuando la puerta del probe bloquea, sin tocar red. */
+    private fun probeBlockedMessage(url: String): String {
+        val reason = if (!com.tvplayer.app.core.UrlPolicer.isAllowedHttpUrl(url)) {
+            getString(R.string.settings_proxy_invalid_url)
+        } else {
+            getString(R.string.error_cleartext)
+        }
+        return getString(R.string.settings_proxy_error, reason)
     }
 
     /**
@@ -266,9 +295,17 @@ class SettingsFragment : Fragment() {
         }
     }
 
-    /** GET con timeout de 8 s. Devuelve el mensaje a mostrar; nunca loguea credenciales. */
-    private suspend fun probeUrl(container: AppContainer, url: String): String =
-        kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+    /**
+     * GET con timeout de 8 s. Devuelve el mensaje a mostrar; nunca loguea
+     * credenciales. LOW 2: la puerta del probe ([ProxyProbeGate]) va ANTES
+     * de cualquier petición — URL no permitida o http con cleartext
+     * bloqueado devuelven el error sin tocar red.
+     */
+    private suspend fun probeUrl(container: AppContainer, url: String): String {
+        if (!com.tvplayer.app.data.net.ProxyProbeGate.isProbeAllowed(url, container.allowHttp)) {
+            return probeBlockedMessage(url)
+        }
+        return kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
             try {
                 val client = container.okHttp.newBuilder()
                     .connectTimeout(8, java.util.concurrent.TimeUnit.SECONDS)
@@ -297,6 +334,7 @@ class SettingsFragment : Fragment() {
                 }
             }
         }
+    }
 
     /** Confirmación antes de cualquier borrado. */
     private fun confirm(itemName: String, onYes: () -> Unit) {

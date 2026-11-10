@@ -121,6 +121,8 @@
     <string name="settings_proxy_ok">OK (code %1$d)</string>
     <string name="settings_proxy_code">Reply: code %1$d</string>
     <string name="settings_proxy_error">Error: %1$s</string>
+    <string name="settings_proxy_invalid">Proxy not enabled: check the server and port (1-65535)</string>
+    <string name="settings_proxy_invalid_url">Invalid http(s) URL: use a valid http:// or https:// URL</string>
     <string name="settings_proxy_bypass_warn">The local AceStream engine (127.0.0.1) never goes through the proxy.</string>
     <string-array name="proxy_types">
         <item>HTTP</item>

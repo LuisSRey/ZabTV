@@ -121,6 +121,8 @@
     <string name="settings_proxy_ok">OK (código %1$d)</string>
     <string name="settings_proxy_code">Respuesta: código %1$d</string>
     <string name="settings_proxy_error">Error: %1$s</string>
+    <string name="settings_proxy_invalid">Proxy no activado: revisa el servidor y el puerto (1-65535)</string>
+    <string name="settings_proxy_invalid_url">URL http(s) inválida: usa una URL http:// o https:// válida</string>
     <string name="settings_proxy_bypass_warn">El motor AceStream local (127.0.0.1) nunca pasa por el proxy.</string>
     <string-array name="proxy_types">
         <item>HTTP</item>

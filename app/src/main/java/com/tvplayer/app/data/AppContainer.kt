@@ -117,7 +117,7 @@ class AppContainer(private val appContext: Context) {
     suspend fun refreshNetPolicy() {
         val dao = db.settingsDao()
         val allow = dao.get(KEY_ALLOW_HTTP, "false") == "true"
-        val proxy = ProxyConfig(
+        val rawProxy = ProxyConfig(
             enabled = dao.get(ProxyConfig.KEY_ENABLED, "false") == "true",
             host = dao.get(ProxyConfig.KEY_HOST, "").orEmpty(),
             port = dao.get(ProxyConfig.KEY_PORT, "8080")?.toIntOrNull() ?: 8080,
@@ -127,6 +127,14 @@ class AppContainer(private val appContext: Context) {
                 com.tvplayer.app.data.net.ProxyType.HTTP
             },
         )
+        // LOW 1: una fila heredada con host vacío o puerto fuera de 1-65535
+        // nunca entra habilitada a la política efectiva (evita fail-open a
+        // DIRECT en silencio en AppProxySelector).
+        val proxy = if (rawProxy.enabled && !ProxyConfig.isValid(rawProxy.host, rawProxy.port)) {
+            rawProxy.copy(enabled = false)
+        } else {
+            rawProxy
+        }
         val auth = runCatching { proxyCreds.load() }.getOrNull()
         val doh = DohConfig.from(
             dao.get(DohConfig.KEY_MODE, DohConfig.MODE_SYSTEM),
