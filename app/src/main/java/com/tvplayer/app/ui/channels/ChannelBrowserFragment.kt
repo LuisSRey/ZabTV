@@ -128,6 +128,7 @@ class ChannelBrowserFragment : Fragment() {
                     listId = id
                     viewModel.setListId(id)
                     selection = Selection.All
+                    viewModel.select(Selection.All)
                     reloadAll()
                 }
             },
