@@ -126,4 +126,16 @@
         <item>HTTP</item>
         <item>SOCKS</item>
     </string-array>
+    <string name="settings_doh_title">DNS privado (DoH)</string>
+    <string name="settings_doh_custom_hint">URL DoH personalizada (https://…)</string>
+    <string name="settings_doh_save">Guardar DNS</string>
+    <string name="settings_doh_saved">DNS guardado</string>
+    <string name="settings_doh_invalid">URL DoH inválida: se usa el DNS del sistema</string>
+    <string name="settings_doh_warn">El DNS cifrado también se usa para importar listas y EPG, no solo para reproducir.</string>
+    <string-array name="doh_modes">
+        <item>Sistema (por defecto)</item>
+        <item>Cloudflare (1.1.1.1)</item>
+        <item>Google (dns.google)</item>
+        <item>Personalizado</item>
+    </string-array>
 </resources>

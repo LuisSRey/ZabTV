@@ -48,6 +48,10 @@ androidx-paging-runtime = { group = "androidx.paging", name = "paging-runtime-kt
 androidx-work-runtime = { group = "androidx.work", name = "work-runtime-ktx", version.ref = "workmanager" }
 androidx-security-crypto = { group = "androidx.security", name = "security-crypto", version.ref = "securityCrypto" }
 okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }
+# DoH app-level (S2): mismo major que okhttp; se referencia como coordenada
+# string en app/build.gradle.kts (las claves con guion no son accesibles por
+# punto en Kotlin DSL, mismo caso que Media3).
+okhttp-dnsoverhttps = { group = "com.squareup.okhttp3", name = "okhttp-dnsoverhttps", version.ref = "okhttp" }
 mockwebserver = { group = "com.squareup.okhttp3", name = "mockwebserver", version.ref = "okhttp" }
 coil = { group = "io.coil-kt", name = "coil", version.ref = "coil" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }

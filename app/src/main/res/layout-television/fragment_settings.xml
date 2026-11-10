@@ -307,6 +307,55 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="40dp"
+            android:text="@string/settings_doh_title"
+            android:textColor="@color/tp_accent"
+            android:textSize="24sp"
+            android:textStyle="bold" />
+
+        <Spinner
+            android:id="@+id/settings_doh_mode"
+            android:layout_width="400dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:entries="@array/doh_modes"
+            android:focusable="true" />
+
+        <EditText
+            android:id="@+id/settings_doh_custom"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/tile_focus_bg"
+            android:focusable="true"
+            android:hint="@string/settings_doh_custom_hint"
+            android:imeOptions="actionDone"
+            android:inputType="textUri"
+            android:padding="16dp"
+            android:textColor="@color/tp_text"
+            android:textColorHint="@color/tp_text_secondary"
+            android:textSize="16sp" />
+
+        <Button
+            android:id="@+id/settings_doh_save"
+            android:background="@drawable/btn_primary"
+            android:textColor="@color/tp_text"
+            android:layout_width="400dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/settings_doh_save" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="@string/settings_doh_warn"
+            android:textColor="@color/tp_text_secondary"
+            android:textSize="15sp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="40dp"
             android:text="@string/settings_about_title"
             android:textColor="@color/tp_accent"
             android:textSize="24sp"

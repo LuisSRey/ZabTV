@@ -111,6 +111,7 @@ class SettingsFragment : Fragment() {
             }
         }
         wireProxySection(view, container)
+        wireDohSection(view, container)
     }
 
     private fun container() = (requireActivity().application as TpApp).container
@@ -192,6 +193,59 @@ class SettingsFragment : Fragment() {
         }
         container.refreshNetPolicy()
         runCatching { coil.Coil.setImageLoader(container.imageLoader) }
+    }
+
+    /**
+     * S2: selector DoH (Sistema/Cloudflare/Google/Personalizado) + URL custom.
+     * Custom inválida → fallback System + toast (DohConfig.from).
+     */
+    private fun wireDohSection(view: View, container: AppContainer) {
+        val mode = view.findViewById<android.widget.Spinner>(R.id.settings_doh_mode)
+        val custom = view.findViewById<android.widget.EditText>(R.id.settings_doh_custom)
+        val save = view.findViewById<Button>(R.id.settings_doh_save)
+        FocusScaleHelper.attach(save)
+        lifecycleScope.launch {
+            val dao = container.db.settingsDao()
+            val current = com.tvplayer.app.data.net.DohConfig.from(
+                dao.get(com.tvplayer.app.data.net.DohConfig.KEY_MODE, "system"),
+                dao.get(com.tvplayer.app.data.net.DohConfig.KEY_CUSTOM_URL, ""),
+            )
+            mode.setSelection(
+                when (current) {
+                    is com.tvplayer.app.data.net.DohConfig.Cloudflare -> 1
+                    is com.tvplayer.app.data.net.DohConfig.Google -> 2
+                    is com.tvplayer.app.data.net.DohConfig.Custom -> 3
+                    else -> 0
+                },
+            )
+            custom.setText((current as? com.tvplayer.app.data.net.DohConfig.Custom)?.url.orEmpty())
+        }
+        save.setOnClickListener {
+            lifecycleScope.launch {
+                val modeStr = when (mode.selectedItemPosition) {
+                    1 -> com.tvplayer.app.data.net.DohConfig.MODE_CLOUDFLARE
+                    2 -> com.tvplayer.app.data.net.DohConfig.MODE_GOOGLE
+                    3 -> com.tvplayer.app.data.net.DohConfig.MODE_CUSTOM
+                    else -> com.tvplayer.app.data.net.DohConfig.MODE_SYSTEM
+                }
+                val customUrl = custom.text.toString().trim()
+                val resolved = com.tvplayer.app.data.net.DohConfig.from(modeStr, customUrl)
+                if (modeStr == com.tvplayer.app.data.net.DohConfig.MODE_CUSTOM &&
+                    resolved is com.tvplayer.app.data.net.DohConfig.System
+                ) {
+                    Toast.makeText(requireContext(), R.string.settings_doh_invalid, Toast.LENGTH_LONG).show()
+                }
+                val dao = container.db.settingsDao()
+                dao.put(
+                    com.tvplayer.app.data.net.DohConfig.KEY_MODE,
+                    com.tvplayer.app.data.net.DohConfig.modeOf(resolved),
+                )
+                dao.put(com.tvplayer.app.data.net.DohConfig.KEY_CUSTOM_URL, customUrl)
+                container.refreshNetPolicy()
+                runCatching { coil.Coil.setImageLoader(container.imageLoader) }
+                Toast.makeText(requireContext(), R.string.settings_doh_saved, Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 
     /** GET con timeout de 8 s. Devuelve el mensaje a mostrar; nunca loguea credenciales. */

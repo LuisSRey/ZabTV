@@ -90,6 +90,8 @@ dependencies {
     implementation(libs.androidx.work.runtime)
     ksp(libs.androidx.room.compiler)
     implementation(libs.okhttp)
+    // okhttp-dnsoverhttps 4.12.0 exacto (clave TOML con guion: coordenada string, como Media3).
+    implementation("com.squareup.okhttp3:okhttp-dnsoverhttps:4.12.0")
 
     testImplementation(libs.junit)
     testImplementation(libs.robolectric)

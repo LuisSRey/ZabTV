@@ -7,6 +7,8 @@ import coil.disk.DiskCache
 import com.tvplayer.app.data.db.AppDatabase
 import com.tvplayer.app.data.net.AppProxySelector
 import com.tvplayer.app.data.net.CleartextGate
+import com.tvplayer.app.data.net.DohConfig
+import com.tvplayer.app.data.net.DohProvider
 import com.tvplayer.app.data.net.ProxyConfig
 import com.tvplayer.app.data.net.ProxyCreds
 import kotlinx.coroutines.CoroutineDispatcher
@@ -36,6 +38,7 @@ class AppContainer(private val appContext: Context) {
     data class NetPolicy(
         val allowHttp: Boolean = false,
         val proxy: ProxyConfig = ProxyConfig(),
+        val doh: DohConfig = DohConfig.System,
     )
 
     @Volatile
@@ -68,9 +71,17 @@ class AppContainer(private val appContext: Context) {
      * null = sin autenticación de proxy.
      */
     fun buildOkHttp(policy: NetPolicy, auth: Pair<String, String>?): OkHttpClient {
+        val proxySelector = selectProxy(policy)
+        // Bootstrap SIN dns propio para las consultas DoH (evita recursión);
+        // hereda proxy + gate para no fugar DNS fuera del túnel.
+        val bootstrap = OkHttpClient.Builder()
+            .addInterceptor(cleartextGate)
+            .proxySelector(proxySelector)
+            .build()
         val builder = OkHttpClient.Builder()
             .addInterceptor(cleartextGate)
-            .proxySelector(selectProxy(policy))
+            .proxySelector(proxySelector)
+            .dns(DohProvider.buildDns(policy.doh, bootstrap))
             .connectTimeout(15, TimeUnit.SECONDS)
             .readTimeout(30, TimeUnit.SECONDS)
             .writeTimeout(30, TimeUnit.SECONDS)
@@ -115,8 +126,12 @@ class AppContainer(private val appContext: Context) {
             },
         )
         val auth = runCatching { proxyCreds.load() }.getOrNull()
+        val doh = DohConfig.from(
+            dao.get(DohConfig.KEY_MODE, DohConfig.MODE_SYSTEM),
+            dao.get(DohConfig.KEY_CUSTOM_URL, ""),
+        )
         allowHttp = allow
-        currentPolicy = NetPolicy(allowHttp = allow, proxy = proxy)
+        currentPolicy = NetPolicy(allowHttp = allow, proxy = proxy, doh = doh)
         rebuildOkHttp(auth)
     }
 

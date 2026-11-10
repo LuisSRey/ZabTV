@@ -126,4 +126,16 @@
         <item>HTTP</item>
         <item>SOCKS</item>
     </string-array>
+    <string name="settings_doh_title">Private DNS (DoH)</string>
+    <string name="settings_doh_custom_hint">Custom DoH URL (https://…)</string>
+    <string name="settings_doh_save">Save DNS</string>
+    <string name="settings_doh_saved">DNS saved</string>
+    <string name="settings_doh_invalid">Invalid DoH URL: falling back to system DNS</string>
+    <string name="settings_doh_warn">Encrypted DNS is also used for importing playlists and EPG, not just playback.</string>
+    <string-array name="doh_modes">
+        <item>System (default)</item>
+        <item>Cloudflare (1.1.1.1)</item>
+        <item>Google (dns.google)</item>
+        <item>Custom</item>
+    </string-array>
 </resources>
