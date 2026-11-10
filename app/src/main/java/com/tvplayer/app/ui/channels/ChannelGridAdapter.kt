@@ -141,8 +141,14 @@ class ChannelGridAdapter(
     }
 
     private fun bindTimeline(holder: Holder, position: Int) {
+        val w = window
+        // Sin ventana (rail de Favoritos en Home) no hay timeline: se oculta.
+        if (w == null) {
+            holder.timeline.visibility = View.GONE
+            return
+        }
+        holder.timeline.visibility = View.VISIBLE
         val channel = getItem(position) ?: return
-        val w = window ?: return
         val titles = cellTitles(timeline[channel.stableKey].orEmpty(), w)
         for (i in 0 until holder.timeline.childCount) {
             (holder.timeline.getChildAt(i) as? TextView)?.text = titles.getOrElse(i) { "" }

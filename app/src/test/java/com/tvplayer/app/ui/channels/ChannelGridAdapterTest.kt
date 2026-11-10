@@ -104,6 +104,23 @@ class ChannelGridAdapterTest {
     }
 
     @Test
+    fun `sin ventana el timeline se oculta (rail Home)`() = runTest {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val adapter = ChannelGridAdapter(onClick = {})
+        adapter.submitData(PagingData.from(listOf(channel())))
+        withContext(Dispatchers.IO) {
+            withTimeout(10_000) {
+                while (adapter.itemCount != 1) kotlinx.coroutines.delay(50)
+            }
+        }
+        val parent = RecyclerView(context)
+        parent.layoutManager = LinearLayoutManager(context)
+        val holder = adapter.onCreateViewHolder(parent, 0)
+        adapter.onBindViewHolder(holder, 0)
+        assertEquals(android.view.View.GONE, holder.timeline.visibility)
+    }
+
+    @Test
     fun `submitEpg sigue pintando la tira tras el timeline`() = runTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val adapter = ChannelGridAdapter(onClick = {})
