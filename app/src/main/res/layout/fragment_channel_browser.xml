@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Browser fusionado (Guía→Canales): título + hero (ahora + progreso + ver)
-     + cabecera de cortes + sidebar (playlists/Todos/Historial/grupos) + filas
-     con timeline + vacío. Móvil/tablet. -->
+     + selector de playlist + sidebar (Todos/Historial/grupos) + cabecera de
+     cortes + grid + vacío. Móvil/tablet. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -61,7 +61,35 @@
             android:textColor="@color/tp_text" />
     </LinearLayout>
 
-    <!-- Cabecera del timeline alineada con las celdas de la fila (MISMO
+    <!-- Selector de playlist en móvil (dropdown framework 48dp con tokens
+         propios): el rail de abajo queda solo para filtros (Todos/Historial/
+         grupos). Solo layout/ — TV prohibido. -->
+    <TextView
+        android:id="@+id/browser_list_selector"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:layout_marginTop="12dp"
+        android:background="@drawable/tile_focus_bg"
+        android:clickable="true"
+        android:ellipsize="end"
+        android:focusable="true"
+        android:gravity="center_vertical"
+        android:maxLines="1"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:textColor="@color/tp_text"
+        android:textSize="16sp"
+        android:textStyle="bold" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/browser_sidebar"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:layout_marginTop="8dp"
+        android:orientation="horizontal"
+        android:clipToPadding="false" />
+
+    <!-- Cabecera del timeline bajo el sidebar, encima del grid (O1: MISMO
          id que el TextView de TV: el fragment pinta por tipo, nunca con
          findViewById<TextView> directo). Spacer = offset del timeline en
          item_channel.xml móvil (ver @dimen/browser_timeline_offset) + 6
@@ -138,34 +166,6 @@
 
         </LinearLayout>
     </HorizontalScrollView>
-
-    <!-- Selector de playlist en móvil (dropdown framework 48dp con tokens
-         propios): el rail de abajo queda solo para filtros (Todos/Historial/
-         grupos). Solo layout/ — TV prohibido. -->
-    <TextView
-        android:id="@+id/browser_list_selector"
-        android:layout_width="match_parent"
-        android:layout_height="48dp"
-        android:layout_marginTop="12dp"
-        android:background="@drawable/tile_focus_bg"
-        android:clickable="true"
-        android:ellipsize="end"
-        android:focusable="true"
-        android:gravity="center_vertical"
-        android:maxLines="1"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
-        android:textColor="@color/tp_text"
-        android:textSize="16sp"
-        android:textStyle="bold" />
-
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/browser_sidebar"
-        android:layout_width="match_parent"
-        android:layout_height="40dp"
-        android:layout_marginTop="8dp"
-        android:orientation="horizontal"
-        android:clipToPadding="false" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/browser_grid"
