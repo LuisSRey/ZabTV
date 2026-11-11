@@ -68,7 +68,7 @@ class ChannelGridAdapter(
     internal val currentWindow: GuideWindow?
         get() = window
 
-    /** Actualiza la tira EPG sin recargar la grilla (solo rebind de visibles). */
+    /** Actualiza la tira EPG sin recargar la grilla (solo rebind de visibles). Clave: stableKey. */
     fun submitEpg(lines: Map<String, String>) {
         epgLines = lines
         notifyItemRangeChanged(0, itemCount, PAYLOAD_EPG)
@@ -80,7 +80,7 @@ class ChannelGridAdapter(
         notifyItemRangeChanged(0, itemCount, PAYLOAD_TIMELINE)
     }
 
-    /** Actualiza el timeline sin recargar la grilla (solo rebind de visibles). */
+    /** Actualiza el timeline sin recargar la grilla (solo rebind de visibles). Clave: stableKey. */
     fun submitTimeline(lines: Map<String, List<EpgProgramEntity>>, window: GuideWindow) {
         timeline = lines
         setWindow(window)
@@ -164,15 +164,18 @@ class ChannelGridAdapter(
             strip.visibility = View.GONE
             return
         }
-        // Con ventana la tira va SIEMPRE visible; el hueco sin guía usa el
-        // string existente de vacío (browser_empty), nunca "—".
+        // Con ventana la tira va SIEMPRE visible con 6 celdas: títulos o la
+        // etiqueta de vacío ([TimelineCellMapper], nunca el nombre del
+        // canal). La clave es stableKey — una clave tvgId no pinta. La tira
+        // channel_epg va separada (binds aislados por payload).
         strip.visibility = View.VISIBLE
         val channel = getItem(position) ?: return
         val emptyLabel = holder.itemView.context.getString(R.string.browser_empty)
-        val titles = cellTitles(timeline[channel.stableKey].orEmpty(), w)
+        val titles = TimelineCellMapper.mapCells(timeline[channel.stableKey].orEmpty(), w, emptyLabel)
         for (i in 0 until strip.childCount) {
-            (strip.getChildAt(i) as? TextView)?.text =
-                titles.getOrElse(i) { "" }.ifBlank { emptyLabel }
+            val cell = strip.getChildAt(i) as? TextView ?: continue
+            cell.text = titles.getOrElse(i) { emptyLabel }
+            cell.contentDescription = cell.text
         }
     }
 }
