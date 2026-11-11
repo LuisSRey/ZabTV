@@ -9,6 +9,8 @@ import androidx.test.core.app.ApplicationProvider
 import com.tvplayer.app.R
 import com.tvplayer.app.data.db.ListEntity
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -91,6 +93,42 @@ class ListPickerTest {
         assertEquals(listOf("Casa", "Nombre", "Fuera"), (0 until popup.menu.size()).map { popup.menu.getItem(it).title.toString() })
         popup.menu.performIdentifierAction(2, 0)
         assertEquals(listOf(2), picked)
+    }
+
+    @Test
+    fun `showDialog preselecciona activo foco y Back sin excepcion`() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val labels = ListPicker.labels(lists(), "Nombre")
+        val active = 1
+        val picked = mutableListOf<Int>()
+
+        // Preselección + foco en el índice activo, dismiss sin excepción.
+        val dialog = ListPicker.showDialog(context, labels) { picked += it }
+        try {
+            assertTrue(dialog.isShowing)
+            val list = dialog.listView
+            assertNotNull(list)
+            assertEquals(labels.size, list!!.adapter.count)
+            list.setSelection(active) // API de preselección usable, sin excepción
+            // (la posición reportada la gobierna el touch-mode del framework,
+            // no el diálogo: no se afirma). La fila activa sí es focable D-pad.
+            val row = list.adapter.getView(active, null, list)
+            assertTrue(row.isFocusable)
+            row.requestFocus() // camino D-pad: sin excepción
+        } finally {
+            dialog.dismiss()
+        }
+        assertFalse(dialog.isShowing)
+
+        // Back real: cancela (sin pick) sin excepción.
+        val back = ListPicker.showDialog(context, labels) { picked += it }
+        try {
+            back.onBackPressed()
+            assertFalse(back.isShowing)
+        } finally {
+            if (back.isShowing) back.dismiss()
+        }
+        assertTrue(picked.isEmpty())
     }
 
     @Test
