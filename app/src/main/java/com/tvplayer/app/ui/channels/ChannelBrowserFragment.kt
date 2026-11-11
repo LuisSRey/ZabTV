@@ -1,6 +1,5 @@
 package com.tvplayer.app.ui.channels
 
-import android.app.AlertDialog
 import android.content.res.Configuration
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -9,9 +8,8 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.ImageButton
 import android.widget.LinearLayout
-import android.widget.PopupMenu
-import android.widget.ProgressBar
 import android.widget.TextView
+import android.widget.ProgressBar
 import androidx.annotation.VisibleForTesting
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
@@ -84,7 +82,7 @@ class ChannelBrowserFragment : Fragment() {
          * directo.
          */
         fun listDialogLabels(lists: List<ListEntity>, fallback: String): Array<String> =
-            lists.map { it.name.ifBlank { fallback } }.toTypedArray()
+            ListPicker.labels(lists, fallback).toTypedArray()
 
         /**
          * Vacío visible SOLO con 0 canales confirmados (refresh ya resolvió,
@@ -448,15 +446,8 @@ class ChannelBrowserFragment : Fragment() {
             val db = (requireActivity().application as TpApp).container.db
             val lists = db.listDao().all()
             if (lists.isEmpty()) return@launch
-            val popup = PopupMenu(requireContext(), anchor)
-            lists.forEachIndexed { index, list ->
-                popup.menu.add(0, index, index, list.name.ifBlank { getString(R.string.lists_name) })
-            }
-            popup.setOnMenuItemClickListener { item ->
-                onListPicked(lists[item.itemId].id)
-                true
-            }
-            popup.show()
+            val labels = ListPicker.labels(lists, getString(R.string.lists_name))
+            ListPicker.showMenu(anchor, labels) { onListPicked(lists[it].id) }
         }
     }
 
@@ -466,11 +457,8 @@ class ChannelBrowserFragment : Fragment() {
             val db = (requireActivity().application as TpApp).container.db
             val lists = db.listDao().all()
             if (lists.isEmpty()) return@launch
-            AlertDialog.Builder(requireContext())
-                .setItems(listDialogLabels(lists, getString(R.string.lists_name))) { _, which ->
-                    onListPicked(lists[which].id)
-                }
-                .show()
+            val labels = ListPicker.labels(lists, getString(R.string.lists_name))
+            ListPicker.showDialog(requireContext(), labels) { onListPicked(lists[it].id) }
         }
     }
 

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Fila del selector de playlists (S4, menú y diálogo): 48dp, tile_focus_bg
+     (foco + activated surface2), Inter 16sp, focable para D-pad. -->
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/list_picker_label"
+    android:layout_width="match_parent"
+    android:layout_height="48dp"
+    android:background="@drawable/tile_focus_bg"
+    android:ellipsize="end"
+    android:focusable="true"
+    android:fontFamily="@font/inter_medium"
+    android:gravity="center_vertical"
+    android:maxLines="1"
+    android:paddingStart="16dp"
+    android:paddingEnd="16dp"
+    android:textColor="@color/tp_text"
+    android:textSize="16sp" />

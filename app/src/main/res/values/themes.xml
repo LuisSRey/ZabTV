@@ -36,4 +36,17 @@
         <item name="android:textSize">13sp</item>
         <item name="android:textColor">@color/tp_text_secondary</item>
     </style>
+
+    <!-- Selector de playlists (S4): superficies con tokens propios — fondo
+         tp_surface, texto tp_text, radio 10dp (dialog_bg), elev 8dp. -->
+    <style name="ThemeOverlay.TVPlayer.ListPopup" parent="ThemeOverlay.AppCompat.Dark">
+        <item name="android:popupBackground">@color/tp_surface</item>
+        <item name="android:textColor">@color/tp_text</item>
+        <item name="android:textColorPrimary">@color/tp_text</item>
+    </style>
+    <style name="ThemeOverlay.TVPlayer.ListDialog" parent="Theme.AppCompat.Dialog.Alert">
+        <item name="android:windowBackground">@drawable/dialog_bg</item>
+        <item name="android:textColor">@color/tp_text</item>
+        <item name="android:textColorPrimary">@color/tp_text</item>
+    </style>
 </resources>
