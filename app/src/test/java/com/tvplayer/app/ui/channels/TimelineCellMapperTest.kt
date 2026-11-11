@@ -48,6 +48,17 @@ class TimelineCellMapperTest {
     }
 
     @Test
+    fun `titulo EPG igual al displayName es legitimo no fuga`() {
+        val slots = window.slots()
+        val programs = listOf(
+            EpgProgramEntity(tvgId = "x", startMillis = slots[0], endMillis = slots[1], title = "Uno"),
+        )
+        // El mapper ni recibe el nombre del canal: un título EPG que
+        // coincide con el displayName se pinta, no se filtra como fuga.
+        assertEquals("Uno", TimelineCellMapper.mapCells(programs, window, empty)[0])
+    }
+
+    @Test
     fun `reparte un titulo por corte como cellTitles`() {
         val slots = window.slots()
         val programs = listOf(

@@ -148,4 +148,30 @@ class ChannelGridAdapterIsolationTest {
         assertEquals("▶ Ahora", holder.epg?.text.toString())
         assertEquals("Ahora", cellTexts(holder)[0])
     }
+
+    @Test
+    fun `titulo EPG igual al displayName pinta como legitimo`() = runTest {
+        // Canal "Uno" + programa titulado "Uno": la celda muestra "Uno"
+        // porque es el título EPG, no una fuga del nombre (el bind no
+        // compara títulos con el displayName).
+        val adapter = adapterWithChannel()
+        adapter.setWindow(window)
+        val slots = window.slots()
+        adapter.submitTimeline(
+            mapOf(
+                "sk1" to listOf(
+                    EpgProgramEntity(
+                        tvgId = "tvg1",
+                        startMillis = slots[0],
+                        endMillis = slots[1],
+                        title = "Uno",
+                    ),
+                ),
+            ),
+            window,
+        )
+        val holder = boundHolder(adapter)
+        assertEquals("Uno", cellTexts(holder)[0])
+        assertEquals("Uno", holder.name.text.toString())
+    }
 }
