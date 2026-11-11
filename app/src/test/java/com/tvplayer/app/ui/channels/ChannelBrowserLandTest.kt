@@ -151,6 +151,13 @@ class ChannelBrowserLandTest {
         assertEquals(R.id.browser_sidebar, selector.nextFocusDownId)
         assertEquals(R.id.browser_list_selector, sidebar.nextFocusUpId)
         assertEquals(R.id.browser_grid, sidebar.nextFocusRightId)
+        // Escudo S1 (U1): gap selector→sidebar 20dp + elevation 16dp, como
+        // la TV vertical.
+        assertEquals(
+            dp(context, 20),
+            (sidebar.layoutParams as ViewGroup.MarginLayoutParams).topMargin,
+        )
+        assertEquals(dp(context, 16).toFloat(), selector.elevation, 1f)
         // Escudo réplica S5: hero compacto como la TV (padding 12 + título
         // 22sp + play minHeight 48).
         val hero = root.findViewById<View>(R.id.browser_hero)

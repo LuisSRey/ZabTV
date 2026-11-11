@@ -40,6 +40,20 @@ class ChannelBrowserTvParityTest {
     }
 
     @Test
+    fun `S1 tv gap selector-sidebar 20dp mas selector elevation 16dp`() {
+        // U1 S1: gap 12→20dp + selector con elevation 16dp (escudo: el
+        // selector focado con escala 1.1 dibuja por encima del sidebar).
+        // Resto intacto (safe 56dp, gap 32dp, nextFocus §F2).
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val root = tvBrowserRoot(context)
+        val selector = root.findViewById<TextView>(R.id.browser_list_selector)
+        val sidebar = root.findViewById<RecyclerView>(R.id.browser_sidebar)
+        val lp = sidebar.layoutParams as ViewGroup.MarginLayoutParams
+        assertEquals(dp(context, 20), lp.topMargin)
+        assertEquals(dp(context, 16).toFloat(), selector.elevation, 1f)
+    }
+
+    @Test
     fun `S1 tv browser lleva selector dropdown 48dp`() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val root = tvBrowserRoot(context)
