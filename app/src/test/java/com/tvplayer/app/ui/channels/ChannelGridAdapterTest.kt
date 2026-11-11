@@ -225,6 +225,73 @@ class ChannelGridAdapterTest {
     }
 
     @Test
+    fun `getItem nulo limpia tira a vacio y GONE`() = runTest {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val adapter = ChannelGridAdapter(onClick = {})
+        // Tira alimentada pero sin datos: getItem() es nulo (nada que pintar).
+        adapter.submitEpg(mapOf("c1" to "▶ Ahora"))
+        val parent = RecyclerView(context)
+        parent.layoutManager = LinearLayoutManager(context)
+        val holder = adapter.onCreateViewHolder(parent, 0)
+        // Reciclado sucio: la tira trae texto visible de otra fila.
+        holder.epg?.text = "rancio"
+        holder.epg?.visibility = android.view.View.VISIBLE
+        adapter.onBindViewHolder(holder, 0)
+        assertEquals("", holder.epg?.text.toString())
+        assertEquals(android.view.View.GONE, holder.epg?.visibility)
+    }
+
+    @Test
+    fun `sin ventana limpia celdas a vacio`() = runTest {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val adapter = ChannelGridAdapter(onClick = {})
+        adapter.submitData(PagingData.from(listOf(channel())))
+        withContext(Dispatchers.IO) {
+            withTimeout(10_000) {
+                while (adapter.itemCount != 1) kotlinx.coroutines.delay(50)
+            }
+        }
+        val parent = RecyclerView(context)
+        parent.layoutManager = LinearLayoutManager(context)
+        val holder = adapter.onCreateViewHolder(parent, 0)
+        // Reciclado sucio: celdas con títulos de otra fila.
+        val strip = holder.timeline as LinearLayout
+        for (i in 0 until strip.childCount) {
+            (strip.getChildAt(i) as android.widget.TextView).text = "rancio"
+        }
+        strip.visibility = android.view.View.VISIBLE
+        adapter.onBindViewHolder(holder, 0)
+        assertEquals(android.view.View.GONE, strip.visibility)
+        val emptyLabel = context.getString(com.tvplayer.app.R.string.browser_empty)
+        for (i in 0 until strip.childCount) {
+            assertEquals(emptyLabel, (strip.getChildAt(i) as android.widget.TextView).text.toString())
+        }
+    }
+
+    @Test
+    fun `getItem nulo con ventana pinta celdas vacias visibles`() = runTest {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val adapter = ChannelGridAdapter(onClick = {})
+        // Ventana presente pero sin datos: getItem() es nulo.
+        adapter.setWindow(window)
+        val parent = RecyclerView(context)
+        parent.layoutManager = LinearLayoutManager(context)
+        val holder = adapter.onCreateViewHolder(parent, 0)
+        val strip = holder.timeline as LinearLayout
+        for (i in 0 until strip.childCount) {
+            (strip.getChildAt(i) as android.widget.TextView).text = "rancio"
+        }
+        strip.visibility = android.view.View.GONE
+        adapter.onBindViewHolder(holder, 0)
+        // Con ventana la tira va visible aunque el item falte, con vacíos.
+        assertEquals(android.view.View.VISIBLE, strip.visibility)
+        val emptyLabel = context.getString(com.tvplayer.app.R.string.browser_empty)
+        for (i in 0 until strip.childCount) {
+            assertEquals(emptyLabel, (strip.getChildAt(i) as android.widget.TextView).text.toString())
+        }
+    }
+
+    @Test
     fun `submitEpg sigue pintando la tira tras el timeline`() = runTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val adapter = ChannelGridAdapter(onClick = {})

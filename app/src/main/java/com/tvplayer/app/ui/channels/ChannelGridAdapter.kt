@@ -63,6 +63,15 @@ class ChannelGridAdapter(
     private var timeline: Map<String, List<EpgProgramEntity>> = emptyMap()
     private var window: GuideWindow? = null
 
+    /**
+     * Item total: fuera de rango o placeholder → null (limpia, nunca rompe).
+     * El getItem() de Paging lanza IndexOutOfBounds fuera de rango en vez de
+     * devolver null (PageStore.checkIndex): sin este guardián, un bind con
+     * posición rancia (p. ej. durante animaciones) rompería antes de limpiar.
+     */
+    private fun safeItem(position: Int): ChannelEntity? =
+        if (position in 0 until itemCount) getItem(position) else null
+
     /** Ventana vigente (CA2: prueba que el rotate re-dispara setWindow). */
     @VisibleForTesting
     internal val currentWindow: GuideWindow?
@@ -127,8 +136,8 @@ class ChannelGridAdapter(
     }
 
     private fun onBind(holder: Holder, position: Int, full: Boolean) {
-        val channel = getItem(position) ?: return
-        if (full) {
+        val channel = safeItem(position)
+        if (full && channel != null) {
             holder.number?.text = (channel.position + 1).toString()
             holder.name.text = channel.displayName
             holder.logo.setImageDrawable(null) // reciclado: sin logo fantasma
@@ -147,8 +156,8 @@ class ChannelGridAdapter(
     }
 
     private fun bindEpg(holder: Holder, position: Int) {
-        val channel = getItem(position) ?: return
-        val line = epgLines[channel.stableKey]
+        // Sin item no hay clave: la tira se limpia (nada rancio del reciclado).
+        val line = safeItem(position)?.let { epgLines[it.stableKey] }
         holder.epg?.let {
             it.text = line.orEmpty()
             it.visibility = if (line.isNullOrBlank()) View.GONE else View.VISIBLE
@@ -156,26 +165,28 @@ class ChannelGridAdapter(
     }
 
     private fun bindTimeline(holder: Holder, position: Int) {
-        // Sin tira (TV) no hay nada que pintar: se sale sin tocar nada.
+        // Sin tira (layouts sin timeline) no hay nada que pintar: TV intacto.
         val strip = holder.timeline ?: return
-        val w = window
-        // Sin ventana (rail de Favoritos/Buscar en Home) no hay timeline.
-        if (w == null) {
-            strip.visibility = View.GONE
-            return
-        }
-        // Con ventana la tira va SIEMPRE visible con 6 celdas: títulos o la
-        // etiqueta de vacío ([TimelineCellMapper], nunca el nombre del
-        // canal). La clave es stableKey — una clave tvgId no pinta. La tira
-        // channel_epg va separada (binds aislados por payload).
-        strip.visibility = View.VISIBLE
-        val channel = getItem(position) ?: return
         val emptyLabel = holder.itemView.context.getString(R.string.browser_empty)
-        val titles = TimelineCellMapper.mapCells(timeline[channel.stableKey].orEmpty(), w, emptyLabel)
+        val w = window
+        val channel = safeItem(position)
+        // Sin ventana (rail de Favoritos/Buscar en Home) la tira se oculta;
+        // sin item no hay clave. Ambas ramas limpian las celdas a vacío para
+        // no mostrar títulos rancios del reciclado. Con ventana la tira va
+        // SIEMPRE visible con 6 celdas: títulos o la etiqueta de vacío
+        // ([TimelineCellMapper], nunca el nombre del canal). La clave es
+        // stableKey. La tira channel_epg va separada (binds aislados).
+        strip.visibility = if (w == null) View.GONE else View.VISIBLE
+        val titles = if (w != null && channel != null) {
+            TimelineCellMapper.mapCells(timeline[channel.stableKey].orEmpty(), w, emptyLabel)
+        } else {
+            emptyList()
+        }
         for (i in 0 until strip.childCount) {
             val cell = strip.getChildAt(i) as? TextView ?: continue
-            cell.text = titles.getOrElse(i) { emptyLabel }
-            cell.contentDescription = cell.text
+            val text = titles.getOrElse(i) { emptyLabel }
+            cell.text = text
+            cell.contentDescription = text
         }
     }
 }
