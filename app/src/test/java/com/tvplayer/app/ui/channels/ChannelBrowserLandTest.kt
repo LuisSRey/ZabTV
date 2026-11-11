@@ -68,7 +68,7 @@ class ChannelBrowserLandTest {
         assertTrue(root.findViewById<TextView>(R.id.browser_hero_now) != null)
         assertTrue(root.findViewById<View>(R.id.browser_hero_progress) != null)
         assertTrue(root.findViewById<View>(R.id.browser_hero_play) != null)
-        assertTrue(root.findViewById<TextView>(R.id.browser_slots) != null)
+        assertTrue(root.findViewById<View>(R.id.browser_slots) != null)
         assertTrue(root.findViewById<RecyclerView>(R.id.browser_grid) != null)
         assertTrue(root.findViewById<TextView>(R.id.browser_empty) != null)
         // Hero compacto: título 16sp (el vertical usa 20sp).
@@ -77,6 +77,55 @@ class ChannelBrowserLandTest {
             android.util.TypedValue.COMPLEX_UNIT_SP, 16f, context.resources.displayMetrics,
         )
         assertEquals(expected, title.textSize, 1.0f)
+    }
+
+    @Test
+    @Config(qualifiers = "land")
+    fun `land cabecera 6 cortes de 110dp con spacer offset en HSV`() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val root = landRoot(context)
+        // MISMO id, ahora LinearLayout horizontal (el TextView vertical sigue intacto).
+        val slots = root.findViewById<LinearLayout>(R.id.browser_slots)
+        assertTrue(slots != null)
+        assertEquals(LinearLayout.HORIZONTAL, slots.orientation)
+        // Envuelto en HSV para alinear con las celdas de la fila.
+        assertTrue(slots.parent is HorizontalScrollView)
+        // Spacer (= offset del timeline en item_channel) + 6 cortes.
+        assertEquals(7, slots.childCount)
+        assertEquals(
+            context.resources.getDimensionPixelSize(R.dimen.browser_timeline_offset),
+            (slots.getChildAt(0).layoutParams as LinearLayout.LayoutParams).width,
+        )
+        assertEquals(
+            dp(context, 229),
+            (slots.getChildAt(0).layoutParams as LinearLayout.LayoutParams).width,
+        )
+        val ids = listOf(
+            R.id.browser_slot_0, R.id.browser_slot_1, R.id.browser_slot_2,
+            R.id.browser_slot_3, R.id.browser_slot_4, R.id.browser_slot_5,
+        )
+        val expectedSize = android.util.TypedValue.applyDimension(
+            android.util.TypedValue.COMPLEX_UNIT_SP, 12f, context.resources.displayMetrics,
+        )
+        for (i in 0..5) {
+            val cell = slots.getChildAt(i + 1) as TextView
+            assertEquals(ids[i], cell.id)
+            assertEquals(dp(context, 110), cell.layoutParams.width)
+            assertEquals(expectedSize, cell.textSize, 1.0f)
+            assertEquals(context.getColor(R.color.tp_text_secondary), cell.currentTextColor)
+        }
+    }
+
+    @Test
+    @Config(qualifiers = "land")
+    fun `land grid intacta`() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val root = landRoot(context)
+        val grid = root.findViewById<RecyclerView>(R.id.browser_grid)
+        assertTrue(grid != null)
+        val lp = grid.layoutParams as LinearLayout.LayoutParams
+        assertEquals(1f, lp.weight, 0.001f)
+        assertEquals(dp(context, 96), grid.minimumHeight)
     }
 
     @Test

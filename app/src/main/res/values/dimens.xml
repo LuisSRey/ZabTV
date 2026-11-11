@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Offset del inicio del timeline dentro de la fila móvil
+     (item_channel.xml en layout/: margen 3 + padding 6 + número 36 +
+     logo 64 + columna nombre 120 = 229dp). La cabecera browser_slots de
+     layout-land/fragment_channel_browser.xml usa este spacer para alinear
+     sus 6 cortes con las celdas de la fila: si cambian esos anchos,
+     actualizar aquí. -->
+<resources>
+    <dimen name="browser_timeline_offset">229dp</dimen>
+</resources>

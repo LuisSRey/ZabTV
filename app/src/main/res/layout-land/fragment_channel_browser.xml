@@ -133,17 +133,82 @@
             </LinearLayout>
         </LinearLayout>
 
+        <!-- Cabecera del timeline alineada con las celdas de la fila (MISMO
+             id que el TextView vertical: el fragment pinta por tipo, nunca
+             con findViewById<TextView> directo). Spacer = offset del timeline
+             en item_channel.xml móvil (ver @dimen/browser_timeline_offset) +
+             6 cortes de 110dp como item_channel_timeline, envuelto en HSV. -->
         <HorizontalScrollView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp">
+            android:layout_marginTop="8dp"
+            android:scrollbars="none">
 
-            <TextView
+            <LinearLayout
                 android:id="@+id/browser_slots"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="@color/tp_text_secondary"
-                android:textSize="12sp" />
+                android:orientation="horizontal">
+
+                <View
+                    android:layout_width="@dimen/browser_timeline_offset"
+                    android:layout_height="match_parent" />
+
+                <TextView
+                    android:id="@+id/browser_slot_0"
+                    android:layout_width="110dp"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:textColor="@color/tp_text_secondary"
+                    android:textSize="12sp" />
+
+                <TextView
+                    android:id="@+id/browser_slot_1"
+                    android:layout_width="110dp"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:textColor="@color/tp_text_secondary"
+                    android:textSize="12sp" />
+
+                <TextView
+                    android:id="@+id/browser_slot_2"
+                    android:layout_width="110dp"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:textColor="@color/tp_text_secondary"
+                    android:textSize="12sp" />
+
+                <TextView
+                    android:id="@+id/browser_slot_3"
+                    android:layout_width="110dp"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:textColor="@color/tp_text_secondary"
+                    android:textSize="12sp" />
+
+                <TextView
+                    android:id="@+id/browser_slot_4"
+                    android:layout_width="110dp"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:textColor="@color/tp_text_secondary"
+                    android:textSize="12sp" />
+
+                <TextView
+                    android:id="@+id/browser_slot_5"
+                    android:layout_width="110dp"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:textColor="@color/tp_text_secondary"
+                    android:textSize="12sp" />
+
+            </LinearLayout>
         </HorizontalScrollView>
 
         <androidx.recyclerview.widget.RecyclerView
