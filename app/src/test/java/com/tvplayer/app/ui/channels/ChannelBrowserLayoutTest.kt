@@ -2,6 +2,10 @@ package com.tvplayer.app.ui.channels
 
 import android.content.Context
 import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.view.ViewParent
+import android.widget.HorizontalScrollView
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.test.core.app.ApplicationProvider
@@ -77,9 +81,55 @@ class ChannelBrowserLayoutTest {
         val parent = android.widget.FrameLayout(context)
         val root = LayoutInflater.from(context).inflate(R.layout.fragment_channel_browser, parent, false)
         assertEquals(true, root.findViewById<android.view.View>(R.id.browser_hero) != null)
-        assertEquals(true, root.findViewById<TextView>(R.id.browser_slots) != null)
+        assertEquals(true, root.findViewById<View>(R.id.browser_slots) != null)
         assertEquals(true, root.findViewById<androidx.recyclerview.widget.RecyclerView>(R.id.browser_grid) != null)
         assertEquals(true, root.findViewById<TextView>(R.id.browser_empty) != null)
+    }
+
+    @Test
+    fun `slots portrait 6 cortes de 110dp con spacer offset en HSV`() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val parent = android.widget.FrameLayout(context)
+        val root = LayoutInflater.from(context).inflate(R.layout.fragment_channel_browser, parent, false)
+        // MISMO id que el land: LinearLayout horizontal dentro del HSV.
+        val slots = root.findViewById<LinearLayout>(R.id.browser_slots)
+        assertTrue(slots != null)
+        assertEquals(LinearLayout.HORIZONTAL, slots.orientation)
+        assertTrue(slots.parent is HorizontalScrollView)
+        // marginTop 12dp del HSV conservado (el land usa 8dp).
+        val hsv = slots.parent as View
+        assertEquals(
+            dp(context, 12),
+            (hsv.layoutParams as ViewGroup.MarginLayoutParams).topMargin,
+        )
+        // Spacer (= offset del timeline) + 6 cortes.
+        assertEquals(7, slots.childCount)
+        assertEquals(
+            context.resources.getDimensionPixelSize(R.dimen.browser_timeline_offset),
+            (slots.getChildAt(0).layoutParams as LinearLayout.LayoutParams).width,
+        )
+        val ids = listOf(
+            R.id.browser_slot_0, R.id.browser_slot_1, R.id.browser_slot_2,
+            R.id.browser_slot_3, R.id.browser_slot_4, R.id.browser_slot_5,
+        )
+        val expectedSize = android.util.TypedValue.applyDimension(
+            android.util.TypedValue.COMPLEX_UNIT_SP, 12f, context.resources.displayMetrics,
+        )
+        for (i in 0..5) {
+            val cell = slots.getChildAt(i + 1) as TextView
+            assertEquals(ids[i], cell.id)
+            assertEquals(dp(context, 110), cell.layoutParams.width)
+            assertEquals(expectedSize, cell.textSize, 1.0f)
+            assertEquals(context.getColor(R.color.tp_text_secondary), cell.currentTextColor)
+            assertEquals(1, cell.maxLines)
+            assertEquals(android.text.TextUtils.TruncateAt.END, cell.ellipsize)
+        }
+        // El hero no contiene la cabecera: van de hermanos.
+        var p: ViewParent? = slots.parent
+        while (p != null) {
+            assertTrue((p as? View)?.id != R.id.browser_hero)
+            p = p.parent
+        }
     }
 
     @Test

@@ -3,6 +3,7 @@ package com.tvplayer.app.ui.channels
 import android.content.res.Configuration
 import android.os.Looper
 import android.view.View
+import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -46,8 +47,22 @@ class ChannelBrowserRotateTest {
         check(cond()) { "condición sin cumplir tras ${timeoutMs}ms" }
     }
 
-    private fun seed(listId: Long, db: com.tvplayer.app.data.db.AppDatabase) {
-        runBlocking {
+    /**
+     * Lectura de la cabecera por tipo (el fragment pinta por tipo): TextView
+     * → text de una pieza; ViewGroup (slots 6 cortes) → join de los hijos
+     * TextView con el mismo separador que slotsText.
+     */
+    private fun slotsTextOf(root: View): String =
+        when (val v = root.findViewById<View>(R.id.browser_slots)) {
+            is TextView -> v.text.toString()
+            is ViewGroup -> (0 until v.childCount)
+                .map { v.getChildAt(it) as? TextView }
+                .filterNotNull()
+                .joinToString("  ·  ") { it.text.toString() }
+            else -> ""
+        }
+
+    private fun seed(listId: Long, db: com.tvplayer.app.data.db.AppDatabase) {        runBlocking {
             db.channelDao().upsertAll(
                 listOf(
                     ChannelEntity(
@@ -79,15 +94,15 @@ class ChannelBrowserRotateTest {
         activity.openTab(fragment, ChannelBrowserFragment.TAG)
 
         val root = fragment.requireView()
-        val slots = root.findViewById<TextView>(R.id.browser_slots)
+        val slots = root.findViewById<View>(R.id.browser_slots)
         val hero = root.findViewById<View>(R.id.browser_hero)
         val heroTitle = root.findViewById<TextView>(R.id.browser_hero_title)
         val grid = root.findViewById<RecyclerView>(R.id.browser_grid)
 
         // Carga inicial con el reloj fijo en t0.
-        pumpUntil { fragment.gridAdapter.itemCount == 2 && slots.text.isNotEmpty() }
+        pumpUntil { fragment.gridAdapter.itemCount == 2 && slotsTextOf(root).isNotEmpty() }
         val expected0 = ChannelBrowserFragment.slotsText(GuideWindow.now(t0))
-        assertEquals(expected0, slots.text.toString())
+        assertEquals(expected0, slotsTextOf(root))
         pumpUntil { hero.visibility == View.VISIBLE }
         assertEquals("Uno", heroTitle.text.toString())
 
@@ -98,7 +113,7 @@ class ChannelBrowserRotateTest {
         val expected1 = ChannelBrowserFragment.slotsText(GuideWindow.now(t1))
         assertNotEquals(expected0, expected1)
         // Ventana nueva: los cortes se re-pintan con la ventana de t1.
-        pumpUntil { slots.text.toString() == expected1 }
+        pumpUntil { slotsTextOf(root) == expected1 }
         assertEquals(View.VISIBLE, slots.visibility)
         // Hero re-pintado con el mismo destacado.
         pumpUntil { hero.visibility == View.VISIBLE && heroTitle.text.toString() == "Uno" }

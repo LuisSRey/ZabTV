@@ -3,6 +3,7 @@ package com.tvplayer.app.ui.channels
 import android.content.res.Configuration
 import android.os.Looper
 import android.view.View
+import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -94,6 +95,21 @@ class ChannelBrowserReinflateTest {
 
     private fun idleMain() = shadowOf(Looper.getMainLooper()).idle()
 
+    /**
+     * Lectura de la cabecera por tipo (el fragment pinta por tipo): TextView
+     * (vertical/TV) → text de una pieza; ViewGroup (slots 6 cortes) → join
+     * de los hijos TextView con el mismo separador que slotsText.
+     */
+    private fun slotsTextOf(root: View): String =
+        when (val v = root.findViewById<View>(R.id.browser_slots)) {
+            is TextView -> v.text.toString()
+            is ViewGroup -> (0 until v.childCount)
+                .map { v.getChildAt(it) as? TextView }
+                .filterNotNull()
+                .joinToString("  ·  ") { it.text.toString() }
+            else -> ""
+        }
+
     private fun firstVisible(grid: RecyclerView): Int =
         (grid.layoutManager as? LinearLayoutManager)?.findFirstVisibleItemPosition() ?: -1
 
@@ -137,8 +153,7 @@ class ChannelBrowserReinflateTest {
         pumpUntil { fragment.gridAdapter.itemCount == 2 }
 
         val adapterBefore = fragment.gridAdapter
-        val slotsBefore = fragment.requireView()
-            .findViewById<TextView>(R.id.browser_slots).text.toString()
+        val slotsBefore = slotsTextOf(fragment.requireView())
         assertEquals(ChannelBrowserFragment.slotsText(GuideWindow.now(t0)), slotsBefore)
 
         // Giro real portrait -> land con 2 h más en el reloj.
@@ -156,7 +171,7 @@ class ChannelBrowserReinflateTest {
         // Ventana nueva: cortes + hero + timeline al día.
         val expected1 = ChannelBrowserFragment.slotsText(GuideWindow.now(t1))
         pumpUntil {
-            fragment.requireView().findViewById<TextView>(R.id.browser_slots).text.toString() == expected1
+            slotsTextOf(fragment.requireView()) == expected1
         }
         val root = fragment.requireView()
         pumpUntil {

@@ -74,7 +74,7 @@ class ChannelBrowserTvParityTest {
         assertEquals(dp(context, 260), sidebar.layoutParams.width)
         assertTrue(root.findViewById<View>(R.id.browser_hero) != null)
         assertTrue(root.findViewById<View>(R.id.browser_hero_play) != null)
-        assertTrue(root.findViewById<TextView>(R.id.browser_slots) != null)
+        assertTrue(root.findViewById<View>(R.id.browser_slots) != null)
         assertTrue(root.findViewById<RecyclerView>(R.id.browser_grid) != null)
         assertTrue(root.findViewById<TextView>(R.id.browser_empty) != null)
     }
