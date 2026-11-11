@@ -65,16 +65,27 @@ class ChannelBrowserFragment : Fragment() {
         const val TIMELINE_RETRY_DELAY_MS = 200L
 
         /**
+         * Etiquetas de la cabecera del timeline: 6 cortes "HH:mm" de la
+         * [window] vigente (la misma que pinta las filas). Puro para test
+         * directo. En vertical se unen con "·" ([slotsText]); en apaisado
+         * cada una va en su corte (browser_slot_0..5).
+         */
+        fun slotsLabels(
+            window: GuideWindow,
+            locale: java.util.Locale = java.util.Locale.getDefault(),
+        ): List<String> {
+            val fmt = java.text.SimpleDateFormat("HH:mm", locale)
+            return window.slots().map { fmt.format(java.util.Date(it)) }
+        }
+
+        /**
          * Cabecera del timeline: 6 cortes "HH:mm" de la misma [window] que
          * las filas (S6). Puro para test directo.
          */
         fun slotsText(
             window: GuideWindow,
             locale: java.util.Locale = java.util.Locale.getDefault(),
-        ): String {
-            val fmt = java.text.SimpleDateFormat("HH:mm", locale)
-            return window.slots().joinToString("  ·  ") { fmt.format(java.util.Date(it)) }
-        }
+        ): String = slotsLabels(window, locale).joinToString("  ·  ")
 
         /**
          * Etiquetas del diálogo de playlists (TV): nombre de cada lista,
@@ -541,11 +552,34 @@ class ChannelBrowserFragment : Fragment() {
         }
     }
 
-    /** Cabecera de cortes de la [window] vigente (siempre visible). */
+    /**
+     * Cabecera de cortes de la [window] vigente (siempre visible). Por tipo:
+     * TextView (vertical/TV) → [slotsText] de una pieza; ViewGroup (land:
+     * LinearLayout con spacer + 6 cortes) → [slotsLabels] corte a corte por
+     * orden (el spacer no es TextView y se salta solo). Nunca
+     * findViewById<TextView> directo: en land browser_slots NO es un
+     * TextView y el cast rompería. El hero no toca esta cabecera (ni la
+     * contiene ni la desplaza: van de hermanos en el layout).
+     */
     private fun paintSlots() {
-        val slotsView = view?.findViewById<TextView>(R.id.browser_slots) ?: return
-        slotsView.text = slotsText(window)
-        slotsView.visibility = View.VISIBLE
+        val root = view ?: return
+        when (val slotsView = root.findViewById<View>(R.id.browser_slots)) {
+            is TextView -> {
+                slotsView.text = slotsText(window)
+                slotsView.visibility = View.VISIBLE
+            }
+            is ViewGroup -> {
+                val labels = slotsLabels(window)
+                var i = 0
+                for (c in 0 until slotsView.childCount) {
+                    val cell = slotsView.getChildAt(c) as? TextView ?: continue
+                    if (i < labels.size) cell.text = labels[i]
+                    i++
+                }
+                slotsView.visibility = View.VISIBLE
+            }
+            else -> Unit
+        }
     }
 
     private fun reloadContent() {

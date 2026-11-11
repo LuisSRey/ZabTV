@@ -5,7 +5,9 @@ import android.content.res.Configuration
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.ViewParent
 import android.widget.FrameLayout
+import android.widget.HorizontalScrollView
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -88,6 +90,23 @@ class ChannelBrowserLandTest {
         assertEquals(dp(context, 56), root.paddingTop)
         val sidebar = root.findViewById<RecyclerView>(R.id.browser_sidebar)
         assertEquals(dp(context, 260), sidebar.layoutParams.width)
+    }
+
+    @Test
+    @Config(qualifiers = "land")
+    fun `land hero no contiene ni desplaza la cabecera`() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val root = landRoot(context)
+        val slots = root.findViewById<View>(R.id.browser_slots)
+        assertTrue(slots != null)
+        // La cabecera vive en un HSV hermano del hero (nunca dentro): el
+        // colapso del hero no la mueve ni la oculta.
+        assertTrue(slots.parent is HorizontalScrollView)
+        var p: ViewParent? = slots.parent
+        while (p != null) {
+            assertTrue((p as? View)?.id != R.id.browser_hero)
+            p = p.parent
+        }
     }
 
     @Test

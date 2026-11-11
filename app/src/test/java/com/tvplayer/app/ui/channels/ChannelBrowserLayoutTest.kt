@@ -6,6 +6,7 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.test.core.app.ApplicationProvider
 import com.tvplayer.app.R
+import com.tvplayer.app.core.xmltv.GuideWindow
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -97,6 +98,27 @@ class ChannelBrowserLayoutTest {
     fun `reintento timeline acotado 200ms max 2`() {
         assertEquals(2, ChannelBrowserFragment.TIMELINE_MAX_RETRY)
         assertEquals(200L, ChannelBrowserFragment.TIMELINE_RETRY_DELAY_MS)
+    }
+
+    @Test
+    fun `slotsLabels 6 cortes HH-mm puros`() {
+        val anchor = GuideWindow.anchorFor(1_794_294_600_000L)
+        val window = GuideWindow(anchor)
+        val labels = ChannelBrowserFragment.slotsLabels(window)
+        assertEquals(6, labels.size)
+        for (label in labels) {
+            assertTrue(label.matches(Regex("\\d{2}:\\d{2}")))
+        }
+    }
+
+    @Test
+    fun `slotsText une slotsLabels con punto medio`() {
+        val anchor = GuideWindow.anchorFor(1_794_294_600_000L)
+        val window = GuideWindow(anchor)
+        assertEquals(
+            ChannelBrowserFragment.slotsLabels(window).joinToString("  ·  "),
+            ChannelBrowserFragment.slotsText(window),
+        )
     }
 
     @Test
