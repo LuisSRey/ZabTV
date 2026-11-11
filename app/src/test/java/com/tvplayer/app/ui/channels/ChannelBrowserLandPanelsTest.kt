@@ -26,7 +26,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
 /**
- * S1: browser apaisado en 2 paneles (izq 320dp título+selector+sidebar con
+ * S1: browser apaisado en 2 paneles (izq 248dp título+selector+sidebar con
  * scroll propio; dcha peso 1 con hero compacto colapsable + cortes + grid con
  * scroll vertical) + portrait con grid min96. TDD RED.
  */

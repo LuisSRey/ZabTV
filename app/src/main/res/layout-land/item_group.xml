@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Fila de grupo land móvil (O4): match_parent×48dp con marginBottom 8dp
+     (rail vertical de 248dp) + mismos ids que el chip portrait
+     (group_label/group_count) + tile_focus_bg + focable D-pad. Portrait
+     (layout/) y TV (layout-television/) intactos. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="48dp"
+    android:layout_marginBottom="8dp"
+    android:background="@drawable/tile_focus_bg"
+    android:focusable="true"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:paddingStart="14dp"
+    android:paddingEnd="14dp">
+
+    <TextView
+        android:id="@+id/group_label"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:textAppearance="@style/TextAppearance_TVPlayer_CardTitle"
+        android:textSize="14sp" />
+
+    <TextView
+        android:id="@+id/group_count"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="6dp"
+        android:textColor="@color/tp_text_secondary"
+        android:textSize="12sp" />
+
+</LinearLayout>

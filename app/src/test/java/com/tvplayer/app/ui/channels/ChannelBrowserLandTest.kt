@@ -23,7 +23,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
 /**
- * S4: browser apaisado móvil (layout-land: panel izq 320dp + contenido dcha
+ * S4: browser apaisado móvil (layout-land: panel izq 248dp + contenido dcha
  * peso 1, mismos ids, hero compacto) + escudo TV-apaisado (sigue mandando
  * layout-television) + refreshOnRotate (helpers puros) + vacío solo con
  * 0 canales confirmados.
@@ -43,13 +43,13 @@ class ChannelBrowserLandTest {
 
     @Test
     @Config(qualifiers = "land")
-    fun `land panel izq 320dp y contenido dcha peso1`() {
+    fun `land panel izq 248dp y contenido dcha peso1`() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val root = landRoot(context) as LinearLayout
         assertEquals(LinearLayout.HORIZONTAL, root.orientation)
         val sidebar = root.findViewById<RecyclerView>(R.id.browser_sidebar)
         val leftPanel = sidebar.parent as View
-        assertEquals(dp(context, 320), leftPanel.layoutParams.width)
+        assertEquals(dp(context, 248), leftPanel.layoutParams.width)
         val grid = root.findViewById<RecyclerView>(R.id.browser_grid)
         val rightPanel = grid.parent as View
         val lp = rightPanel.layoutParams as LinearLayout.LayoutParams
