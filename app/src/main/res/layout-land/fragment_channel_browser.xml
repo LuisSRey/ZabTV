@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Browser apaisado móvil/tablet (S1+O4): panel izquierdo 248dp (título +
+<!-- Browser apaisado móvil/tablet (S1+O4, cap S5 140dp): panel izquierdo 248dp (título +
      selector de playlist + rail de filtros vertical con peso 1, min 96dp y
-     scroll propio) + contenido a la derecha (peso 1: hero compacto max 180dp
+     scroll propio) + contenido a la derecha (peso 1: hero compacto max 140dp
      colapsable con chevron + cortes HSV + grid peso 1 min 96dp con scroll
      vertical). Mismos ids que el vertical + browser_hero_toggle/body.
      TV prohibido (ver layout-television + escudo land-television). -->
@@ -62,7 +62,7 @@
         android:layout_weight="1"
         android:orientation="vertical">
 
-        <!-- Hero compacto (max 180dp vía cap en el fragment, solo móvil):
+        <!-- Hero compacto (max 140dp vía cap en el fragment, solo móvil):
              cabecera siempre visible (título + chevron) + body colapsable. -->
         <LinearLayout
             android:id="@+id/browser_hero"

@@ -151,6 +151,16 @@ class ChannelBrowserLandTest {
         assertEquals(R.id.browser_sidebar, selector.nextFocusDownId)
         assertEquals(R.id.browser_list_selector, sidebar.nextFocusUpId)
         assertEquals(R.id.browser_grid, sidebar.nextFocusRightId)
+        // Escudo réplica S5: hero compacto como la TV (padding 12 + título
+        // 22sp + play minHeight 48).
+        val hero = root.findViewById<View>(R.id.browser_hero)
+        assertEquals(dp(context, 12), hero.paddingLeft)
+        val title = root.findViewById<TextView>(R.id.browser_hero_title)
+        val expected = android.util.TypedValue.applyDimension(
+            android.util.TypedValue.COMPLEX_UNIT_SP, 22f, context.resources.displayMetrics,
+        )
+        assertEquals(expected, title.textSize, 1.0f)
+        assertEquals(dp(context, 48), root.findViewById<View>(R.id.browser_hero_play).minimumHeight)
     }
 
     @Test

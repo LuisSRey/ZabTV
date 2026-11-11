@@ -85,7 +85,7 @@
                 android:layout_marginTop="12dp"
                 android:background="@drawable/tile_focus_bg"
                 android:orientation="vertical"
-                android:padding="20dp"
+                android:padding="12dp"
                 android:visibility="gone">
 
                 <TextView
@@ -94,7 +94,7 @@
                     android:layout_height="wrap_content"
                     android:ellipsize="end"
                     android:maxLines="1"
-                    android:textSize="26sp"
+                    android:textSize="22sp"
                     android:textStyle="bold" />
 
                 <TextView
@@ -120,6 +120,7 @@
                     android:layout_marginTop="12dp"
                     android:background="@drawable/btn_primary"
                     android:focusable="true"
+                    android:minHeight="48dp"
                     android:nextFocusDown="@id/browser_grid"
                     android:nextFocusLeft="@id/browser_sidebar"
                     android:nextFocusUp="@id/browser_list_selector"

@@ -98,7 +98,8 @@ class ChannelBrowserLandPanelsTest {
 
     @Test
     @Config(qualifiers = "land")
-    fun `land 360x640 hero cap180 colapsa y grid con altura`() {
+    fun `land 360x640 hero cap140 colapsa y grid con altura`() {
+        // S5 (motivo S6): cap 180→140dp (el hero deja más grid en 360p).
         val activity = Robolectric.buildActivity(MainActivity::class.java).setup().get()
         val db = (activity.application as TpApp).container.db
         val listId = runBlocking {
@@ -123,7 +124,7 @@ class ChannelBrowserLandPanelsTest {
         val grid = root.findViewById<RecyclerView>(R.id.browser_grid)
         pumpUntil { hero.visibility == View.VISIBLE }
 
-        // Hero expandido con contenido gigante: cap 180dp y la grid conserva altura.
+        // Hero expandido con contenido gigante: cap 140dp y la grid conserva altura.
         heroNow.text = (1..30).joinToString("\n") { "Línea de guía $it con texto largo para forzar altura del hero" }
         hero.requestLayout()
         shadowOf(Looper.getMainLooper()).idle()
@@ -133,7 +134,7 @@ class ChannelBrowserLandPanelsTest {
         )
         root.layout(0, 0, dp(root.context, 640), dp(root.context, 360))
         shadowOf(Looper.getMainLooper()).idle()
-        assertTrue(hero.height <= dp(root.context, 180))
+        assertTrue(hero.height <= dp(root.context, 140))
         assertTrue(grid.height > 0)
 
         // Colapsable con chevron: el body se oculta y vuelve.

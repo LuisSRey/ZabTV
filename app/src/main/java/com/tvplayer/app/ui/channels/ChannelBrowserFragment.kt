@@ -57,8 +57,8 @@ class ChannelBrowserFragment : Fragment() {
         const val TAG = "browser"
         const val ARG_LIST_ID = "listId"
 
-        /** Hero compacto móvil (S1): cap de altura, solo no-TV. */
-        const val HERO_MAX_DP = 180
+        /** Hero compacto móvil (S5): cap de altura, solo no-TV. */
+        const val HERO_MAX_DP = 140
 
         /** Reintento acotado del timeline: tope de reintentos tras grid vacía. */
         const val TIMELINE_MAX_RETRY = BrowserTimelineRunner.MAX_RETRY
@@ -247,7 +247,7 @@ class ChannelBrowserFragment : Fragment() {
     }
 
     /**
-     * Cap 180dp del hero móvil (S1): si el contenido expandido desborda, se
+     * Cap 140dp del hero móvil (S5): si el contenido expandido desborda, se
      * fija la altura para que la grid conserve la suya. TV intacto (sin cap).
      */
     private fun bindHeroCap(heroBox: View) {
@@ -383,7 +383,7 @@ class ChannelBrowserFragment : Fragment() {
         }
 
         // Hero land colapsable con chevron (S1, solo donde existe el toggle)
-        // + cap 180dp no-TV para que la grid conserve altura.
+        // + cap 140dp no-TV para que la grid conserve altura.
         root.findViewById<ImageButton>(R.id.browser_hero_toggle)?.let { toggle ->
             FocusScaleHelper.attach(toggle)
             applyHeroCollapsed(root)

@@ -94,6 +94,23 @@ class ChannelBrowserTvParityTest {
     }
 
     @Test
+    fun `S5 tv hero compacto padding12 titulo22sp playMin48`() {
+        // S5 (motivo S6): hero TV 20→12dp + título 26→22sp + play minHeight
+        // 48dp (D-pad sin recortes en 720p).
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val root = tvBrowserRoot(context)
+        val hero = root.findViewById<View>(R.id.browser_hero)
+        assertEquals(dp(context, 12), hero.paddingLeft)
+        assertEquals(dp(context, 12), hero.paddingTop)
+        val title = root.findViewById<TextView>(R.id.browser_hero_title)
+        val expected = android.util.TypedValue.applyDimension(
+            android.util.TypedValue.COMPLEX_UNIT_SP, 22f, context.resources.displayMetrics,
+        )
+        assertEquals(expected, title.textSize, 1.0f)
+        assertEquals(dp(context, 48), root.findViewById<View>(R.id.browser_hero_play).minimumHeight)
+    }
+
+    @Test
     fun `S3 tv nextFocus mapa F2 sin trampas`() {
         // §F2: nav_browse<->selector, selector v sidebar, sidebar ^selector
         // >grid <nav, grid ^selector <sidebar, hero_play ^selector v grid
