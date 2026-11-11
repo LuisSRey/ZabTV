@@ -64,6 +64,8 @@
         android:layout_height="match_parent"
         android:layout_weight="1"
         android:scrollbars="none"
+        android:requiresFadingEdge="horizontal"
+        android:fadingEdgeLength="12dp"
         android:clipToPadding="false">
 
         <LinearLayout

@@ -174,6 +174,57 @@ class ChannelGridAdapterTest {
     }
 
     @Test
+    fun `setWindow pinta tira visible con placeholder sin submitTimeline`() = runTest {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val adapter = ChannelGridAdapter(onClick = {})
+        adapter.submitData(PagingData.from(listOf(channel())))
+        withContext(Dispatchers.IO) {
+            withTimeout(10_000) {
+                while (adapter.itemCount != 1) kotlinx.coroutines.delay(50)
+            }
+        }
+        // Solo ventana, sin lote: visible con placeholder (no GONE).
+        adapter.setWindow(window)
+        val parent = RecyclerView(context)
+        parent.layoutManager = LinearLayoutManager(context)
+        val holder = adapter.onCreateViewHolder(parent, 0)
+        adapter.onBindViewHolder(holder, 0)
+        assertEquals(android.view.View.VISIBLE, holder.timeline?.visibility)
+        val cells = holder.timeline as LinearLayout
+        val placeholder = context.getString(com.tvplayer.app.R.string.browser_empty)
+        assertEquals(placeholder, (cells.getChildAt(0) as android.widget.TextView).text.toString())
+    }
+
+    @Test
+    fun `submitTimeline con mapa vacio limpia y delega en setWindow`() = runTest {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val adapter = ChannelGridAdapter(onClick = {})
+        adapter.submitData(PagingData.from(listOf(channel())))
+        withContext(Dispatchers.IO) {
+            withTimeout(10_000) {
+                while (adapter.itemCount != 1) kotlinx.coroutines.delay(50)
+            }
+        }
+        val slots = window.slots()
+        adapter.submitTimeline(
+            mapOf("c1" to listOf(EpgProgramEntity(tvgId = "c1", startMillis = slots[0], endMillis = slots[1], title = "Ahora"))),
+            window,
+        )
+        val parent = RecyclerView(context)
+        parent.layoutManager = LinearLayoutManager(context)
+        val holder = adapter.onCreateViewHolder(parent, 0)
+        adapter.onBindViewHolder(holder, 0)
+        val cells = holder.timeline as LinearLayout
+        assertEquals("Ahora", (cells.getChildAt(0) as android.widget.TextView).text.toString())
+        // Mapa vacío aceptado: limpia el lote pero conserva la ventana visible.
+        adapter.submitTimeline(emptyMap(), window)
+        adapter.onBindViewHolder(holder, 0)
+        assertEquals(android.view.View.VISIBLE, holder.timeline?.visibility)
+        val placeholder = context.getString(com.tvplayer.app.R.string.browser_empty)
+        assertEquals(placeholder, (cells.getChildAt(0) as android.widget.TextView).text.toString())
+    }
+
+    @Test
     fun `submitEpg sigue pintando la tira tras el timeline`() = runTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val adapter = ChannelGridAdapter(onClick = {})

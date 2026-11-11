@@ -68,11 +68,16 @@ class ChannelGridAdapter(
         notifyItemRangeChanged(0, itemCount, PAYLOAD_EPG)
     }
 
+    /** Fija la ventana del timeline (p. ej. al rellenar antes del lote). */
+    fun setWindow(window: GuideWindow) {
+        this.window = window
+        notifyItemRangeChanged(0, itemCount, PAYLOAD_TIMELINE)
+    }
+
     /** Actualiza el timeline sin recargar la grilla (solo rebind de visibles). */
     fun submitTimeline(lines: Map<String, List<EpgProgramEntity>>, window: GuideWindow) {
         timeline = lines
-        this.window = window
-        notifyItemRangeChanged(0, itemCount, PAYLOAD_TIMELINE)
+        setWindow(window)
     }
 
     class Holder(root: View) : RecyclerView.ViewHolder(root) {

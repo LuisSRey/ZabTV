@@ -82,6 +82,18 @@ class ChannelBrowserLayoutTest {
     }
 
     @Test
+    fun `tira movil con fading horizontal 12dp`() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val parent = LinearLayout(context).apply { orientation = LinearLayout.VERTICAL }
+        val root = LayoutInflater.from(context).inflate(R.layout.item_channel, parent, false) as LinearLayout
+        val hsv = (0 until root.childCount).map { root.getChildAt(it) }
+            .filterIsInstance<android.widget.HorizontalScrollView>().single()
+        assertTrue(hsv.isHorizontalFadingEdgeEnabled)
+        assertEquals(dp(context, 12), hsv.getHorizontalFadingEdgeLength())
+        assertEquals(false, hsv.isVerticalFadingEdgeEnabled)
+    }
+
+    @Test
     fun `reintento timeline acotado 200ms max 2`() {
         assertEquals(2, ChannelBrowserFragment.TIMELINE_MAX_RETRY)
         assertEquals(200L, ChannelBrowserFragment.TIMELINE_RETRY_DELAY_MS)
