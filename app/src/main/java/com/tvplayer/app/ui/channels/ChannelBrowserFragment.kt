@@ -8,6 +8,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.ImageButton
+import android.widget.LinearLayout
 import android.widget.PopupMenu
 import android.widget.ProgressBar
 import android.widget.TextView
@@ -126,6 +127,12 @@ class ChannelBrowserFragment : Fragment() {
     internal var heroCollapsed: Boolean = false
 
     /**
+     * Cableado único (S2): load-listener + colección Paging + resolve
+     * inicial solo corren en el primer bind; el reinflate reutiliza todo.
+     */
+    private var boundOnce: Boolean = false
+
+    /**
      * Reloj inyectable para tests (CA2): la ventana tras rotar se recomputa
      * de aquí; en producción es el reloj del sistema (sin cambio de
      * comportamiento).
@@ -137,6 +144,14 @@ class ChannelBrowserFragment : Fragment() {
     @VisibleForTesting
     internal lateinit var timelineRunner: BrowserTimelineRunner
 
+    /**
+     * Orientación del último bind (S2): con ella se decide si el giro exige
+     * reinflar (móvil portrait<->land) o basta managers + repaint (TV o
+     * mismo layout).
+     */
+    @VisibleForTesting
+    internal var lastOrientation: Int = Configuration.ORIENTATION_UNDEFINED
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         return inflater.inflate(R.layout.fragment_channel_browser, container, false)
     }
@@ -144,16 +159,28 @@ class ChannelBrowserFragment : Fragment() {
     /** Rotación sin recrear (configChanges): ventana + cortes + hero + timeline al día. */
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
-        refreshOnRotate()
+        val root = view ?: return
+        val isTv = FocusScaleHelper.isTv(root)
+        val newOrientation = newConfig.orientation
+        // S2: giro real en móvil = snapshot → reinflate síncrono (misma raíz
+        // con los hijos del layout que toca) reutilizando adapter + Paging;
+        // restore + repaint corren aquí mismo. TV o mismo layout: solo
+        // managers + repaint.
+        if (BrowserRotateHelper.needsReinflate(isTv, lastOrientation, newOrientation)) {
+            reinflateOnRotate(newOrientation)
+            return
+        }
+        lastOrientation = newOrientation
+        repaintOnRotate()
     }
 
     /**
-     * Re-pintado tras rotar (S4): el layout-land solo entra en creaciones
-     * frescas (con configChanges no hay re-inflate), así que aquí se reajusta
-     * a mano — columnas, orientación del rail, ventana nueva, cortes, hero y
-     * re-disparo del timeline.
+     * Re-pintado tras rotar sin giro de layout (S4 + S2 TV): el layout-land
+     * solo entra en creaciones frescas (con configChanges no hay re-inflate),
+     * así que aquí se reajusta a mano — columnas, orientación del rail,
+     * ventana nueva, cortes, hero y re-disparo del timeline.
      */
-    private fun refreshOnRotate() {
+    private fun repaintOnRotate() {
         val root = view ?: return
         val isTv = FocusScaleHelper.isTv(root)
         val orientation = resources.configuration.orientation
@@ -213,22 +240,79 @@ class ChannelBrowserFragment : Fragment() {
         val argId = arguments?.getLong(ARG_LIST_ID, -1L) ?: -1L
         val isTv = FocusScaleHelper.isTv(view)
         val container = (requireActivity().application as TpApp).container
-        viewModel = ChannelBrowserViewModel(
-            argId,
-            container.db.channelDao(),
-            container.db.epgDao(),
-            container.db.recentDao(),
-        )
+        // S2: viewModel + adapters sobreviven al reinflate — solo se crean
+        // en el primer bind y el Paging sigue coleccionado sobre el mismo
+        // adapter (el viewLifecycleOwner no se destruye al trasplantar).
+        if (!::viewModel.isInitialized) {
+            viewModel = ChannelBrowserViewModel(
+                argId,
+                container.db.channelDao(),
+                container.db.epgDao(),
+                container.db.recentDao(),
+            )
+        }
+        if (!::gridAdapter.isInitialized) {
+            gridAdapter = ChannelGridAdapter(
+                onClick = ::onChannelClick,
+                onLongClick = { channel ->
+                    ChannelSheetFragment.newInstance(channel.listId, channel.stableKey)
+                        .show(parentFragmentManager, ChannelSheetFragment.TAG)
+                },
+            )
+        }
+        if (!::sidebarAdapter.isInitialized) {
+            sidebarAdapter = ChannelSidebarAdapter(
+                onPlaylist = ::onListPicked,
+                onSelection = ::onFilterPicked,
+            )
+        }
+        bindBrowserViews(view, isTv, resources.configuration.orientation)
+        if (!boundOnce) {
+            boundOnce = true
+            // Vacío en All/Group por estado de carga (Historial lo resuelve en
+            // reloadContent: loadState no emite para PagingData.from en tests).
+            // Con datos (NotLoading + items) se pinta el timeline tras el
+            // submit. Una sola vez: usa la vista vigente, no la del bind.
+            gridAdapter.addLoadStateListener { states ->
+                if (selection is Selection.History) return@addLoadStateListener
+                val current = this.view ?: return@addLoadStateListener
+                val resolved = states.refresh is LoadState.NotLoading
+                val empty = current.findViewById<TextView>(R.id.browser_empty)
+                // Vacío SOLO con 0 canales confirmados (nada rancio en carga).
+                empty.visibility =
+                    if (emptyVisible(gridAdapter.itemCount, resolved)) View.VISIBLE else View.GONE
+                timelineRunner.onLoadState(resolved, gridAdapter.itemCount, selection is Selection.History)
+            }
+            viewLifecycleOwner.lifecycleScope.launch {
+                viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                    // collectLatest: cada filtro nuevo cancela el submit anterior (si no,
+                    // el primer submitData se queda suspendido y la parrilla no cambia).
+                    viewModel.channels.collectLatest { pagingData -> gridAdapter.submitData(pagingData) }
+                }
+            }
+            lifecycleScope.launch {
+                val start = if (argId >= 0) argId else ActiveList.resolve(container.db)
+                if (start == null) {
+                    (activity as? TvNavigator.NavHost)?.openTab(HomeFragment(), HomeFragment.TAG)
+                    return@launch
+                }
+                listId = start
+                viewModel.setListId(start)
+                reloadAll()
+            }
+        }
+        lastOrientation = resources.configuration.orientation
+    }
 
-        gridAdapter = ChannelGridAdapter(
-            onClick = ::onChannelClick,
-            onLongClick = { channel ->
-                ChannelSheetFragment.newInstance(channel.listId, channel.stableKey)
-                    .show(parentFragmentManager, ChannelSheetFragment.TAG)
-            },
-        )
-        val grid = view.findViewById<RecyclerView>(R.id.browser_grid)
-        grid.layoutManager = GridLayoutManager(requireContext(), spanCount(isTv, resources.configuration.orientation))
+    /**
+     * Cablea la jerarquía vigente a los colaboradores (S2): managers +
+     * adapters reutilizados + runner nuevo (captura la grid vigente) +
+     * listeners de la vista + selector + toggle + cap. Vale para el primer
+     * bind y para el re-bind tras reinflar.
+     */
+    private fun bindBrowserViews(root: View, isTv: Boolean, orientation: Int) {
+        val grid = root.findViewById<RecyclerView>(R.id.browser_grid)
+        grid.layoutManager = GridLayoutManager(requireContext(), spanCount(isTv, orientation))
         grid.adapter = gridAdapter
         timelineRunner = BrowserTimelineRunner(
             scope = lifecycleScope,
@@ -254,27 +338,10 @@ class ChannelBrowserFragment : Fragment() {
                 timelineRunner.onScrollStateChanged(newState)
             }
         })
-        // Vacío en All/Group por estado de carga (Historial lo resuelve en
-        // reloadContent: loadState no emite para PagingData.from en tests). Con
-        // datos (NotLoading + items) se pinta el timeline tras el submit.
-        gridAdapter.addLoadStateListener { states ->
-            if (selection is Selection.History) return@addLoadStateListener
-            val resolved = states.refresh is LoadState.NotLoading
-            val empty = view.findViewById<TextView>(R.id.browser_empty)
-            // Vacío SOLO con 0 canales confirmados (nada rancio en carga).
-            empty.visibility =
-                if (emptyVisible(gridAdapter.itemCount, resolved)) View.VISIBLE else View.GONE
-            timelineRunner.onLoadState(resolved, gridAdapter.itemCount, selection is Selection.History)
-        }
-
-        sidebarAdapter = ChannelSidebarAdapter(
-            onPlaylist = ::onListPicked,
-            onSelection = ::onFilterPicked,
-        )
-        val sidebar = view.findViewById<RecyclerView>(R.id.browser_sidebar)
+        val sidebar = root.findViewById<RecyclerView>(R.id.browser_sidebar)
         sidebar.layoutManager = LinearLayoutManager(
             requireContext(),
-            sidebarOrientation(isTv, resources.configuration.orientation),
+            sidebarOrientation(isTv, orientation),
             false,
         )
         sidebar.adapter = sidebarAdapter
@@ -282,7 +349,7 @@ class ChannelBrowserFragment : Fragment() {
         // El dropdown de playlists vive en el selector de 48dp (móvil y TV);
         // el rail queda solo para filtros. TV usa diálogo D-pad, móvil
         // PopupMenu.
-        view.findViewById<TextView>(R.id.browser_list_selector)?.let { selector ->
+        root.findViewById<TextView>(R.id.browser_list_selector)?.let { selector ->
             FocusScaleHelper.attach(selector)
             selector.setOnClickListener {
                 if (isTv) showListDialog() else showListMenu(selector)
@@ -291,37 +358,62 @@ class ChannelBrowserFragment : Fragment() {
 
         // Hero land colapsable con chevron (S1, solo donde existe el toggle)
         // + cap 180dp no-TV para que la grid conserve altura.
-        view.findViewById<ImageButton>(R.id.browser_hero_toggle)?.let { toggle ->
+        root.findViewById<ImageButton>(R.id.browser_hero_toggle)?.let { toggle ->
             FocusScaleHelper.attach(toggle)
-            applyHeroCollapsed(view)
+            applyHeroCollapsed(root)
             toggle.setOnClickListener {
                 heroCollapsed = !heroCollapsed
                 this.view?.let(::applyHeroCollapsed)
             }
         }
         if (!isTv) {
-            view.findViewById<View>(R.id.browser_hero)?.let(::bindHeroCap)
-        }
-
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                // collectLatest: cada filtro nuevo cancela el submit anterior (si no,
-                // el primer submitData se queda suspendido y la parrilla no cambia).
-                viewModel.channels.collectLatest { pagingData -> gridAdapter.submitData(pagingData) }
-            }
-        }
-
-        lifecycleScope.launch {
-            val start = if (argId >= 0) argId else ActiveList.resolve(container.db)
-            if (start == null) {
-                (activity as? TvNavigator.NavHost)?.openTab(HomeFragment(), HomeFragment.TAG)
-                return@launch
-            }
-            listId = start
-            viewModel.setListId(start)
-            reloadAll()
+            root.findViewById<View>(R.id.browser_hero)?.let(::bindHeroCap)
         }
     }
+
+    /**
+     * Reinflate síncrono tras giro real en móvil (S2): snapshot → misma raíz
+     * con los hijos del layout que toca → bind (adapters + Paging
+     * reutilizados, sin re-coleccionar) → restore del scroll → ventana +
+     * cortes + hero + fill(0). TV nunca llega aquí (needsReinflate).
+     */
+    private fun reinflateOnRotate(newOrientation: Int) {
+        val root = view as? ViewGroup ?: return
+        val snapshot = BrowserRotateHelper.snapshot(
+            heroCollapsed,
+            firstVisiblePosition(R.id.browser_grid),
+            firstVisiblePosition(R.id.browser_sidebar),
+        )
+        val fresh = layoutInflater.inflate(
+            R.layout.fragment_channel_browser, root.parent as? ViewGroup, false,
+        ) as? ViewGroup ?: return
+        if (root is LinearLayout && fresh is LinearLayout) root.orientation = fresh.orientation
+        root.setPadding(fresh.paddingLeft, fresh.paddingTop, fresh.paddingRight, fresh.paddingBottom)
+        root.removeAllViews()
+        while (fresh.childCount > 0) {
+            val child = fresh.getChildAt(0)
+            fresh.removeViewAt(0)
+            root.addView(child)
+        }
+        val isTv = FocusScaleHelper.isTv(root)
+        bindBrowserViews(root, isTv, newOrientation)
+        root.findViewById<RecyclerView>(R.id.browser_grid)?.scrollToPosition(snapshot.gridPosition)
+        root.findViewById<RecyclerView>(R.id.browser_sidebar)?.scrollToPosition(snapshot.sidebarPosition)
+        lastOrientation = newOrientation
+        lifecycleScope.launch {
+            if (listId < 0) return@launch
+            window = GuideWindow.now(clock())
+            paintSlots()
+            paintHero()
+            root.post { timelineRunner.fill() }
+        }
+    }
+
+    /** Primera posición visible del layout (0 sin layout o sin items). */
+    private fun firstVisiblePosition(recyclerId: Int): Int =
+        (view?.findViewById<RecyclerView>(recyclerId)
+            ?.layoutManager as? LinearLayoutManager)?.findFirstVisibleItemPosition()
+            ?.coerceAtLeast(0) ?: 0
 
     /**
      * Cambio de playlist: mueve la [ActiveList] global, resetea el filtro a
