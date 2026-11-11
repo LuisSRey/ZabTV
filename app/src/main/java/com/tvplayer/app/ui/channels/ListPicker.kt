@@ -2,20 +2,22 @@ package com.tvplayer.app.ui.channels
 
 import android.app.AlertDialog
 import android.content.Context
+import android.graphics.drawable.Drawable
 import android.view.ContextThemeWrapper
 import android.view.View
 import android.widget.ArrayAdapter
+import android.widget.ListPopupWindow
 import android.widget.PopupMenu
 import com.tvplayer.app.R
 import com.tvplayer.app.data.db.ListEntity
 import com.tvplayer.app.ui.common.FocusScaleHelper
 
 /**
- * Selector de playlists reutilizable (S4): menú móvil (PopupMenu) y diálogo
- * TV (AlertDialog con filas propias) sobre las MISMAS etiquetas en el MISMO
- * orden. Superficies con tokens propios vía overlays (fondo tp_surface,
- * texto tp_text, radio 10dp, elev 8dp); foco D-pad intacto (filas focables
- * + escala TV).
+ * Selector de playlists reutilizable: burbuja móvil ([ListPopupWindow] vía
+ * buildPopup/showPopup), menú legacy ([PopupMenu]) y diálogo TV
+ * (AlertDialog con filas propias) sobre las MISMAS etiquetas en el MISMO
+ * orden. Superficies con tokens propios (fondo dialog_bg: radio 10dp sobre
+ * tp_surface, elev 8dp); foco D-pad intacto (filas focables + escala TV).
  */
 object ListPicker {
 
@@ -54,6 +56,72 @@ object ListPicker {
     /** Menú anclado y mostrado. */
     fun showMenu(anchor: View, labels: List<String>, onPick: (Int) -> Unit) {
         buildMenu(anchor, labels, onPick).show()
+    }
+
+    /**
+     * Ancho de la burbuja: el del anchor. Puro para test directo.
+     */
+    fun popupWidth(anchorWidth: Int): Int = anchorWidth
+
+    /**
+     * Fondo de la burbuja: dialog_bg (radio 10dp sobre tp_surface).
+     */
+    fun popupBackground(context: Context): Drawable =
+        context.getDrawable(R.drawable.dialog_bg)!!
+
+    /**
+     * Elevación de la burbuja en px (8dp, la misma del diálogo).
+     */
+    fun popupElevationPx(context: Context): Float =
+        ELEVATION_DP * context.resources.displayMetrics.density
+
+    /**
+     * Elevación de la ventana interna (O3): ListPopupWindow no expone API
+     * pública de elevación en ningún nivel (verificado hasta API 35), así
+     * que se aplica al PopupWindow interno vía reflexión con runCatching:
+     * si un OEM renombra el campo, la burbuja abre igual sin elevación.
+     */
+    private fun applyPopupElevation(popup: ListPopupWindow, px: Float) {
+        runCatching {
+            val field = ListPopupWindow::class.java.getDeclaredField("mPopup")
+            field.isAccessible = true
+            (field.get(popup) as? android.widget.PopupWindow)?.elevation = px
+        }
+    }
+
+    /**
+     * Burbuja anclada (móvil, O3): [ListPopupWindow] modal con el MISMO
+     * adapter de filas propias que el diálogo (item_list_picker 48dp
+     * focable), fondo dialog_bg, elev 8dp y ancho = anchor.width.
+     * [onPick] recibe el ÍNDICE en [labels]; el dismiss precede al pick
+     * (sin reentradas ni leak: el caller cierra con dismiss()).
+     */
+    fun buildPopup(anchor: View, labels: List<String>, onPick: (Int) -> Unit): ListPopupWindow {
+        val popup = ListPopupWindow(anchor.context)
+        val adapter = object : ArrayAdapter<String>(anchor.context, R.layout.item_list_picker, R.id.list_picker_label, labels) {
+            override fun getView(position: Int, convertView: View?, parent: android.view.ViewGroup): View =
+                super.getView(position, convertView, parent).also { FocusScaleHelper.attach(it) }
+        }
+        popup.setAdapter(adapter)
+        popup.anchorView = anchor
+        popup.isModal = true
+        popup.width = popupWidth(anchor.width)
+        popup.setBackgroundDrawable(popupBackground(anchor.context))
+        applyPopupElevation(popup, popupElevationPx(anchor.context))
+        popup.setOnItemClickListener { _, _, position, _ ->
+            popup.dismiss()
+            onPick(position)
+        }
+        return popup
+    }
+
+    /**
+     * Burbuja anclada y mostrada. Con lista vacía NO abre (null, sin
+     * excepción ni ventana: el caller ya filtra, esto es el cerrojo).
+     */
+    fun showPopup(anchor: View, labels: List<String>, onPick: (Int) -> Unit): ListPopupWindow? {
+        if (labels.isEmpty()) return null
+        return buildPopup(anchor, labels, onPick).also { it.show() }
     }
 
     /**

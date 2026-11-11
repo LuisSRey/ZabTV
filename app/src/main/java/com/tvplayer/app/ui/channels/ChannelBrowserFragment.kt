@@ -371,7 +371,7 @@ class ChannelBrowserFragment : Fragment() {
 
         // El dropdown de playlists vive en el selector de 48dp (móvil y TV);
         // el rail queda solo para filtros. TV usa diálogo D-pad, móvil
-        // PopupMenu.
+        // burbuja (ListPopupWindow modal).
         root.findViewById<TextView>(R.id.browser_list_selector)?.let { selector ->
             FocusScaleHelper.attach(selector)
             selector.setOnClickListener {
@@ -471,14 +471,14 @@ class ChannelBrowserFragment : Fragment() {
         reloadContent()
     }
 
-    /** Dropdown framework con las playlists (móvil; el rail es de filtros). */
+    /** Burbuja con las playlists (móvil; el rail es de filtros). */
     private fun showListMenu(anchor: View) {
         lifecycleScope.launch {
             val db = (requireActivity().application as TpApp).container.db
             val lists = db.listDao().all()
             if (lists.isEmpty()) return@launch
             val labels = ListPicker.labels(lists, getString(R.string.lists_name))
-            ListPicker.showMenu(anchor, labels) { onListPicked(lists[it].id) }
+            ListPicker.showPopup(anchor, labels) { onListPicked(lists[it].id) }
         }
     }
 
