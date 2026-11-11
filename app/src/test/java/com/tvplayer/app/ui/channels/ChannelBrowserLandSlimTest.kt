@@ -32,6 +32,7 @@ class ChannelBrowserLandSlimTest {
     @Test
     @Config(qualifiers = "land")
     fun `land columna izq 248dp`() {
+        // S6: 248dp móvil-land INTACTO (el slim TV S3/S5 no lo toca).
         val context = ApplicationProvider.getApplicationContext<Context>()
         val root = LayoutInflater.from(context)
             .inflate(R.layout.fragment_channel_browser, FrameLayout(context), false)
