@@ -10,6 +10,8 @@
     <string name="browser_channel_logo">Logotipo del canal</string>
     <string name="browser_history">Historial</string>
     <string name="browser_empty">Sin datos</string>
+    <string name="browser_hero_collapse">Ocultar destacado</string>
+    <string name="browser_hero_expand">Mostrar destacado</string>
     <string name="browser_next">Después: %1$s</string>
     <string name="player_coming">Reproductor disponible en la próxima versión</string>
     <string name="player_logo">Logotipo del canal</string>

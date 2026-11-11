@@ -7,6 +7,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.ImageButton
 import android.widget.PopupMenu
 import android.widget.ProgressBar
 import android.widget.TextView
@@ -54,6 +55,9 @@ class ChannelBrowserFragment : Fragment() {
     companion object {
         const val TAG = "browser"
         const val ARG_LIST_ID = "listId"
+
+        /** Hero compacto móvil (S1): cap de altura, solo no-TV. */
+        const val HERO_MAX_DP = 180
 
         /** Reintento acotado del timeline: tope de reintentos tras grid vacía. */
         const val TIMELINE_MAX_RETRY = BrowserTimelineRunner.MAX_RETRY
@@ -115,6 +119,13 @@ class ChannelBrowserFragment : Fragment() {
     private var window: GuideWindow = GuideWindow.now()
 
     /**
+     * Hero colapsado (S1, land móvil): el chevron oculta el body y deja la
+     * cabecera; sobrevive a la rotación vía snapshot (S2).
+     */
+    @VisibleForTesting
+    internal var heroCollapsed: Boolean = false
+
+    /**
      * Reloj inyectable para tests (CA2): la ventana tras rotar se recomputa
      * de aquí; en producción es el reloj del sistema (sin cambio de
      * comportamiento).
@@ -162,6 +173,41 @@ class ChannelBrowserFragment : Fragment() {
 
     /** Una sola columna (ruling usuario: legibilidad): la grilla es una lista. */
     private fun spanCount(isTv: Boolean, orientation: Int): Int = 1
+
+    /** Cap del hero compacto en px (S1). */
+    @VisibleForTesting
+    internal fun heroMaxPx(): Int =
+        (HERO_MAX_DP * resources.displayMetrics.density).toInt()
+
+    /**
+     * Estado colapsado al hero land (S1): body GONE + chevron; sin body
+     * (portrait/TV) no toca nada.
+     */
+    private fun applyHeroCollapsed(root: View) {
+        val body = root.findViewById<View>(R.id.browser_hero_body) ?: return
+        val toggle = root.findViewById<ImageButton>(R.id.browser_hero_toggle)
+        body.visibility = if (heroCollapsed) View.GONE else View.VISIBLE
+        toggle?.setImageResource(
+            if (heroCollapsed) R.drawable.ic_chevron_down else R.drawable.ic_chevron_up,
+        )
+        toggle?.contentDescription = getString(
+            if (heroCollapsed) R.string.browser_hero_expand else R.string.browser_hero_collapse,
+        )
+    }
+
+    /**
+     * Cap 180dp del hero móvil (S1): si el contenido expandido desborda, se
+     * fija la altura para que la grid conserve la suya. TV intacto (sin cap).
+     */
+    private fun bindHeroCap(heroBox: View) {
+        heroBox.addOnLayoutChangeListener { v, _, _, _, _, _, _, _, _ ->
+            val max = heroMaxPx()
+            if (v.height > max && v.layoutParams.height != max) {
+                v.layoutParams.height = max
+                v.requestLayout()
+            }
+        }
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         val argId = arguments?.getLong(ARG_LIST_ID, -1L) ?: -1L
@@ -241,6 +287,20 @@ class ChannelBrowserFragment : Fragment() {
             selector.setOnClickListener {
                 if (isTv) showListDialog() else showListMenu(selector)
             }
+        }
+
+        // Hero land colapsable con chevron (S1, solo donde existe el toggle)
+        // + cap 180dp no-TV para que la grid conserve altura.
+        view.findViewById<ImageButton>(R.id.browser_hero_toggle)?.let { toggle ->
+            FocusScaleHelper.attach(toggle)
+            applyHeroCollapsed(view)
+            toggle.setOnClickListener {
+                heroCollapsed = !heroCollapsed
+                this.view?.let(::applyHeroCollapsed)
+            }
+        }
+        if (!isTv) {
+            view.findViewById<View>(R.id.browser_hero)?.let(::bindHeroCap)
         }
 
         viewLifecycleOwner.lifecycleScope.launch {
@@ -387,6 +447,7 @@ class ChannelBrowserFragment : Fragment() {
                 listOfNotNull(nowLine, nextLine).joinToString(" · ")
             view.findViewById<ProgressBar>(R.id.browser_hero_progress).progress =
                 (hero.progress * 100).toInt().coerceIn(0, 100)
+            applyHeroCollapsed(view)
             val play = view.findViewById<Button>(R.id.browser_hero_play)
             FocusScaleHelper.attach(play)
             play.setOnClickListener {
