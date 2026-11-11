@@ -228,8 +228,78 @@ class MainActivity : AppCompatActivity(), TvNavigator.NavHost {
     override fun open(fragment: androidx.fragment.app.Fragment, tag: String) =
         openTab(fragment, tag)
 
-    override fun openPlayer(listId: Long, position: Int) =
-        pushFlow(PlayerFragment.newInstance(listId, position), PlayerFragment.TAG)
+    /**
+     * Player con auto-route externo (S5): con la política FRESCA de DAO
+     * (allowHttp + global + preferido vigentes, no caché) se resuelve la
+     * ruta — externo directo/chooser, o interno con toast si está vetado
+     * (blocked), sin receptor (no_external) o con preferido desinstalado
+     * (gone). Vetos de ExternalGate intactos.
+     */
+    override fun openPlayer(listId: Long, position: Int) {
+        lifecycleScopeLaunch {
+            val app = application as TpApp
+            val db = app.container.db
+            val channel = db.channelDao().channelAtPosition(listId, position)
+            if (channel == null) {
+                pushFlow(PlayerFragment.newInstance(listId, position), PlayerFragment.TAG)
+                return@lifecycleScopeLaunch
+            }
+            val (allowHttp, global, preferred) =
+                com.tvplayer.app.engine.ExternalAutoRoute.freshPolicyForRoute(db.settingsDao())
+            val proxy = com.tvplayer.app.data.AppContainer.DEFAULT_ACE_PROXY
+            val engineTarget =
+                com.tvplayer.app.engine.AceStreamEngine.engineProxyFor(channel.url, proxy)
+            val source = try {
+                com.tvplayer.app.engine.PlaybackSource.forUrl(
+                    channel.url, allowCleartext = allowHttp, aceStreamProxy = proxy,
+                )
+            } catch (_: IllegalArgumentException) {
+                null
+            }
+            val viewIntent =
+                com.tvplayer.app.engine.ExternalOpener.buildIntent(channel.url, source?.mimeType())
+            val preferredUsable = !preferred.isNullOrBlank() &&
+                com.tvplayer.app.engine.ExternalPlayers.isPreferredUsable(
+                    packageManager, preferred, viewIntent,
+                )
+            fun openInternal() =
+                pushFlow(PlayerFragment.newInstance(listId, position), PlayerFragment.TAG)
+            when (
+                com.tvplayer.app.engine.ExternalAutoRoute.resolve(
+                    channel.url, allowHttp, engineTarget, channel.allowExternal,
+                    global, preferred, preferredUsable,
+                )
+            ) {
+                com.tvplayer.app.engine.ExternalAutoRoute.Route.INTERNAL -> openInternal()
+                com.tvplayer.app.engine.ExternalAutoRoute.Route.BLOCKED -> {
+                    Toast.makeText(this, R.string.player_external_blocked, Toast.LENGTH_SHORT).show()
+                    openInternal()
+                }
+                com.tvplayer.app.engine.ExternalAutoRoute.Route.EXTERNAL_DIRECT -> {
+                    val opened = com.tvplayer.app.engine.ExternalOpener.openDirect(
+                        this, viewIntent, requireNotNull(preferred),
+                    )
+                    if (!opened) {
+                        Toast.makeText(this, R.string.player_no_external, Toast.LENGTH_SHORT).show()
+                        openInternal()
+                    }
+                }
+                com.tvplayer.app.engine.ExternalAutoRoute.Route.EXTERNAL_CHOOSER -> {
+                    if (!preferred.isNullOrBlank() && !preferredUsable) {
+                        Toast.makeText(
+                            this, R.string.settings_external_gone, Toast.LENGTH_LONG,
+                        ).show()
+                    }
+                    val opened =
+                        com.tvplayer.app.engine.ExternalOpener.openWithChooser(this, viewIntent)
+                    if (!opened) {
+                        Toast.makeText(this, R.string.player_no_external, Toast.LENGTH_SHORT).show()
+                        openInternal()
+                    }
+                }
+            }
+        }
+    }
 
     override fun openBrowser(listId: Long) =
         pushFlow(ChannelBrowserFragment.newInstance(listId), ChannelBrowserFragment.TAG)
