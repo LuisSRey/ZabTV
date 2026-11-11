@@ -58,18 +58,21 @@ class BrowserTimelineRunnerTest {
         ),
         retries: MutableList<Int> = mutableListOf(),
         debugs: MutableList<Pair<String, Int>> = mutableListOf(),
+        clock: () -> Long = System::currentTimeMillis,
+        batches: MutableList<Unit> = mutableListOf(),
     ) = BrowserTimelineRunner(
         scope = this,
         windowOf = { window },
         rangeOf = { range },
         peekOf = { peeks[it] },
         itemCountOf = { itemCount },
-        batchOf = { batch },
+        batchOf = { batches += Unit; batch },
         setWindow = sink.setWindow,
         submitEpg = sink.submitEpg,
         submitTimeline = sink.submitTimeline,
         retryOf = { retries += it },
         debugOf = { reason, attempt -> debugs += reason to attempt },
+        clockOf = clock,
     )
 
     @Test
@@ -184,14 +187,58 @@ class BrowserTimelineRunnerTest {
     }
 
     @Test
-    fun `reintento acotado a max 2`() = runTest {
+    fun `shouldFill puro debounce 300ms`() {
+        assertEquals(300L, BrowserTimelineRunner.DEBOUNCE_MS)
+        assertTrue(BrowserTimelineRunner.shouldFill(-300L, 0L))
+        assertTrue(BrowserTimelineRunner.shouldFill(0L, 300L))
+        assertTrue(!BrowserTimelineRunner.shouldFill(0L, 299L))
+        assertTrue(BrowserTimelineRunner.shouldFill(1_000L, 1_300L))
+        assertTrue(!BrowserTimelineRunner.shouldFill(1_000L, 1_299L))
+    }
+
+    @Test
+    fun `fill tras debounce solo setWindow sin batch`() = runTest {
+        var now = 10_000L
+        val sink = Sink()
+        val batches = mutableListOf<Unit>()
+        val r = runner(sink, clock = { now }, batches = batches)
+        r.fill()
+        advanceUntilIdle()
+        assertEquals(listOf("setWindow", "submitEpg", "submitTimeline"), sink.events)
+        assertEquals(1, batches.size)
+        // 100 ms después: debounceado — solo la ventana, sin batch ni
+        // submits ni reintento.
+        now += 100
+        r.fill()
+        advanceUntilIdle()
+        assertEquals(
+            listOf("setWindow", "submitEpg", "submitTimeline", "setWindow"),
+            sink.events,
+        )
+        assertEquals(1, batches.size)
+        // Tras la ventana de 300 ms el lote vuelve a correr.
+        now += 300
+        r.fill()
+        advanceUntilIdle()
+        assertEquals(2, batches.size)
+        assertEquals(7, sink.events.size)
+    }
+
+    @Test
+    fun `reintento acotado a max 1`() = runTest {
+        assertEquals(1, BrowserTimelineRunner.MAX_RETRY)
         val sink = Sink()
         val retries = mutableListOf<Int>()
-        runner(sink, range = null, retries = retries).fill(attempt = 2)
+        runner(sink, range = null, retries = retries).fill()
         advanceUntilIdle()
-        assertTrue(retries.isEmpty())
-        // Aun en el tope, tira y timeline se limpian.
-        assertEquals(listOf("setWindow", "submitEpg", "submitTimeline"), sink.events)
+        assertEquals(listOf(1), retries)
+        // En el tope no hay reintento, pero tira y timeline se limpian.
+        val capped = Sink()
+        val cappedRetries = mutableListOf<Int>()
+        runner(capped, range = null, retries = cappedRetries).fill(attempt = 1)
+        advanceUntilIdle()
+        assertTrue(cappedRetries.isEmpty())
+        assertEquals(listOf("setWindow", "submitEpg", "submitTimeline"), capped.events)
     }
 
     @Test

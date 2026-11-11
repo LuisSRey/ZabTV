@@ -145,8 +145,8 @@ class ChannelBrowserLayoutTest {
     }
 
     @Test
-    fun `reintento timeline acotado 200ms max 2`() {
-        assertEquals(2, ChannelBrowserFragment.TIMELINE_MAX_RETRY)
+    fun `reintento timeline acotado 200ms max 1`() {
+        assertEquals(1, ChannelBrowserFragment.TIMELINE_MAX_RETRY)
         assertEquals(200L, ChannelBrowserFragment.TIMELINE_RETRY_DELAY_MS)
     }
 

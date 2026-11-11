@@ -28,7 +28,11 @@ internal class BrowserTimelineRunner(
     private val retryOf: (Int) -> Unit,
     private val maxRetry: Int = MAX_RETRY,
     private val debugOf: (reason: String, attempt: Int) -> Unit = { _, _ -> },
+    private val clockOf: () -> Long = System::currentTimeMillis,
 ) {
+
+    /** Último fill que corrió el lote (debounce): arranca vencido. */
+    private var lastFillMs: Long = -DEBOUNCE_MS
 
     /** Lote por visibles: tira ahora/siguiente + programas de la ventana. */
     data class Batch(
@@ -38,7 +42,10 @@ internal class BrowserTimelineRunner(
 
     companion object {
         /** Tope de reintentos tras grid sin visibles (mismo que el fragment). */
-        const val MAX_RETRY = 2
+        const val MAX_RETRY = 1
+
+        /** Debounce entre lotes (DB/red): los fills seguidos solo re-fijan la ventana. */
+        const val DEBOUNCE_MS = 300L
 
         /** Motivos de retorno vacío para la traza ([TimelineDebug]). */
         const val EMPTY_NO_RANGE = "sin-rango"
@@ -47,6 +54,13 @@ internal class BrowserTimelineRunner(
         /** Predicado del trigger de scroll (puro): solo el reposo rellena. */
         fun fireOnScroll(newState: Int): Boolean =
             newState == RecyclerView.SCROLL_STATE_IDLE
+
+        /**
+         * Predicado del debounce (puro): el lote corre si pasó la ventana
+         * desde el último fill con lote.
+         */
+        fun shouldFill(lastFillMs: Long, nowMs: Long, debounceMs: Long = DEBOUNCE_MS): Boolean =
+            nowMs - lastFillMs >= debounceMs
 
         /**
          * Predicado del trigger de carga (puro): refresh resuelto + items +
@@ -69,13 +83,17 @@ internal class BrowserTimelineRunner(
     /**
      * Doble batch sobre los visibles → líneas "▶ ahora · después" (submitEpg)
      * + programas de la ventana por canal (submitTimeline). La ventana va
-     * SIEMPRE primero; AMBOS submits van SIEMPRE (vacíos incluidos) para
+     * SIEMPRE primero (también en fills debounceados, que solo re-fijan la
+     * ventana sin lote); AMBOS submits van SIEMPRE (vacíos incluidos) para
      * limpiar lotes rancios. Sin visibles (layout sin resolver o peek en
      * curso) reintento acotado.
      */
     fun fill(attempt: Int = 0) {
         val window = windowOf()
         setWindow(window)
+        val now = clockOf()
+        if (!shouldFill(lastFillMs, now)) return
+        lastFillMs = now
         val range = rangeOf()
         if (range == null || range.first < 0 || range.last < range.first) {
             if (attempt < maxRetry) retryOf(attempt + 1)
