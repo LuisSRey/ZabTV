@@ -64,7 +64,7 @@ internal class BrowserTimelineRunner(
     /**
      * Doble batch sobre los visibles → líneas "▶ ahora · después" (submitEpg)
      * + programas de la ventana por canal (submitTimeline). La ventana va
-     * SIEMPRE primero; el submitTimeline va SIEMPRE (vacío incluido) para
+     * SIEMPRE primero; AMBOS submits van SIEMPRE (vacíos incluidos) para
      * limpiar lotes rancios. Sin visibles (layout sin resolver o peek en
      * curso) reintento acotado.
      */
@@ -74,6 +74,7 @@ internal class BrowserTimelineRunner(
         val range = rangeOf()
         if (range == null || range.first < 0 || range.last < range.first) {
             if (attempt < maxRetry) retryOf(attempt + 1)
+            submitEpg(emptyMap())
             submitTimeline(emptyMap(), window)
             return
         }
@@ -81,11 +82,12 @@ internal class BrowserTimelineRunner(
             val visibles = range.mapNotNull(peekOf)
             if (visibles.isEmpty()) {
                 if (itemCountOf() > 0 && attempt < maxRetry) retryOf(attempt + 1)
+                submitEpg(emptyMap())
                 submitTimeline(emptyMap(), window)
                 return@launch
             }
             val batch = batchOf(visibles)
-            if (batch.epgLines.isNotEmpty()) submitEpg(batch.epgLines)
+            submitEpg(batch.epgLines)
             submitTimeline(batch.perChannel, window)
         }
     }

@@ -116,15 +116,37 @@ class BrowserTimelineRunnerTest {
         advanceUntilIdle()
         assertEquals("setWindow", sink.events.first())
         assertEquals("submitTimeline", sink.events.last())
-        // Sin líneas EPG no hay submitEpg, pero el timeline sí va.
+        // La tira va SIEMPRE (vacía incluida): sin submitEpg, una línea
+        // rancia sobreviviría al lote vacío.
         val bare = Sink()
         runner(
             bare,
             batch = BrowserTimelineRunner.Batch(emptyMap(), mapOf("c1" to emptyList())),
         ).fill()
         advanceUntilIdle()
-        assertEquals(listOf("setWindow", "submitTimeline"), bare.events)
+        assertEquals(listOf("setWindow", "submitEpg", "submitTimeline"), bare.events)
+        assertEquals(emptyMap<String, String>(), bare.lastEpg)
         assertEquals(mapOf("c1" to emptyList<EpgProgramEntity>()), bare.lastTimeline)
+    }
+
+    @Test
+    fun `retornos tempranos limpian tira y timeline`() = runTest {
+        // Sin rango (layout sin resolver): tira + timeline vacíos.
+        val noRange = Sink()
+        runner(noRange, range = null).fill()
+        advanceUntilIdle()
+        assertEquals(listOf("setWindow", "submitEpg", "submitTimeline"), noRange.events)
+        assertEquals(emptyMap<String, String>(), noRange.lastEpg)
+        assertEquals(emptyMap<String, List<EpgProgramEntity>>(), noRange.lastTimeline)
+        // Sin visibles (peek en curso, grilla cargada): lo mismo.
+        val noPeek = Sink()
+        val retries = mutableListOf<Int>()
+        runner(noPeek, peeks = emptyMap(), itemCount = 2, retries = retries).fill()
+        advanceUntilIdle()
+        assertEquals(listOf("setWindow", "submitEpg", "submitTimeline"), noPeek.events)
+        assertEquals(emptyMap<String, String>(), noPeek.lastEpg)
+        assertTrue(noPeek.lastTimeline?.isEmpty() == true)
+        assertEquals(listOf(1), retries)
     }
 
     @Test
@@ -133,7 +155,7 @@ class BrowserTimelineRunnerTest {
         val retries = mutableListOf<Int>()
         runner(sink, range = null, retries = retries).fill()
         advanceUntilIdle()
-        assertEquals(listOf("setWindow", "submitTimeline"), sink.events)
+        assertEquals(listOf("setWindow", "submitEpg", "submitTimeline"), sink.events)
         assertEquals(emptyMap<String, List<EpgProgramEntity>>(), sink.lastTimeline)
         assertEquals(listOf(1), retries)
     }
@@ -145,7 +167,7 @@ class BrowserTimelineRunnerTest {
         runner(sink, peeks = emptyMap(), itemCount = 2, retries = retries).fill()
         advanceUntilIdle()
         assertTrue(sink.lastTimeline?.isEmpty() == true)
-        assertEquals(listOf("setWindow", "submitTimeline"), sink.events)
+        assertEquals(listOf("setWindow", "submitEpg", "submitTimeline"), sink.events)
         assertEquals(listOf(1), retries)
     }
 
@@ -155,7 +177,7 @@ class BrowserTimelineRunnerTest {
         val retries = mutableListOf<Int>()
         runner(sink, peeks = emptyMap(), itemCount = 0, retries = retries).fill()
         advanceUntilIdle()
-        assertEquals(listOf("setWindow", "submitTimeline"), sink.events)
+        assertEquals(listOf("setWindow", "submitEpg", "submitTimeline"), sink.events)
         assertTrue(retries.isEmpty())
     }
 
@@ -166,7 +188,7 @@ class BrowserTimelineRunnerTest {
         runner(sink, range = null, retries = retries).fill(attempt = 2)
         advanceUntilIdle()
         assertTrue(retries.isEmpty())
-        // Aun en el tope, el timeline se limpia.
-        assertEquals(listOf("setWindow", "submitTimeline"), sink.events)
+        // Aun en el tope, tira y timeline se limpian.
+        assertEquals(listOf("setWindow", "submitEpg", "submitTimeline"), sink.events)
     }
 }
