@@ -11,7 +11,9 @@ import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import coil.load
+import coil.transform.RoundedCornersTransformation
 import com.tvplayer.app.R
+import com.tvplayer.app.core.UrlPolicer
 import com.tvplayer.app.core.xmltv.GuideWindow
 import com.tvplayer.app.data.db.ChannelEntity
 import com.tvplayer.app.data.db.EpgProgramEntity
@@ -140,11 +142,7 @@ class ChannelGridAdapter(
         if (full && channel != null) {
             holder.number?.text = (channel.position + 1).toString()
             holder.name.text = channel.displayName
-            holder.logo.setImageDrawable(null) // reciclado: sin logo fantasma
-            val radiusPx = 8f * holder.itemView.resources.displayMetrics.density
-            channel.logoUrl?.let { holder.logo.load(it) {
-                transformations(coil.transform.RoundedCornersTransformation(radiusPx))
-            } }
+            bindLogo(holder.logo, channel.logoUrl)
             holder.itemView.setOnClickListener { onClick(channel) }
             holder.itemView.setOnLongClickListener {
                 onLongClick?.invoke(channel)
@@ -153,6 +151,39 @@ class ChannelGridAdapter(
         }
         bindEpg(holder, position)
         bindTimeline(holder, position)
+    }
+
+    /**
+     * Logo con tag-check (U2 S4): la misma URL no recarga (evita parpadeo en
+     * rebinds por payload); sin URL o prohibida por [UrlPolicer] va el
+     * placeholder sin tocar red ni decoder. Carga 96×56 sin crossfade,
+     * esquinas 8dp, placeholder+error del escudo TV.
+     */
+    @VisibleForTesting
+    internal fun bindLogo(logo: ImageView, url: String?) {
+        val clean = url?.trim().takeIf { UrlPolicer.isAllowedHttpUrl(it) }
+        if (clean == null) {
+            logo.tag = null
+            logo.setImageResource(R.drawable.tile_logo_placeholder)
+            return
+        }
+        if (logo.tag == clean) return
+        logo.tag = clean
+        val radiusPx = 8f * logo.resources.displayMetrics.density
+        logo.load(clean) {
+            crossfade(false)
+            placeholder(R.drawable.tile_logo_placeholder)
+            error(R.drawable.tile_logo_placeholder)
+            size(96, 56)
+            transformations(RoundedCornersTransformation(radiusPx))
+        }
+    }
+
+    /** Reciclado: sin logo fantasma ni tag rancio (el próximo bind decide). */
+    override fun onViewRecycled(holder: Holder) {
+        holder.logo.tag = null
+        holder.logo.setImageDrawable(null)
+        super.onViewRecycled(holder)
     }
 
     private fun bindEpg(holder: Holder, position: Int) {
