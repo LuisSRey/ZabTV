@@ -80,6 +80,25 @@ class ChannelBrowserFragment : Fragment() {
         fun listDialogLabels(lists: List<ListEntity>, fallback: String): Array<String> =
             lists.map { it.name.ifBlank { fallback } }.toTypedArray()
 
+        /**
+         * Vacío visible SOLO con 0 canales confirmados (refresh ya resolvió,
+         * sin carga en curso): nada de "Sin datos" rancio mientras carga.
+         * Puro para test directo.
+         */
+        fun emptyVisible(itemCount: Int, refreshNotLoading: Boolean): Boolean =
+            refreshNotLoading && itemCount == 0
+
+        /**
+         * Orientación del rail: vertical en TV y en apaisado móvil (panel
+         * izquierdo de 320dp); horizontal solo en vertical táctil. Puro.
+         */
+        fun sidebarOrientation(isTv: Boolean, orientation: Int): Int =
+            if (isTv || orientation == Configuration.ORIENTATION_LANDSCAPE) {
+                LinearLayoutManager.VERTICAL
+            } else {
+                LinearLayoutManager.HORIZONTAL
+            }
+
         fun newInstance(listId: Long) = ChannelBrowserFragment().apply {
             arguments = bundleOf(ARG_LIST_ID to listId)
         }
@@ -97,12 +116,34 @@ class ChannelBrowserFragment : Fragment() {
         return inflater.inflate(R.layout.fragment_channel_browser, container, false)
     }
 
-    /** Rotación sin recrear (configChanges): reajusta columnas 1V/2H. */
+    /** Rotación sin recrear (configChanges): ventana + cortes + hero + timeline al día. */
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
-        val grid = view?.findViewById<RecyclerView>(R.id.browser_grid) ?: return
-        grid.layoutManager =
-            GridLayoutManager(requireContext(), spanCount(FocusScaleHelper.isTv(grid), newConfig.orientation))
+        refreshOnRotate()
+    }
+
+    /**
+     * Re-pintado tras rotar (S4): el layout-land solo entra en creaciones
+     * frescas (con configChanges no hay re-inflate), así que aquí se reajusta
+     * a mano — columnas, orientación del rail, ventana nueva, cortes, hero y
+     * re-disparo del timeline.
+     */
+    private fun refreshOnRotate() {
+        val root = view ?: return
+        val isTv = FocusScaleHelper.isTv(root)
+        val orientation = resources.configuration.orientation
+        root.findViewById<RecyclerView>(R.id.browser_grid)?.layoutManager =
+            GridLayoutManager(requireContext(), spanCount(isTv, orientation))
+        root.findViewById<RecyclerView>(R.id.browser_sidebar)?.layoutManager =
+            LinearLayoutManager(requireContext(), sidebarOrientation(isTv, orientation), false)
+        lifecycleScope.launch {
+            val v = view ?: return@launch
+            if (listId < 0) return@launch
+            window = GuideWindow.now()
+            paintSlots()
+            paintHero()
+            v.post { fillTimeline() }
+        }
     }
 
     /** Una sola columna (ruling usuario: legibilidad): la grilla es una lista. */
@@ -141,12 +182,12 @@ class ChannelBrowserFragment : Fragment() {
         // datos (NotLoading + items) se pinta el timeline tras el submit.
         gridAdapter.addLoadStateListener { states ->
             if (selection is Selection.History) return@addLoadStateListener
-            if (states.refresh !is LoadState.NotLoading) return@addLoadStateListener
+            val resolved = states.refresh is LoadState.NotLoading
             val empty = view.findViewById<TextView>(R.id.browser_empty)
-            if (gridAdapter.itemCount == 0) {
-                empty.visibility = View.VISIBLE
-            } else {
-                empty.visibility = View.GONE
+            // Vacío SOLO con 0 canales confirmados (nada rancio en carga).
+            empty.visibility =
+                if (emptyVisible(gridAdapter.itemCount, resolved)) View.VISIBLE else View.GONE
+            if (resolved && gridAdapter.itemCount > 0) {
                 grid.post { fillTimeline() }
             }
         }
@@ -158,7 +199,7 @@ class ChannelBrowserFragment : Fragment() {
         val sidebar = view.findViewById<RecyclerView>(R.id.browser_sidebar)
         sidebar.layoutManager = LinearLayoutManager(
             requireContext(),
-            if (isTv) LinearLayoutManager.VERTICAL else LinearLayoutManager.HORIZONTAL,
+            sidebarOrientation(isTv, resources.configuration.orientation),
             false,
         )
         sidebar.adapter = sidebarAdapter
@@ -288,42 +329,53 @@ class ChannelBrowserFragment : Fragment() {
                 selector.text = "$activeName ▾"
             }
             // Hero: destacado + ahora + progreso + siguiente.
-            val hero = viewModel.hero()
-            featured = hero?.channel
-            val heroBox = view.findViewById<View>(R.id.browser_hero)
-            if (hero != null) {
-                heroBox.visibility = View.VISIBLE
-                view.findViewById<TextView>(R.id.browser_hero_title).text = hero.channel.displayName
-                val nowLine = when {
-                    hero.nowTitle != null && hero.approximate ->
-                        getString(R.string.player_now_approx, hero.nowTitle)
-                    hero.nowTitle != null -> getString(R.string.player_now, hero.nowTitle)
-                    else -> getString(R.string.player_now_placeholder)
-                }
-                val nextLine = hero.nextTitle?.let { getString(R.string.browser_next, it) }
-                view.findViewById<TextView>(R.id.browser_hero_now).text =
-                    listOfNotNull(nowLine, nextLine).joinToString(" · ")
-                view.findViewById<ProgressBar>(R.id.browser_hero_progress).progress =
-                    (hero.progress * 100).toInt().coerceIn(0, 100)
-                val play = view.findViewById<Button>(R.id.browser_hero_play)
-                FocusScaleHelper.attach(play)
-                play.setOnClickListener {
-                    val ch = featured
-                    if (ch != null) {
-                        (activity as? TvNavigator.NavHost)?.openPlayer(ch.listId, ch.position)
-                    }
-                }
-            } else {
-                heroBox.visibility = View.GONE
-            }
+            paintHero()
             // Cabecera del timeline: 6 cortes de 30 min desde el anchor, con la
             // misma ventana que las filas y siempre visible (S6).
             window = GuideWindow.now()
-            val slotsView = view.findViewById<TextView>(R.id.browser_slots)
-            slotsView.text = slotsText(window)
-            slotsView.visibility = View.VISIBLE
+            paintSlots()
             reloadContent()
         }
+    }
+
+    /** Hero del destacado (ahora + progreso + siguiente; GONE sin canales). */
+    private suspend fun paintHero() {
+        val view = view ?: return
+        val hero = viewModel.hero()
+        featured = hero?.channel
+        val heroBox = view.findViewById<View>(R.id.browser_hero)
+        if (hero != null) {
+            heroBox.visibility = View.VISIBLE
+            view.findViewById<TextView>(R.id.browser_hero_title).text = hero.channel.displayName
+            val nowLine = when {
+                hero.nowTitle != null && hero.approximate ->
+                    getString(R.string.player_now_approx, hero.nowTitle)
+                hero.nowTitle != null -> getString(R.string.player_now, hero.nowTitle)
+                else -> getString(R.string.player_now_placeholder)
+            }
+            val nextLine = hero.nextTitle?.let { getString(R.string.browser_next, it) }
+            view.findViewById<TextView>(R.id.browser_hero_now).text =
+                listOfNotNull(nowLine, nextLine).joinToString(" · ")
+            view.findViewById<ProgressBar>(R.id.browser_hero_progress).progress =
+                (hero.progress * 100).toInt().coerceIn(0, 100)
+            val play = view.findViewById<Button>(R.id.browser_hero_play)
+            FocusScaleHelper.attach(play)
+            play.setOnClickListener {
+                val ch = featured
+                if (ch != null) {
+                    (activity as? TvNavigator.NavHost)?.openPlayer(ch.listId, ch.position)
+                }
+            }
+        } else {
+            heroBox.visibility = View.GONE
+        }
+    }
+
+    /** Cabecera de cortes de la [window] vigente (siempre visible). */
+    private fun paintSlots() {
+        val slotsView = view?.findViewById<TextView>(R.id.browser_slots) ?: return
+        slotsView.text = slotsText(window)
+        slotsView.visibility = View.VISIBLE
     }
 
     private fun reloadContent() {
