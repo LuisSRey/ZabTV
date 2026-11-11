@@ -45,7 +45,8 @@ import kotlinx.coroutines.launch
  * Room es el único estado: todo se lee de DB por ciclo.
  *
  * Dual layout: `layout/` (sidebar horizontal + columna) y `layout-television/`
- * (sidebar vertical 260dp + contenido, safe area 56dp). Foco TV vía
+ * (columna media 200dp con selector encima de los filtros + contenido, safe
+ * area 56dp). Foco TV vía
  * [FocusScaleHelper] 1.1. La grilla es una lista de 1 columna y JAMÁS carga
  * la lista completa en RAM (PagingData; Historial = snapshot cap 20).
  */

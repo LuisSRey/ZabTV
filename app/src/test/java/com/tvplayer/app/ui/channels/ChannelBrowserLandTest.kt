@@ -44,6 +44,7 @@ class ChannelBrowserLandTest {
     @Test
     @Config(qualifiers = "land")
     fun `land panel izq 248dp y contenido dcha peso1`() {
+        // S6: 248dp móvil-land INTACTO (el slim de la S3 TV no lo toca).
         val context = ApplicationProvider.getApplicationContext<Context>()
         val root = landRoot(context) as LinearLayout
         assertEquals(LinearLayout.HORIZONTAL, root.orientation)
@@ -130,15 +131,26 @@ class ChannelBrowserLandTest {
 
     @Test
     @Config(qualifiers = "land-television")
-    fun `tv apaisado conserva layout television`() {
+    fun `tv apaisado conserva layout television S3`() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val root = landRoot(context)
         // Escudo: sin layout-land-television, el land móvil secuestraría la TV
-        // (orientación precede a ui-mode). Debe seguir la TV: safe 56dp.
+        // (orientación precede a ui-mode). Réplica de la S3 TV: safe 56dp +
+        // columna media 200dp (motivo S6: media 260→200) con el selector
+        // encima de los filtros.
         assertEquals(dp(context, 56), root.paddingLeft)
         assertEquals(dp(context, 56), root.paddingTop)
         val sidebar = root.findViewById<RecyclerView>(R.id.browser_sidebar)
-        assertEquals(dp(context, 260), sidebar.layoutParams.width)
+        val selector = root.findViewById<TextView>(R.id.browser_list_selector)
+        val column = sidebar.parent as View
+        assertEquals(selector.parent, column)
+        assertEquals(dp(context, 200), column.layoutParams.width)
+        val columnGroup = column as ViewGroup
+        assertTrue(columnGroup.indexOfChild(selector) < columnGroup.indexOfChild(sidebar))
+        assertEquals(R.id.nav_browse, selector.nextFocusLeftId)
+        assertEquals(R.id.browser_sidebar, selector.nextFocusDownId)
+        assertEquals(R.id.browser_list_selector, sidebar.nextFocusUpId)
+        assertEquals(R.id.browser_grid, sidebar.nextFocusRightId)
     }
 
     @Test

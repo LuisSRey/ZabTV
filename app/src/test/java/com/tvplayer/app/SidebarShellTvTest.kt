@@ -49,6 +49,16 @@ class SidebarShellTvTest {
     }
 
     @Test
+    fun `S3 tv nav_browse derecha al selector F2`() {
+        // §F2 (lado shell): nav_browse → browser_list_selector; el regreso
+        // selector → nav_browse vive en el layout del fragment.
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val root = shellRoot(context)
+        val navBrowse = root.findViewById<View>(R.id.nav_browse)
+        assertEquals(R.id.browser_list_selector, navBrowse.nextFocusRightId)
+    }
+
+    @Test
     fun `S1 tv resto intacto 5 navs + container`() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val root = shellRoot(context)

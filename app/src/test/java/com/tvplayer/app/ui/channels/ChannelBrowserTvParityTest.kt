@@ -19,9 +19,11 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
 /**
- * Paridad TV D1+D2 (S1): el browser TV lleva el mismo selector de playlist
- * (dropdown 48dp) que el móvil, bajo el título en la columna derecha, con
- * nextFocus explícitos. Resto intacto (safe 56dp, sidebar 260dp).
+ * Paridad TV D1+D2 (S1) + columna media S3: el browser TV lleva el selector
+ * de playlist (dropdown 48dp) ENCIMA de los filtros en la columna media de
+ * 200dp (antes 260dp con el selector en la columna derecha: ~60dp más de
+ * grid en 720p), con nextFocus explícitos §F2. Resto intacto (safe 56dp,
+ * gap 32dp).
  * Solo layout-television; layout/ móvil prohibido.
  */
 @RunWith(RobolectricTestRunner::class)
@@ -63,7 +65,10 @@ class ChannelBrowserTvParityTest {
     }
 
     @Test
-    fun `S1 tv resto intacto safe 56dp sidebar 260dp`() {
+    fun `S3 tv columna media 200dp selector encima de filtros resto intacto`() {
+        // S3 (motivo S6): media 260→200dp + selector a la columna media
+        // encima de los filtros; el ancho vive en la columna y el sidebar
+        // rellena (match_parent).
         val context = ApplicationProvider.getApplicationContext<Context>()
         val root = tvBrowserRoot(context)
         assertEquals(dp(context, 56), root.paddingLeft)
@@ -71,7 +76,16 @@ class ChannelBrowserTvParityTest {
         assertEquals(dp(context, 56), root.paddingRight)
         assertEquals(dp(context, 56), root.paddingBottom)
         val sidebar = root.findViewById<RecyclerView>(R.id.browser_sidebar)
-        assertEquals(dp(context, 260), sidebar.layoutParams.width)
+        val selector = root.findViewById<TextView>(R.id.browser_list_selector)
+        val column = sidebar.parent as View
+        assertEquals(selector.parent, column)
+        assertEquals(dp(context, 200), column.layoutParams.width)
+        val columnGroup = column as ViewGroup
+        assertTrue(columnGroup.indexOfChild(selector) < columnGroup.indexOfChild(sidebar))
+        val grid = root.findViewById<RecyclerView>(R.id.browser_grid)
+        assertEquals(dp(context, 32), (grid.parent as View).layoutParams.let {
+            (it as ViewGroup.MarginLayoutParams).marginStart
+        })
         assertTrue(root.findViewById<View>(R.id.browser_hero) != null)
         assertTrue(root.findViewById<View>(R.id.browser_hero_play) != null)
         assertTrue(root.findViewById<View>(R.id.browser_slots) != null)
@@ -80,22 +94,28 @@ class ChannelBrowserTvParityTest {
     }
 
     @Test
-    fun `S1 tv nextFocus explicitos sin trampas`() {
+    fun `S3 tv nextFocus mapa F2 sin trampas`() {
+        // §F2: nav_browse<->selector, selector v sidebar, sidebar ^selector
+        // >grid <nav, grid ^selector <sidebar, hero_play ^selector v grid
+        // <sidebar. Nada apunta al hero en exclusiva (puede estar GONE).
         val context = ApplicationProvider.getApplicationContext<Context>()
         val root = tvBrowserRoot(context)
         val selector = root.findViewById<TextView>(R.id.browser_list_selector)
         val sidebar = root.findViewById<RecyclerView>(R.id.browser_sidebar)
         val grid = root.findViewById<RecyclerView>(R.id.browser_grid)
         val play = root.findViewById<View>(R.id.browser_hero_play)
-        assertEquals(R.id.browser_sidebar, selector.nextFocusLeftId)
-        assertEquals(R.id.browser_grid, selector.nextFocusDownId)
-        assertEquals(R.id.browser_list_selector, sidebar.nextFocusRightId)
+        assertEquals(R.id.nav_browse, selector.nextFocusLeftId)
+        assertEquals(R.id.browser_sidebar, selector.nextFocusDownId)
+        assertEquals(R.id.browser_list_selector, sidebar.nextFocusUpId)
+        assertEquals(R.id.browser_grid, sidebar.nextFocusRightId)
+        assertEquals(R.id.nav_browse, sidebar.nextFocusLeftId)
         assertEquals(R.id.browser_list_selector, grid.nextFocusUpId)
         assertEquals(R.id.browser_sidebar, grid.nextFocusLeftId)
         assertEquals(R.id.browser_list_selector, play.nextFocusUpId)
         assertEquals(R.id.browser_grid, play.nextFocusDownId)
+        assertEquals(R.id.browser_sidebar, play.nextFocusLeftId)
         // Sin trampas: el selector no se apunta a sí mismo y su salida
-        // principal (abajo) es la grilla, siempre visible (el hero puede
+        // principal (abajo) es el sidebar, siempre visible (el hero puede
         // estar GONE, así que nada lo apunta como único camino).
         assertNotEquals(R.id.browser_list_selector, selector.nextFocusDownId)
     }
