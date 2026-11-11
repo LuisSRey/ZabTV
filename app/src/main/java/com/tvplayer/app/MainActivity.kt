@@ -17,6 +17,7 @@ import com.tvplayer.app.ui.player.PlayerFragment
 import com.tvplayer.app.ui.search.SearchFragment
 import com.tvplayer.app.ui.settings.SettingsFragment
 import com.tvplayer.app.ui.common.FocusScaleHelper
+import com.tvplayer.app.ui.common.SidebarCollapseController
 
 /**
  * Única Activity (spec §5): shell estilo tvOS — sidebar en TV, barra inferior
@@ -43,7 +44,13 @@ class MainActivity : AppCompatActivity(), TvNavigator.NavHost {
             FocusScaleHelper.attach(row)
             row.setOnClickListener { goTab(tag) }
         }
-        supportFragmentManager.addOnBackStackChangedListener { syncShell() }
+        // S2: colapso a iconos solo en browser (encadena el foco de escala,
+        // sin tocar syncShell/back stack/selección).
+        SidebarCollapseController.attach(this, ::currentTag, ChannelBrowserFragment.TAG)
+        supportFragmentManager.addOnBackStackChangedListener {
+            syncShell()
+            SidebarCollapseController.refresh(this, currentTag(), ChannelBrowserFragment.TAG)
+        }
         if (supportFragmentManager.findFragmentByTag(HomeFragment.TAG) == null) {
             supportFragmentManager.beginTransaction()
                 .replace(R.id.container, HomeFragment(), HomeFragment.TAG)
@@ -51,6 +58,7 @@ class MainActivity : AppCompatActivity(), TvNavigator.NavHost {
         }
         supportFragmentManager.executePendingTransactions()
         syncShell()
+        SidebarCollapseController.refresh(this, currentTag(), ChannelBrowserFragment.TAG)
         refreshActiveEpg()
         // "Abrir con" desde un gestor (solo creaciones frescas: con
         // configChanges no hay recreación por rotación que duplique).
@@ -159,6 +167,10 @@ class MainActivity : AppCompatActivity(), TvNavigator.NavHost {
         }
     }
 
+    /** Tab visible para el colapso S2 (null sin fragment). */
+    private fun currentTag(): String? =
+        supportFragmentManager.findFragmentById(R.id.container)?.tag
+
     /** Estado del shell según el fragment visible: tab activa + chrome. */
     private fun syncShell() {
         val current = supportFragmentManager.findFragmentById(R.id.container)
@@ -207,6 +219,7 @@ class MainActivity : AppCompatActivity(), TvNavigator.NavHost {
         // openTab no toca el back stack → el listener no dispara: sincronizar a mano.
         supportFragmentManager.executePendingTransactions()
         syncShell()
+        SidebarCollapseController.refresh(this, currentTag(), ChannelBrowserFragment.TAG)
     }
 
     /**
