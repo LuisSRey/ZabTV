@@ -96,6 +96,19 @@ class ChannelBrowserFragment : Fragment() {
             ListPicker.labels(lists, fallback).toTypedArray()
 
         /**
+         * Nombre de la lista activa para el selector (O2): nombre vigente
+         * con fallback si viene en blanco, ausente o sin listas. Puro.
+         */
+        fun activeLabel(lists: List<ListEntity>, listId: Long, fallback: String): String =
+            lists.find { it.id == listId }?.name?.ifBlank { fallback } ?: fallback
+
+        /**
+         * Texto del selector (O2): la etiqueta activa SIEMPRE con sufijo
+         * ▾ (haya o no listas: el fallback ya viene resuelto). Puro.
+         */
+        fun selectorText(active: String): String = "$active ▾"
+
+        /**
          * Vacío visible SOLO con 0 canales confirmados (refresh ya resolvió,
          * sin carga en curso): nada de "Sin datos" rancio mientras carga.
          * Puro para test directo.
@@ -393,6 +406,7 @@ class ChannelBrowserFragment : Fragment() {
             heroCollapsed,
             firstVisiblePosition(R.id.browser_grid),
             firstVisiblePosition(R.id.browser_sidebar),
+            root.findViewById<TextView>(R.id.browser_list_selector)?.text?.toString().orEmpty(),
         )
         val fresh = layoutInflater.inflate(
             R.layout.fragment_channel_browser, root.parent as? ViewGroup, false,
@@ -409,6 +423,11 @@ class ChannelBrowserFragment : Fragment() {
         bindBrowserViews(root, isTv, newOrientation)
         root.findViewById<RecyclerView>(R.id.browser_grid)?.scrollToPosition(snapshot.gridPosition)
         root.findViewById<RecyclerView>(R.id.browser_sidebar)?.scrollToPosition(snapshot.sidebarPosition)
+        // Restore del selector sin re-query (O2): el texto ya resuelto viaja
+        // en el snapshot; vacío = placeholder del XML recién inflado.
+        if (snapshot.selectorText.isNotEmpty()) {
+            root.findViewById<TextView>(R.id.browser_list_selector)?.text = snapshot.selectorText
+        }
         lastOrientation = newOrientation
         lifecycleScope.launch {
             if (listId < 0) return@launch
@@ -492,22 +511,22 @@ class ChannelBrowserFragment : Fragment() {
             sidebarAdapter.activeListId = listId
             sidebarAdapter.updateSelection(selection)
             // Rail solo filtros + playlist activa en el selector (TV y móvil
-            // con selector); sin selector, rail completo (fallback).
+            // con selector); sin selector, rail completo (fallback). El texto
+            // sale de activeLabel/selectorText tras el resolve (O2): con o
+            // sin listas siempre hay sufijo ▾.
             val selector = view.findViewById<TextView>(R.id.browser_list_selector)
-            val activeName = lists.find { it.id == listId }?.name
-                ?.ifBlank { getString(R.string.lists_name) }
-                ?: getString(R.string.lists_name)
+            val text = selectorText(activeLabel(lists, listId, getString(R.string.lists_name)))
             if (FocusScaleHelper.isTv(view) && selector != null) {
                 // TV: rail solo filtros y playlist en el selector.
                 sidebarAdapter.submit(filterRows)
-                selector.text = "$activeName ▾"
+                selector.text = text
             } else if (selector == null) {
                 // Fallback sin selector: rail completo, como siempre.
                 sidebarAdapter.submit(ChannelSidebar.buildPlaylistRows(lists, listId) + filterRows)
             } else {
                 // Móvil como hoy: rail solo filtros y playlist en el dropdown.
                 sidebarAdapter.submit(filterRows)
-                selector.text = "$activeName ▾"
+                selector.text = text
             }
             // Hero: destacado + ahora + progreso + siguiente.
             paintHero()

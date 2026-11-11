@@ -10,11 +10,12 @@ object BrowserRotateHelper {
     /** Modo del hero land (S1): colapsado muestra solo la cabecera. */
     enum class HeroMode { EXPANDED, COLLAPSED }
 
-    /** Estado a restaurar tras reinflar: hero + primeras posiciones visibles. */
+    /** Estado a restaurar tras reinflar: hero + primeras posiciones visibles + texto del selector. */
     data class Snapshot(
         val heroCollapsed: Boolean,
         val gridPosition: Int,
         val sidebarPosition: Int,
+        val selectorText: String = "",
     )
 
     fun heroMode(collapsed: Boolean): HeroMode =
@@ -31,8 +32,13 @@ object BrowserRotateHelper {
             oldOrientation != ORIENTATION_UNDEFINED && newOrientation != ORIENTATION_UNDEFINED
 
     /** Snapshot saneado (posiciones negativas a 0). */
-    fun snapshot(heroCollapsed: Boolean, gridPosition: Int, sidebarPosition: Int): Snapshot =
-        Snapshot(heroCollapsed, gridPosition.coerceAtLeast(0), sidebarPosition.coerceAtLeast(0))
+    fun snapshot(
+        heroCollapsed: Boolean,
+        gridPosition: Int,
+        sidebarPosition: Int,
+        selectorText: String = "",
+    ): Snapshot =
+        Snapshot(heroCollapsed, gridPosition.coerceAtLeast(0), sidebarPosition.coerceAtLeast(0), selectorText)
 
     /** Espejo de `Configuration.ORIENTATION_UNDEFINED` sin importar Android. */
     const val ORIENTATION_UNDEFINED = 0
