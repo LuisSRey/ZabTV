@@ -108,20 +108,55 @@ class ChannelBrowserTvParityTest {
     }
 
     @Test
-    fun `S5 tv hero compacto padding12 titulo22sp playMin48`() {
-        // S5 (motivo S6): hero TV 20→12dp + título 26→22sp + play minHeight
-        // 48dp (D-pad sin recortes en 720p).
+    fun `S2 tv hero compacto padding8 titulo18sp now13sp play48`() {
+        // U1 S2: hero TV 12→8dp + título 22→18sp 1 línea + now 16→13sp
+        // 1 línea + progreso intacto + play 48dp fijos (D-pad sin recortes
+        // en 720p). Grid a peso intacta.
         val context = ApplicationProvider.getApplicationContext<Context>()
         val root = tvBrowserRoot(context)
         val hero = root.findViewById<View>(R.id.browser_hero)
-        assertEquals(dp(context, 12), hero.paddingLeft)
-        assertEquals(dp(context, 12), hero.paddingTop)
+        assertEquals(dp(context, 8), hero.paddingLeft)
+        assertEquals(dp(context, 8), hero.paddingTop)
         val title = root.findViewById<TextView>(R.id.browser_hero_title)
-        val expected = android.util.TypedValue.applyDimension(
-            android.util.TypedValue.COMPLEX_UNIT_SP, 22f, context.resources.displayMetrics,
+        val expectedTitle = android.util.TypedValue.applyDimension(
+            android.util.TypedValue.COMPLEX_UNIT_SP, 18f, context.resources.displayMetrics,
         )
-        assertEquals(expected, title.textSize, 1.0f)
-        assertEquals(dp(context, 48), root.findViewById<View>(R.id.browser_hero_play).minimumHeight)
+        assertEquals(expectedTitle, title.textSize, 1.0f)
+        assertEquals(1, title.maxLines)
+        val now = root.findViewById<TextView>(R.id.browser_hero_now)
+        val expectedNow = android.util.TypedValue.applyDimension(
+            android.util.TypedValue.COMPLEX_UNIT_SP, 13f, context.resources.displayMetrics,
+        )
+        assertEquals(expectedNow, now.textSize, 1.0f)
+        assertEquals(1, now.maxLines)
+        assertTrue(root.findViewById<View>(R.id.browser_hero_progress) != null)
+        val play = root.findViewById<View>(R.id.browser_hero_play)
+        assertEquals(dp(context, 48), play.layoutParams.height)
+        assertEquals(dp(context, 48), play.minimumHeight)
+    }
+
+    @Test
+    fun `S2 tv slots elevation 12dp 1 linea y grid a peso intacta`() {
+        // U1 S2: slots con elevation 12dp a 1 línea; la grid conserva peso
+        // 1 + marginTop 12dp (misma altura de lista que antes).
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val root = tvBrowserRoot(context)
+        val slots = root.findViewById<TextView>(R.id.browser_slots)
+        assertEquals(dp(context, 12).toFloat(), slots.elevation, 1f)
+        assertEquals(1, slots.maxLines)
+        val grid = root.findViewById<RecyclerView>(R.id.browser_grid)
+        val glp = grid.layoutParams as LinearLayout.LayoutParams
+        assertEquals(1f, glp.weight, 0.001f)
+        assertEquals(dp(context, 12), (glp as ViewGroup.MarginLayoutParams).topMargin)
+    }
+
+    @Test
+    fun `S2 tile_logo_placeholder layer-list surface2 mas logo`() {
+        // U1 S2: placeholder de logo = layer-list (fondo surface2 + marca).
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val d = context.getDrawable(R.drawable.tile_logo_placeholder)
+        assertTrue(d is android.graphics.drawable.LayerDrawable)
+        assertEquals(2, (d as android.graphics.drawable.LayerDrawable).numberOfLayers)
     }
 
     @Test

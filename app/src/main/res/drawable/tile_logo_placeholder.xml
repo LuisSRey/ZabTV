@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Placeholder de logo de canal (U1 S2): fondo surface2 con la marca
+     centrada a 96x56 (mismo tamaño que el logo TV, esquinas 8dp como el
+     tile). Se usa como placeholder+error de Coil y como fallback sin URL. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@color/tp_surface2" />
+            <corners android:radius="8dp" />
+        </shape>
+    </item>
+    <item
+        android:drawable="@drawable/ic_logo_mark"
+        android:gravity="center"
+        android:width="96dp"
+        android:height="56dp" />
+</layer-list>

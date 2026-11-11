@@ -158,16 +158,31 @@ class ChannelBrowserLandTest {
             (sidebar.layoutParams as ViewGroup.MarginLayoutParams).topMargin,
         )
         assertEquals(dp(context, 16).toFloat(), selector.elevation, 1f)
-        // Escudo réplica S5: hero compacto como la TV (padding 12 + título
-        // 22sp + play minHeight 48).
+        // Escudo réplica S2 (U1): hero compacto como la TV (padding 8 +
+        // título 18sp 1 línea + now 13sp 1 línea + play 48dp fijos) +
+        // slots elevation 12dp 1 línea + grid a peso intacta.
         val hero = root.findViewById<View>(R.id.browser_hero)
-        assertEquals(dp(context, 12), hero.paddingLeft)
+        assertEquals(dp(context, 8), hero.paddingLeft)
         val title = root.findViewById<TextView>(R.id.browser_hero_title)
         val expected = android.util.TypedValue.applyDimension(
-            android.util.TypedValue.COMPLEX_UNIT_SP, 22f, context.resources.displayMetrics,
+            android.util.TypedValue.COMPLEX_UNIT_SP, 18f, context.resources.displayMetrics,
         )
         assertEquals(expected, title.textSize, 1.0f)
-        assertEquals(dp(context, 48), root.findViewById<View>(R.id.browser_hero_play).minimumHeight)
+        assertEquals(1, title.maxLines)
+        val now = root.findViewById<TextView>(R.id.browser_hero_now)
+        val expectedNow = android.util.TypedValue.applyDimension(
+            android.util.TypedValue.COMPLEX_UNIT_SP, 13f, context.resources.displayMetrics,
+        )
+        assertEquals(expectedNow, now.textSize, 1.0f)
+        assertEquals(1, now.maxLines)
+        val play = root.findViewById<View>(R.id.browser_hero_play)
+        assertEquals(dp(context, 48), play.layoutParams.height)
+        assertEquals(dp(context, 48), play.minimumHeight)
+        val slots = root.findViewById<TextView>(R.id.browser_slots)
+        assertEquals(dp(context, 12).toFloat(), slots.elevation, 1f)
+        assertEquals(1, slots.maxLines)
+        val grid = root.findViewById<RecyclerView>(R.id.browser_grid)
+        assertEquals(1f, (grid.layoutParams as LinearLayout.LayoutParams).weight, 0.001f)
     }
 
     @Test
