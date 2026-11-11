@@ -541,7 +541,16 @@ class ChannelBrowserFragment : Fragment() {
         }
     }
 
-    /** Hero del destacado (ahora + progreso + siguiente; GONE sin canales). */
+    /**
+     * Hero del destacado (ahora + progreso + siguiente; GONE sin canales).
+     *
+     * Política de repintado (U3 S5): repinta SOLO en lista/filtro/reload
+     * ([reloadAll]/[reloadContent]), rotación
+     * ([repaintOnRotate]/[reinflateOnRotate]) y reingreso al fragment. El
+     * foco D-pad (N eventos) NUNCA repinta: el fragment no registra ningún
+     * callback de foco hacia aquí (los [FocusScaleHelper] solo animan la
+     * escala 1.1) — lo blinda [ChannelBrowserHeroInvariantTest].
+     */
     private suspend fun paintHero() {
         val view = view ?: return
         val hero = viewModel.hero()
