@@ -45,6 +45,7 @@
                 android:focusable="true"
                 android:gravity="center_vertical"
                 android:maxLines="1"
+                android:marqueeRepeatLimit="1"
                 android:nextFocusDown="@id/browser_sidebar"
                 android:nextFocusLeft="@id/nav_browse"
                 android:paddingStart="16dp"

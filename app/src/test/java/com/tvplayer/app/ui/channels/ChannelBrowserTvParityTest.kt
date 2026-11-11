@@ -170,13 +170,18 @@ class ChannelBrowserTvParityTest {
     }
 
     @Test
-    fun `S3 tv grupo end maxLines1 sin marquee`() {
+    fun `S4 tv grupo reposo end maxLines1 repeat1 sin seleccionar`() {
+        // S4 (motivo S6): en reposo sigue END + maxLines 1 (el MARQUEE solo
+        // entra con el foco vía MarqueeOnFocus, que el adapter cablea por
+        // holder); group_count intacto y sin marquee.
         val context = ApplicationProvider.getApplicationContext<Context>()
         val parent = LinearLayout(context).apply { orientation = LinearLayout.VERTICAL }
         val root = LayoutInflater.from(context).inflate(R.layout.item_group, parent, false)
         val label = root.findViewById<TextView>(R.id.group_label)
         assertEquals(android.text.TextUtils.TruncateAt.END, label.ellipsize)
         assertEquals(1, label.maxLines)
+        assertEquals(1, label.marqueeRepeatLimit)
+        assertEquals(false, label.isSelected)
         assertTrue(root.findViewById<TextView>(R.id.group_count) != null)
     }
 

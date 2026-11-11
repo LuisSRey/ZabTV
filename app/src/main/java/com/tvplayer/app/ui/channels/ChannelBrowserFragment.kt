@@ -31,6 +31,7 @@ import com.tvplayer.app.data.db.ListEntity
 import com.tvplayer.app.ui.channel_dialog.ChannelSheetFragment
 import com.tvplayer.app.ui.channels.ChannelSidebar.Selection
 import com.tvplayer.app.ui.common.FocusScaleHelper
+import com.tvplayer.app.ui.common.MarqueeOnFocus
 import com.tvplayer.app.ui.home.HomeFragment
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -375,6 +376,7 @@ class ChannelBrowserFragment : Fragment() {
         // burbuja (ListPopupWindow modal).
         root.findViewById<TextView>(R.id.browser_list_selector)?.let { selector ->
             FocusScaleHelper.attach(selector)
+            MarqueeOnFocus.attach(selector)
             selector.setOnClickListener {
                 if (isTv) showListDialog() else showListMenu(selector)
             }

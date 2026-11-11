@@ -7,6 +7,7 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.tvplayer.app.R
 import com.tvplayer.app.ui.common.FocusScaleHelper
+import com.tvplayer.app.ui.common.MarqueeOnFocus
 
 /**
  * Sidebar del browser (playlists + Todos + Historial + grupos) sobre
@@ -45,7 +46,13 @@ class ChannelSidebarAdapter(
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): Holder {
         val v = LayoutInflater.from(parent.context).inflate(R.layout.item_group, parent, false)
-        return Holder(v)
+        val holder = Holder(v)
+        // Cableado único por holder (S4): escala de foco + marquee del label
+        // según la fila; en el bind solo texto y selección (evita apilar
+        // listeners en cada reciclado). group_count nunca lleva marquee.
+        FocusScaleHelper.attach(v)
+        MarqueeOnFocus.bind(holder.label, v)
+        return holder
     }
 
     override fun getItemCount(): Int = rows.size
@@ -86,6 +93,5 @@ class ChannelSidebarAdapter(
                 is ChannelSidebar.Row.Group -> onSelection(ChannelSidebar.Selection.Group(row.name))
             }
         }
-        FocusScaleHelper.attach(holder.itemView)
     }
 }
