@@ -59,6 +59,8 @@ android {
         buildFeatures {
         viewBinding = true
         aidl = true
+        // G2 S5: TimelineDebug usa el flag DEBUG + la versión del APK.
+        buildConfig = true
     }
 
     testOptions {

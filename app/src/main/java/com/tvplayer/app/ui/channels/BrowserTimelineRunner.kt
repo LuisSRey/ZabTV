@@ -27,6 +27,7 @@ internal class BrowserTimelineRunner(
     private val submitTimeline: (Map<String, List<EpgProgramEntity>>, GuideWindow) -> Unit,
     private val retryOf: (Int) -> Unit,
     private val maxRetry: Int = MAX_RETRY,
+    private val debugOf: (reason: String, attempt: Int) -> Unit = { _, _ -> },
 ) {
 
     /** Lote por visibles: tira ahora/siguiente + programas de la ventana. */
@@ -38,6 +39,10 @@ internal class BrowserTimelineRunner(
     companion object {
         /** Tope de reintentos tras grid sin visibles (mismo que el fragment). */
         const val MAX_RETRY = 2
+
+        /** Motivos de retorno vacío para la traza ([TimelineDebug]). */
+        const val EMPTY_NO_RANGE = "sin-rango"
+        const val EMPTY_NO_VISIBLES = "sin-visibles"
 
         /** Predicado del trigger de scroll (puro): solo el reposo rellena. */
         fun fireOnScroll(newState: Int): Boolean =
@@ -74,6 +79,7 @@ internal class BrowserTimelineRunner(
         val range = rangeOf()
         if (range == null || range.first < 0 || range.last < range.first) {
             if (attempt < maxRetry) retryOf(attempt + 1)
+            debugOf(EMPTY_NO_RANGE, attempt)
             submitEpg(emptyMap())
             submitTimeline(emptyMap(), window)
             return
@@ -82,6 +88,7 @@ internal class BrowserTimelineRunner(
             val visibles = range.mapNotNull(peekOf)
             if (visibles.isEmpty()) {
                 if (itemCountOf() > 0 && attempt < maxRetry) retryOf(attempt + 1)
+                debugOf(EMPTY_NO_VISIBLES, attempt)
                 submitEpg(emptyMap())
                 submitTimeline(emptyMap(), window)
                 return@launch

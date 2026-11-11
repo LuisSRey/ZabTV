@@ -340,6 +340,7 @@ class ChannelBrowserFragment : Fragment() {
                 grid.postDelayed({ timelineRunner.fill(next) }, TIMELINE_RETRY_DELAY_MS)
             },
             maxRetry = TIMELINE_MAX_RETRY,
+            debugOf = { reason, attempt -> TimelineDebug.logEmpty(reason, attempt, window) },
         )
         // Tira ahora/siguiente + timeline por pausa de scroll (doble batch).
         grid.addOnScrollListener(object : RecyclerView.OnScrollListener() {
@@ -641,7 +642,30 @@ class ChannelBrowserFragment : Fragment() {
             ).joinToString(" ").takeIf { it.isNotBlank() }?.let { lines[ch.stableKey] = it }
             range[key]?.takeIf { it.isNotEmpty() }?.let { perChannel[ch.stableKey] = it }
         }
+        // Traza sin PII (G2 S5): contadores + tvgIds + ventana + visibilidades.
+        TimelineDebug.logBatch(
+            tvgIds = exactIds + approxIds,
+            window = window,
+            visibles = visibles.size,
+            epg = lines.size,
+            channels = perChannel.size,
+            vis = visSnapshot(),
+        )
         return BrowserTimelineRunner.Batch(lines, perChannel)
+    }
+
+    /**
+     * Visibilidades del chrome para la traza (sin PII): hero/cabecera/vacío.
+     */
+    private fun visSnapshot(): String {
+        val root = view ?: return "sin-vista"
+        fun vis(id: Int) = when (root.findViewById<View>(id)?.visibility) {
+            View.VISIBLE -> "V"
+            View.GONE -> "G"
+            View.INVISIBLE -> "I"
+            else -> "?"
+        }
+        return "hero=${vis(R.id.browser_hero)} slots=${vis(R.id.browser_slots)} empty=${vis(R.id.browser_empty)}"
     }
 
     private fun onChannelClick(channel: ChannelEntity) {

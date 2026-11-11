@@ -57,6 +57,7 @@ class BrowserTimelineRunnerTest {
             mapOf("c1" to listOf(EpgProgramEntity(tvgId = "c1", startMillis = 1, endMillis = 2, title = "Ahora"))),
         ),
         retries: MutableList<Int> = mutableListOf(),
+        debugs: MutableList<Pair<String, Int>> = mutableListOf(),
     ) = BrowserTimelineRunner(
         scope = this,
         windowOf = { window },
@@ -68,6 +69,7 @@ class BrowserTimelineRunnerTest {
         submitEpg = sink.submitEpg,
         submitTimeline = sink.submitTimeline,
         retryOf = { retries += it },
+        debugOf = { reason, attempt -> debugs += reason to attempt },
     )
 
     @Test
@@ -190,5 +192,32 @@ class BrowserTimelineRunnerTest {
         assertTrue(retries.isEmpty())
         // Aun en el tope, tira y timeline se limpian.
         assertEquals(listOf("setWindow", "submitEpg", "submitTimeline"), sink.events)
+    }
+
+    @Test
+    fun `retorno sin rango avisa a debugOf`() = runTest {
+        val sink = Sink()
+        val debugs = mutableListOf<Pair<String, Int>>()
+        runner(sink, range = null, debugs = debugs).fill()
+        advanceUntilIdle()
+        assertEquals(listOf(BrowserTimelineRunner.EMPTY_NO_RANGE to 0), debugs)
+    }
+
+    @Test
+    fun `retorno sin visibles avisa a debugOf`() = runTest {
+        val sink = Sink()
+        val debugs = mutableListOf<Pair<String, Int>>()
+        runner(sink, peeks = emptyMap(), itemCount = 2, debugs = debugs).fill()
+        advanceUntilIdle()
+        assertEquals(listOf(BrowserTimelineRunner.EMPTY_NO_VISIBLES to 0), debugs)
+    }
+
+    @Test
+    fun `lote con datos no avisa a debugOf`() = runTest {
+        val sink = Sink()
+        val debugs = mutableListOf<Pair<String, Int>>()
+        runner(sink, debugs = debugs).fill()
+        advanceUntilIdle()
+        assertTrue(debugs.isEmpty())
     }
 }
