@@ -6,6 +6,7 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.annotation.VisibleForTesting
 import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
@@ -61,6 +62,11 @@ class ChannelGridAdapter(
     private var epgLines: Map<String, String> = emptyMap()
     private var timeline: Map<String, List<EpgProgramEntity>> = emptyMap()
     private var window: GuideWindow? = null
+
+    /** Ventana vigente (CA2: prueba que el rotate re-dispara setWindow). */
+    @VisibleForTesting
+    internal val currentWindow: GuideWindow?
+        get() = window
 
     /** Actualiza la tira EPG sin recargar la grilla (solo rebind de visibles). */
     fun submitEpg(lines: Map<String, String>) {

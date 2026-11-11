@@ -10,6 +10,7 @@ import android.widget.Button
 import android.widget.PopupMenu
 import android.widget.ProgressBar
 import android.widget.TextView
+import androidx.annotation.VisibleForTesting
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
@@ -108,9 +109,18 @@ class ChannelBrowserFragment : Fragment() {
     private var listId: Long = -1
     private var selection: Selection = Selection.All
     private lateinit var sidebarAdapter: ChannelSidebarAdapter
-    private lateinit var gridAdapter: ChannelGridAdapter
+    @VisibleForTesting
+    internal lateinit var gridAdapter: ChannelGridAdapter
     private var featured: ChannelEntity? = null
     private var window: GuideWindow = GuideWindow.now()
+
+    /**
+     * Reloj inyectable para tests (CA2): la ventana tras rotar se recomputa
+     * de aquí; en producción es el reloj del sistema (sin cambio de
+     * comportamiento).
+     */
+    @VisibleForTesting
+    internal var clock: () -> Long = System::currentTimeMillis
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         return inflater.inflate(R.layout.fragment_channel_browser, container, false)
@@ -139,7 +149,7 @@ class ChannelBrowserFragment : Fragment() {
         lifecycleScope.launch {
             val v = view ?: return@launch
             if (listId < 0) return@launch
-            window = GuideWindow.now()
+            window = GuideWindow.now(clock())
             paintSlots()
             paintHero()
             v.post { fillTimeline() }
@@ -332,7 +342,7 @@ class ChannelBrowserFragment : Fragment() {
             paintHero()
             // Cabecera del timeline: 6 cortes de 30 min desde el anchor, con la
             // misma ventana que las filas y siempre visible (S6).
-            window = GuideWindow.now()
+            window = GuideWindow.now(clock())
             paintSlots()
             reloadContent()
         }
