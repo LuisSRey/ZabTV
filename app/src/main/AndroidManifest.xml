@@ -46,6 +46,24 @@
             <action android:name="android.intent.action.VIEW" />
             <data android:scheme="https" android:mimeType="video/*" />
         </intent>
+        <!-- Handlers externos HLS/DASH que filtran por mimeType (S1, auto-route):
+             sin estos intents Android 11+ los oculta y el route cae a "sin app". -->
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="http" android:mimeType="application/vnd.apple.mpegurl" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="https" android:mimeType="application/vnd.apple.mpegurl" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="http" android:mimeType="application/dash+xml" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="https" android:mimeType="application/dash+xml" />
+        </intent>
     </queries>
 
     <uses-feature android:name="android.software.leanback" android:required="false" />
