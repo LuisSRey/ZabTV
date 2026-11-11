@@ -345,11 +345,18 @@ class ChannelBrowserFragment : Fragment() {
 
     /**
      * Doble batch sobre los visibles → líneas "▶ ahora · después" (submitEpg)
-     * + programas de la ventana por canal (submitTimeline). Clave: stableKey.
-     * Si la grilla aún no resolvió visibles (submit recién hecho), reintento
-     * acotado con postDelayed de 200 ms hasta 2 veces.
+     * + programas de la ventana por canal (submitTimeline). Clave: stableKey;
+     * la clave EPG por canal la resuelve [BrowserEpgResolver] (exacta con
+     * programas crudos → fallback aproximado vía EpgMatcher → sin guía).
+     * La ventana va SIEMPRE primero (setWindow antes de cualquier salida):
+     * aunque no haya visibles ni lote, las filas ya pintan la tira VISIBLE
+     * con placeholder en vez de GONE. Si la grilla aún no resolvió visibles
+     * (submit recién hecho), reintento acotado con postDelayed de 200 ms
+     * hasta 2 veces. El submitTimeline va SIEMPRE (mapa vacío incluido)
+     * para limpiar lotes rancios.
      */
     private fun fillTimeline(attempt: Int = 0) {
+        gridAdapter.setWindow(window)
         val grid = view?.findViewById<RecyclerView>(R.id.browser_grid) ?: return
         val layout = grid.layoutManager as? GridLayoutManager ?: return
         val first = layout.findFirstVisibleItemPosition()
@@ -362,37 +369,46 @@ class ChannelBrowserFragment : Fragment() {
         }
         lifecycleScope.launch {
             val db = (requireActivity().application as TpApp).container.db
-            val ids = (first..last).mapNotNull { gridAdapter.peek(it)?.tvgId?.takeIf { t -> t.isNotBlank() } }
-                .distinct()
+            val visibles = (first..last).mapNotNull { gridAdapter.peek(it) }
             // Paging aún resolviendo el peek con grilla cargada: reintenta.
-            if (ids.isEmpty()) {
+            if (visibles.isEmpty()) {
                 if (gridAdapter.itemCount > 0 && attempt < TIMELINE_MAX_RETRY) {
                     grid.postDelayed({ fillTimeline(attempt + 1) }, TIMELINE_RETRY_DELAY_MS)
                 }
                 return@launch
             }
+            val exactIds = visibles.mapNotNull { it.tvgId?.takeIf { t -> t.isNotBlank() } }
+                .distinct()
             val now = System.currentTimeMillis()
-            val nn = db.epgDao().nowNext(ids, now)
+            val nn = db.epgDao().nowNext(exactIds, now).toMutableMap()
+            val range = viewModel.timeline(exactIds, window).toMutableMap()
+            // Fallback aproximado SOLO en misses exactos (acota las queries).
+            val matcher = com.tvplayer.app.data.repo.EpgMatcher(db.epgDao())
+            val approxHit = mutableMapOf<String, String>()
+            for (ch in visibles) {
+                if (BrowserEpgResolver.resolveKey(ch.tvgId, range, null) != null) continue
+                val hit = matcher.match(ch) ?: continue
+                approxHit[ch.stableKey] = hit.tvgId
+            }
+            val approxIds = approxHit.values.distinct().filter { !range.containsKey(it) }
+            if (approxIds.isNotEmpty()) {
+                nn.putAll(db.epgDao().nowNext(approxIds, now))
+                range.putAll(viewModel.timeline(approxIds, window))
+            }
             val lines = mutableMapOf<String, String>()
-            for (pos in first..last) {
-                val ch = gridAdapter.peek(pos) ?: continue
-                val tvgId = ch.tvgId?.takeIf { it.isNotBlank() } ?: continue
-                val (nowP, nextP) = nn[tvgId] ?: continue
-                val line = listOfNotNull(
+            val perChannel = mutableMapOf<String, List<EpgProgramEntity>>()
+            for (ch in visibles) {
+                val key = BrowserEpgResolver.resolveKey(ch.tvgId, range, approxHit[ch.stableKey])
+                    ?: continue
+                val (nowP, nextP) = nn[key] ?: (null to null)
+                listOfNotNull(
                     nowP?.title?.let { "▶ $it" },
                     nextP?.title?.let { "· $it" },
-                ).joinToString(" ").takeIf { it.isNotBlank() } ?: continue
-                lines[ch.stableKey] = line
+                ).joinToString(" ").takeIf { it.isNotBlank() }?.let { lines[ch.stableKey] = it }
+                range[key]?.takeIf { it.isNotEmpty() }?.let { perChannel[ch.stableKey] = it }
             }
             if (lines.isNotEmpty()) gridAdapter.submitEpg(lines)
-            val range = viewModel.timeline(ids, window)
-            val perChannel = mutableMapOf<String, List<EpgProgramEntity>>()
-            for (pos in first..last) {
-                val ch = gridAdapter.peek(pos) ?: continue
-                val tvgId = ch.tvgId?.takeIf { it.isNotBlank() } ?: continue
-                range[tvgId]?.let { perChannel[ch.stableKey] = it }
-            }
-            if (perChannel.isNotEmpty()) gridAdapter.submitTimeline(perChannel, window)
+            gridAdapter.submitTimeline(perChannel, window)
         }
     }
 
