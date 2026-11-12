@@ -348,20 +348,6 @@ class ChannelBrowserFragment : Fragment() {
     }
 
     /**
-     * Frontera de clip del wrap (X1 S4): el wrap es contención y conserva los
-     * clips del XML (true/false + aire lateral). Solo protect, NUNCA enforce:
-     * enforce restauraría clipToPadding true y rompería la matriz X1 S3.
-     * Solo TV; sin wrap (móvil) o fuera de TV es no-op.
-     */
-    @VisibleForTesting
-    internal fun bindClipBoundary(root: View, isTv: Boolean) {
-        if (!isTv) return
-        root.findViewById<View>(R.id.browser_grid_wrap)?.let { wrap ->
-            FocusScaleHelper.protectClipBoundary(wrap)
-        }
-    }
-
-    /**
      * Destino del foco arriba desde la grid (W3 S4): VER con hero visible,
      * selector con hero GONE. Solo TV; cubre el reinflate porque lo invoca
      * [paintHero].
@@ -380,8 +366,6 @@ class ChannelBrowserFragment : Fragment() {
      * bind y para el re-bind tras reinflar.
      */
     private fun bindBrowserViews(root: View, isTv: Boolean, orientation: Int) {
-        // W1 S4: el wrap contiene la grid (frontera de clip) en TV.
-        bindClipBoundary(root, isTv)
         val grid = root.findViewById<RecyclerView>(R.id.browser_grid)
         grid.layoutManager = GridLayoutManager(requireContext(), spanCount(isTv, orientation))
         grid.adapter = gridAdapter

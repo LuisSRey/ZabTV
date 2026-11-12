@@ -235,13 +235,13 @@ class ChannelBrowserB1B2Test {
 
     @Test
     @Config(qualifiers = "television")
-    fun `B2 no-regresion contenedor protegido y raiz focable`() {
+    fun `B2 wrap sin frontera y raiz focable`() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val root = browserRoot(context)
-        // El wrap sigue siendo frontera de clip (contención).
-        ChannelBrowserFragment().bindClipBoundary(root, isTv = true)
+        // Nueva verdad (S3): sin bindClipBoundary, el wrap no queda
+        // protegido — el attach de los tiles abre la cadena entera.
         val wrap = root.findViewById<View>(R.id.browser_grid_wrap)
-        assertTrue(com.tvplayer.app.ui.common.FocusScaleHelper.isProtected(wrap))
+        assertFalse(com.tvplayer.app.ui.common.FocusScaleHelper.isProtected(wrap))
         // La raíz del item porta foco/click; el inner solo pinta.
         val holder = tvHolder(context)
         assertTrue(holder.itemView.isFocusable)

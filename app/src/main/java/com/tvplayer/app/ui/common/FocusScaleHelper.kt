@@ -43,38 +43,6 @@ object FocusScaleHelper {
     }
 
     /**
-     * Foco en el host, escala en el target (A1/A2): la raíz del item TV
-     * porta el foco (click/longclick/nextFocus intactos) y el tile interno
-     * anima 1.0→1.1 (+elevación) como [attach]. El anti-clip corre diferido
-     * igual que en [attach]. Solo TV: fuera de TV es no-op.
-     */
-    fun attachInner(host: View, target: View, onFocus: ((View, Boolean) -> Unit)? = null) {
-        if (!isTv(host)) return
-        if (host.isAttachedToWindow) {
-            unclipAncestors(host)
-        } else {
-            host.addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
-                override fun onViewAttachedToWindow(v: View) {
-                    v.removeOnAttachStateChangeListener(this)
-                    unclipAncestors(v)
-                }
-
-                override fun onViewDetachedFromWindow(v: View) = Unit
-            })
-        }
-        host.isFocusable = true
-        host.isFocusableInTouchMode = false
-        host.onFocusChangeListener = View.OnFocusChangeListener { v, hasFocus ->
-            val s = if (hasFocus) 1.1f else 1.0f
-            target.animate().scaleX(s).scaleY(s)
-                .translationZ(if (hasFocus) 8f else 0f)
-                .setDuration(120)
-                .start()
-            onFocus?.invoke(v, hasFocus)
-        }
-    }
-
-    /**
      * Marca una frontera de clip (W1 S1): el paseo de [unclipAncestors] la
      * salta y conserva sus clips (contención, p. ej. el wrap de la grid TV).
      * Solo TV: fuera de TV es no-op (móvil intacto).
