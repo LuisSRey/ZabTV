@@ -239,4 +239,91 @@ class ChannelBrowserA1A2Test {
         assertEquals(1.0f, target.scaleX, 0.001f)
         assertEquals(0f, target.translationZ, 0.001f)
     }
+
+    // ---- S4: adapter ----
+
+    private fun tvHolder(context: Context): ChannelGridAdapter.Holder {
+        val adapter = ChannelGridAdapter(onClick = {})
+        val parent = androidx.recyclerview.widget.RecyclerView(context)
+        parent.layoutManager = androidx.recyclerview.widget.LinearLayoutManager(context)
+        return adapter.onCreateViewHolder(parent, 0)
+    }
+
+    private fun idleMain() {
+        org.robolectric.Shadows.shadowOf(android.os.Looper.getMainLooper())
+            .idleFor(java.time.Duration.ofMillis(300))
+    }
+
+    @Test
+    @Config(qualifiers = "television")
+    fun `S4 tv holder cablea attachInner foco en raiz anima inner`() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val holder = tvHolder(context)
+        val inner = holder.inner
+        assertNotNull(inner)
+        // Foco en la raíz (attach(root) 0: la raíz no escala).
+        assertTrue(holder.itemView.isFocusable)
+        assertNotNull(holder.itemView.onFocusChangeListener)
+        assertNull(inner?.onFocusChangeListener)
+        holder.itemView.onFocusChangeListener.onFocusChange(holder.itemView, true)
+        idleMain()
+        assertEquals(1.1f, inner!!.scaleX, 0.001f)
+        assertEquals(1.1f, inner.scaleY, 0.001f)
+        assertEquals(1.0f, holder.itemView.scaleX, 0.001f)
+        // Sin inner: el logo sigue cableado (celdas intactas).
+        assertEquals(6, holder.timeline?.childCount)
+    }
+
+    @Test
+    @Config(qualifiers = "television")
+    fun `S4 tv onViewRecycled resetea inner y limpia logo`() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val adapter = ChannelGridAdapter(onClick = {})
+        val holder = tvHolder(context)
+        val inner = holder.inner
+        assertNotNull(inner)
+        inner!!.scaleX = 1.1f
+        inner.scaleY = 1.1f
+        inner.translationZ = 8f
+        holder.logo.tag = "https://s/rancio.png"
+        adapter.onViewRecycled(holder)
+        assertEquals(1.0f, inner.scaleX, 0.001f)
+        assertEquals(1.0f, inner.scaleY, 0.001f)
+        assertEquals(0f, inner.translationZ, 0.001f)
+        assertNull(holder.logo.tag)
+    }
+
+    @Test
+    @Config(qualifiers = "television")
+    fun `S4 tv raiz focable e inner no focable click en raiz`() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val holder = tvHolder(context)
+        // La raíz porta foco/click; el inner solo anima.
+        assertTrue(holder.itemView.isFocusable)
+        assertFalse(holder.inner?.isFocusable ?: true)
+    }
+
+    @Test
+    @Config(qualifiers = "television")
+    fun `S4 tv protect wrap verificado`() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val root = browserRoot(context)
+        ChannelBrowserFragment().bindClipBoundary(root, isTv = true)
+        val wrap = root.findViewById<View>(R.id.browser_grid_wrap)
+        assertTrue(com.tvplayer.app.ui.common.FocusScaleHelper.isProtected(wrap))
+    }
+
+    @Test
+    fun `S4 movil sin inner reciclado seguro`() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val adapter = ChannelGridAdapter(onClick = {})
+        val parent = androidx.recyclerview.widget.RecyclerView(context)
+        parent.layoutManager = androidx.recyclerview.widget.LinearLayoutManager(context)
+        val holder = adapter.onCreateViewHolder(parent, 0)
+        assertNull(holder.inner)
+        // Reciclado sin inner: no crashea y limpia el logo.
+        holder.logo.tag = "https://s/rancio.png"
+        adapter.onViewRecycled(holder)
+        assertNull(holder.logo.tag)
+    }
 }

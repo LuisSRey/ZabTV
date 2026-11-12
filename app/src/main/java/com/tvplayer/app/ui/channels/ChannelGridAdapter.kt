@@ -98,7 +98,8 @@ class ChannelGridAdapter(
     }
 
     class Holder(root: View) : RecyclerView.ViewHolder(root) {
-        // Nulables null-safe: el layout TV no trae number ni timeline.
+        // Nulables null-safe: el layout móvil no trae inner (tile TV).
+        val inner: View? = root.findViewById(R.id.channel_tile_inner)
         val number: TextView? = root.findViewById(R.id.channel_number)
         val logo: ImageView = root.findViewById(R.id.channel_logo)
         val name: TextView = root.findViewById(R.id.channel_name)
@@ -108,8 +109,14 @@ class ChannelGridAdapter(
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): Holder {
         val v = LayoutInflater.from(parent.context).inflate(R.layout.item_channel, parent, false)
-        FocusScaleHelper.attach(v)
         val holder = Holder(v)
+        // A1/A2 TV: el foco vive en la raíz y el inner anima (attachInner);
+        // sin inner (móvil) se conserva el attach clásico en la raíz.
+        if (holder.inner != null) {
+            FocusScaleHelper.attachInner(v, holder.inner)
+        } else {
+            FocusScaleHelper.attach(v)
+        }
         // Solo el layout con tira lleva celdas (TV sin timeline = 0 celdas).
         if (holder.timeline != null) {
             val inflater = LayoutInflater.from(parent.context)
@@ -183,8 +190,14 @@ class ChannelGridAdapter(
         }
     }
 
-    /** Reciclado: sin logo fantasma ni tag rancio (el próximo bind decide). */
+    /** Reciclado: inner sin escala fantasma + logo sin fantasma ni tag rancio (el próximo bind decide). */
     override fun onViewRecycled(holder: Holder) {
+        holder.inner?.let {
+            it.animate().cancel()
+            it.scaleX = 1.0f
+            it.scaleY = 1.0f
+            it.translationZ = 0f
+        }
         holder.logo.tag = null
         holder.logo.setImageDrawable(null)
         super.onViewRecycled(holder)
