@@ -227,9 +227,9 @@
 
             </LinearLayout>
 
-            <!-- Contención Y1 S4: el wrap porta el peso 1 + minHeight
+            <!-- Contención Y1 S4 + Z1: el wrap porta el peso 1 + minHeight
                  192dp (el hero GONE ya no colapsa la zona) con clips
-                 true/false + aire lateral 16dp (el vertical lo pone la
+                 true/false + aire lateral 28dp (el vertical lo pone la
                  grid) + marginTop 0; la grid vive dentro en match_parent
                  sin peso ni minHeight, con el halo (clipChildren false +
                  clipToPadding false + paddingTop 12) y marginTop 0 para
@@ -244,8 +244,8 @@
                 android:clipToPadding="false"
                 android:focusable="false"
                 android:minHeight="192dp"
-                android:paddingStart="16dp"
-                android:paddingEnd="16dp"
+                android:paddingStart="28dp"
+                android:paddingEnd="28dp"
                 android:paddingTop="0dp"
                 android:paddingBottom="0dp">
 

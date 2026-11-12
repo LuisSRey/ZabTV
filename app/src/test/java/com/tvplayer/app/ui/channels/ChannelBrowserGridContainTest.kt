@@ -92,7 +92,7 @@ class ChannelBrowserGridContainTest {
 
     @Test
     fun `X1 S3 matriz clip wrap aire12 grid sin margen`() {
-        // Y1 S4 (motivo: el aire lateral del wrap abre de 12→16dp; el
+        // Y1 S4 + Z1 (motivo: el aire lateral del wrap abre de 16→28dp; el
         // resto de la matriz X1 S3 queda intacto): el wrap porta
         // clipChildren true + clipToPadding false + aire lateral 16 (el
         // vertical lo pone la grid) + marginTop 0 + peso 1 + minHeight 192;
@@ -103,8 +103,8 @@ class ChannelBrowserGridContainTest {
         val wrap = root.findViewById<ViewGroup>(R.id.browser_grid_wrap)
         assertTrue(wrap.clipChildren)
         assertFalse(wrap.clipToPadding)
-        assertEquals(dp(context, 16), wrap.paddingStart)
-        assertEquals(dp(context, 16), wrap.paddingEnd)
+        assertEquals(dp(context, 28), wrap.paddingStart)
+        assertEquals(dp(context, 28), wrap.paddingEnd)
         assertEquals(0, wrap.paddingTop)
         assertEquals(0, wrap.paddingBottom)
         val wlp = wrap.layoutParams as LinearLayout.LayoutParams
@@ -140,7 +140,7 @@ class ChannelBrowserGridContainTest {
 
     @Test
     fun `X1 S3 halo grid sin clip aire12 reemplaza matriz anterior`() {
-        // Y1 S4 (motivo: el aire lateral del wrap abre a 16dp; el vertical
+        // Y1 S4 + Z1 (motivo: el aire lateral del wrap abre a 28dp; el vertical
         // sigue en el paddingTop 12 de la grid): grid sin clips con
         // paddingTop 12 + marginTop 0; wrap true/false con aire 16.
         val context = ApplicationProvider.getApplicationContext<Context>()
@@ -153,8 +153,8 @@ class ChannelBrowserGridContainTest {
         val wrap = root.findViewById<ViewGroup>(R.id.browser_grid_wrap)
         assertTrue(wrap.clipChildren)
         assertFalse(wrap.clipToPadding)
-        assertEquals(dp(context, 16), wrap.paddingStart)
-        assertEquals(dp(context, 16), wrap.paddingEnd)
+        assertEquals(dp(context, 28), wrap.paddingStart)
+        assertEquals(dp(context, 28), wrap.paddingEnd)
     }
 
     @Test
