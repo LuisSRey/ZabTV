@@ -9,7 +9,14 @@ import androidx.recyclerview.widget.RecyclerView
 import com.tvplayer.app.R
 import com.tvplayer.app.ui.common.FocusScaleHelper
 
-/** Fila de lista: nombre + estado • nº canales; abrir / actualizar / borrar / activar / editar. */
+/**
+ * Fila de lista: nombre + estado • nº canales; abrir / actualizar / borrar /
+ * activar / editar / EPG.
+ *
+ * TV: la raíz NO es focable — el foco entra por los botones (si la raíz lo
+ * tomara, Actualizar/Borrar quedarían inalcanzables con el D-pad); el tap de
+ * fila sigue abriendo la lista en móvil (listener cableado en bind).
+ */
 class ListsAdapter(
     private val onOpen: (Row) -> Unit,
     private val onRefresh: (Row) -> Unit,
@@ -39,7 +46,9 @@ class ListsAdapter(
         val epg: Button = root.findViewById(R.id.list_epg)
 
         init {
-            // Foco+escala por botón (TV); el attach de la raíz ya quitó el clip.
+            // Foco+escala por botón (TV); cada attach pasea los ancestros y
+            // abre su clip para que el halo 1.1 no se recorte. La raíz queda
+            // fuera de la cadena de foco.
             listOf(open, refresh, delete, activate, edit, epg).forEach {
                 FocusScaleHelper.attach(it)
             }
@@ -48,7 +57,7 @@ class ListsAdapter(
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): Holder {
         val v = LayoutInflater.from(parent.context).inflate(R.layout.item_list, parent, false)
-        FocusScaleHelper.attach(v)
+        // Sin attach en la raíz: en TV el D-pad entra por los botones.
         return Holder(v)
     }
 
