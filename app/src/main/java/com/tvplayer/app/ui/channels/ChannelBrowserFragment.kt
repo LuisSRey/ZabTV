@@ -60,6 +60,15 @@ class ChannelBrowserFragment : Fragment() {
         /** Hero compacto móvil (S5): cap de altura, solo no-TV. */
         const val HERO_MAX_DP = 140
 
+        /** Hero compacto TV (S1): cap de altura también en TV, 160dp. */
+        const val HERO_MAX_DP_TV = 160
+
+        /**
+         * Cap en px (puro para test): 140dp en móvil, 160dp en TV.
+         */
+        fun heroMaxPxFor(density: Float, isTv: Boolean): Int =
+            ((if (isTv) HERO_MAX_DP_TV else HERO_MAX_DP) * density).toInt()
+
         /** Reintento acotado del timeline: tope de reintentos tras grid vacía. */
         const val TIMELINE_MAX_RETRY = BrowserTimelineRunner.MAX_RETRY
 
@@ -225,10 +234,10 @@ class ChannelBrowserFragment : Fragment() {
     /** Una sola columna (ruling usuario: legibilidad): la grilla es una lista. */
     private fun spanCount(isTv: Boolean, orientation: Int): Int = 1
 
-    /** Cap del hero compacto en px (S1). */
+    /** Cap del hero compacto en px (S1: 140dp móvil, 160dp TV). */
     @VisibleForTesting
-    internal fun heroMaxPx(): Int =
-        (HERO_MAX_DP * resources.displayMetrics.density).toInt()
+    internal fun heroMaxPx(isTv: Boolean): Int =
+        heroMaxPxFor(resources.displayMetrics.density, isTv)
 
     /**
      * Estado colapsado al hero land (S1): body GONE + chevron; sin body
@@ -247,12 +256,15 @@ class ChannelBrowserFragment : Fragment() {
     }
 
     /**
-     * Cap 140dp del hero móvil (S5): si el contenido expandido desborda, se
-     * fija la altura para que la grid conserve la suya. TV intacto (sin cap).
+     * Cap del hero (S1 móvil 140dp + TV 160dp): si el contenido expandido
+     * desborda, se fija la altura para que la grid conserve la suya.
      */
     private fun bindHeroCap(heroBox: View) {
         heroBox.addOnLayoutChangeListener { v, _, _, _, _, _, _, _, _ ->
-            val max = heroMaxPx()
+            val max = heroMaxPxFor(
+                v.resources.displayMetrics.density,
+                FocusScaleHelper.isTv(v),
+            )
             if (v.height > max && v.layoutParams.height != max) {
                 v.layoutParams.height = max
                 v.requestLayout()
@@ -383,7 +395,7 @@ class ChannelBrowserFragment : Fragment() {
         }
 
         // Hero land colapsable con chevron (S1, solo donde existe el toggle)
-        // + cap 140dp no-TV para que la grid conserve altura.
+        // + cap móvil 140dp / TV 160dp para que la grid conserve altura.
         root.findViewById<ImageButton>(R.id.browser_hero_toggle)?.let { toggle ->
             FocusScaleHelper.attach(toggle)
             applyHeroCollapsed(root)
@@ -392,9 +404,7 @@ class ChannelBrowserFragment : Fragment() {
                 this.view?.let(::applyHeroCollapsed)
             }
         }
-        if (!isTv) {
-            root.findViewById<View>(R.id.browser_hero)?.let(::bindHeroCap)
-        }
+        root.findViewById<View>(R.id.browser_hero)?.let(::bindHeroCap)
     }
 
     /**

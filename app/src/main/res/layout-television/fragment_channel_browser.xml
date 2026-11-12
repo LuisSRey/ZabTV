@@ -111,7 +111,9 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
-                    android:max="100" />
+                    android:max="100"
+                    android:maxHeight="4dp"
+                    android:minHeight="4dp" />
 
                 <Button
                     android:id="@+id/browser_hero_play"
@@ -146,6 +148,7 @@
                 android:layout_marginTop="12dp"
                 android:layout_weight="1"
                 android:clipToPadding="false"
+                android:minHeight="192dp"
                 android:nextFocusLeft="@id/browser_sidebar"
                 android:nextFocusUp="@id/browser_list_selector" />
 

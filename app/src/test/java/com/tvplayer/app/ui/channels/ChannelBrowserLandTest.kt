@@ -131,6 +131,18 @@ class ChannelBrowserLandTest {
 
     @Test
     @Config(qualifiers = "land-television")
+    fun `S1 tv apaisado grid 192dp y progreso 4dp`() {
+        // Escudo S1: land-television réplica de TV (grid 192dp + progreso 4dp).
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val root = landRoot(context)
+        val grid = root.findViewById<RecyclerView>(R.id.browser_grid)
+        assertEquals(dp(context, 192), grid.minimumHeight)
+        val progress = root.findViewById<android.widget.ProgressBar>(R.id.browser_hero_progress)
+        assertEquals(dp(context, 4), progress.minimumHeight)
+    }
+
+    @Test
+    @Config(qualifiers = "land-television")
     fun `tv apaisado conserva layout television S3`() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val root = landRoot(context)

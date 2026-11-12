@@ -264,6 +264,39 @@ class ChannelBrowserTvParityTest {
     }
 
     @Test
+    fun `S1 tv grid minHeight 192dp peso intacto`() {
+        // S1: la grid gana minHeight 192dp; peso 1 + marginTop 12dp intactos.
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val root = tvBrowserRoot(context)
+        val grid = root.findViewById<RecyclerView>(R.id.browser_grid)
+        assertEquals(dp(context, 192), grid.minimumHeight)
+        val glp = grid.layoutParams as LinearLayout.LayoutParams
+        assertEquals(1f, glp.weight, 0.001f)
+        assertEquals(dp(context, 12), (glp as ViewGroup.MarginLayoutParams).topMargin)
+    }
+
+    @Test
+    fun `S1 tv hero progress 4dp min-max`() {
+        // S1: barra del hero fina (4dp) vía min+max, resto intacto.
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val root = tvBrowserRoot(context)
+        val progress = root.findViewById<android.widget.ProgressBar>(R.id.browser_hero_progress)
+        assertEquals(dp(context, 4), progress.minimumHeight)
+        val f = android.widget.ProgressBar::class.java
+            .getDeclaredField("mMaxHeight").apply { isAccessible = true }
+        assertEquals(dp(context, 4), f.getInt(progress))
+    }
+
+    @Test
+    fun `S1 hero cap TV 160dp y movil 140dp`() {
+        // S1: el cap aplica también en TV (160dp); móvil sigue en 140dp.
+        assertEquals(140, ChannelBrowserFragment.HERO_MAX_DP)
+        assertEquals(160, ChannelBrowserFragment.HERO_MAX_DP_TV)
+        assertEquals((2f * 160).toInt(), ChannelBrowserFragment.heroMaxPxFor(2f, true))
+        assertEquals((2f * 140).toInt(), ChannelBrowserFragment.heroMaxPxFor(2f, false))
+    }
+
+    @Test
     fun `S4 movil conserva PopupMenu y TV usa dialogo`() {
         // El wiring existe en ambos caminos: showListMenu (móvil) y
         // showListDialog (TV, AlertDialog con el mismo onListPicked).
