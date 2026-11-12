@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Browser fusionado TV (safe area 56dp, paridad D1+D2 + S3): X1 S1 sin
-     título raíz (baja a la fila del hero) + browser_columns (media 200dp
-     con selector de 48dp encima de los filtros + derecha [toprow, slots,
-     wrap, empty] con gap 32dp). Foco D-pad con nextFocus explícitos §F2
+<!-- Browser fusionado TV (safe area 56dp, paridad D1+D2 + S3): Y1 S1 sin
+     título raíz (baja a la media como primer hijo) + browser_columns
+     (media 200dp con título 30sp + selector de 48dp encima de los filtros
+     + derecha [toprow solo hero, slots, wrap, empty] con gap 32dp). Foco D-pad con nextFocus explícitos §F2
      (nav_browse<->selector, selector v sidebar, sidebar ^selector >grid
      <nav, grid ^selector <sidebar, hero_play ^selector v grid <sidebar);
      ninguna salida apunta al hero en exclusiva (puede estar GONE). -->
@@ -19,11 +19,28 @@
         android:layout_marginTop="0dp"
         android:orientation="horizontal">
 
-        <!-- Columna media S3: selector encima de los filtros. -->
+        <!-- Columna media Y1 S1: título inline primero + selector encima
+             de los filtros. -->
         <LinearLayout
             android:layout_width="200dp"
             android:layout_height="match_parent"
             android:orientation="vertical">
+
+            <!-- Título inline (Y1 S1: baja del toprow a la media; 30sp
+                 acento bold 1L end centro-vertical, no focable; el peso 1
+                 sigue en el sidebar). -->
+            <TextView
+                android:id="@+id/browser_title_inline"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:focusable="false"
+                android:gravity="center_vertical"
+                android:maxLines="1"
+                android:text="@string/browser_title"
+                android:textColor="@color/tp_accent"
+                android:textSize="30sp"
+                android:textStyle="bold" />
 
             <!-- Selector de playlist (dropdown framework 48dp con tokens
                  propios, como en móvil): vive en la columna media y el rail
@@ -69,28 +86,14 @@
             android:layout_weight="1"
             android:orientation="vertical">
 
-            <!-- X1 S1 toprow: título inline (peso 1, centro vertical,
-                 30sp acento, 1 línea end — hereda bold del título raíz) +
-                 hero lateral compacto (mismo id, wrap_content + minWidth
-                 320dp, interior W3 S3 intacto). -->
+            <!-- Y1 S1 toprow: hero hijo único (el título baja a la
+                 columna media; hero lateral compacto mismo id, interior
+                 W3 S3 intacto — S2 lo pone a match_parent). -->
             <LinearLayout
                 android:id="@+id/browser_toprow"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal">
-
-                <TextView
-                    android:id="@+id/browser_title_inline"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:ellipsize="end"
-                    android:gravity="center_vertical"
-                    android:maxLines="1"
-                    android:text="@string/browser_title"
-                    android:textColor="@color/tp_accent"
-                    android:textSize="30sp"
-                    android:textStyle="bold" />
 
                 <LinearLayout
                     android:id="@+id/browser_hero"

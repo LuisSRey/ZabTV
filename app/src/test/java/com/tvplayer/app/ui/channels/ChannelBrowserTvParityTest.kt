@@ -109,11 +109,12 @@ class ChannelBrowserTvParityTest {
 
     @Test
     fun `X1 tv columnas sin titulo raiz con toprow titulo-inline y hero lateral`() {
-        // X1 S1 (motivo: el título raíz robaba 1 fila en 720p; el título
-        // baja a la fila del hero y el hero pasa a lateral compacto):
-        // raíz → solo browser_columns (marginTop 0); derecha →
-        // [toprow, slots, wrap, empty]; toprow horizontal →
-        // [title_inline, hero]; hero mismo id en wrap_content + minWidth 320.
+        // Y1 S1 (motivo: el título baja del toprow a la columna media como
+        // primer hijo; el toprow queda con el hero como hijo único):
+        // raíz → solo browser_columns (marginTop 0); media →
+        // [title_inline, selector, sidebar]; derecha →
+        // [toprow, slots, wrap, empty]; toprow → [hero]; hero mismo id en
+        // wrap_content + minWidth 320 (S2 lo pasa a match_parent).
         val context = ApplicationProvider.getApplicationContext<Context>()
         val root = tvBrowserRoot(context) as ViewGroup
         assertEquals(1, root.childCount)
@@ -132,15 +133,24 @@ class ChannelBrowserTvParityTest {
             ),
             ids,
         )
+        val sidebar = root.findViewById<RecyclerView>(R.id.browser_sidebar)
+        val column = sidebar.parent as ViewGroup
+        val columnIds = (0 until column.childCount).map { column.getChildAt(it).id }
+        assertEquals(
+            listOf(
+                R.id.browser_title_inline,
+                R.id.browser_list_selector, R.id.browser_sidebar,
+            ),
+            columnIds,
+        )
         val toprow = root.findViewById<LinearLayout>(R.id.browser_toprow)
         assertEquals(LinearLayout.HORIZONTAL, toprow.orientation)
         val topIds = (0 until toprow.childCount).map { toprow.getChildAt(it).id }
-        assertEquals(listOf(R.id.browser_title_inline, R.id.browser_hero), topIds)
+        assertEquals(listOf(R.id.browser_hero), topIds)
         val title = root.findViewById<TextView>(R.id.browser_title_inline)
+        assertEquals(column, title.parent as View)
         assertEquals(context.getString(R.string.browser_title), title.text.toString())
-        val tlp = title.layoutParams as LinearLayout.LayoutParams
-        assertEquals(0, tlp.width)
-        assertEquals(1f, tlp.weight, 0.001f)
+        assertEquals(ViewGroup.LayoutParams.MATCH_PARENT, title.layoutParams.width)
         assertTrue(title.gravity and android.view.Gravity.CENTER_VERTICAL != 0)
         val expectedTitle = android.util.TypedValue.applyDimension(
             android.util.TypedValue.COMPLEX_UNIT_SP, 30f, context.resources.displayMetrics,
