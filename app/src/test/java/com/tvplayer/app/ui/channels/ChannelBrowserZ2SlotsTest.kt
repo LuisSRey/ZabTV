@@ -37,7 +37,7 @@ class ChannelBrowserZ2SlotsTest {
 
     @Test
     @Config(qualifiers = "television")
-    fun `Z2 tv slots 6 celdas a peso sin spacer ni HSV padding lateral 14dp`() {
+    fun `Z2 tv slots 6 celdas a peso sin spacer ni HSV padding lateral 36dp B2`() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val root = tvRoot(context)
         val slots = root.findViewById<LinearLayout>(R.id.browser_slots)
@@ -49,9 +49,9 @@ class ChannelBrowserZ2SlotsTest {
         assertEquals(R.id.browser_slot_0, slots.getChildAt(0).id)
         // Sin HSV: el padre es la columna derecha, nunca un scroll.
         assertTrue(slots.parent !is HorizontalScrollView)
-        // Padding lateral 16dp (aire vertical 2dp W2 S2 intacto).
-        assertEquals(dp(context, 16), slots.paddingStart)
-        assertEquals(dp(context, 16), slots.paddingEnd)
+        // Padding lateral 36dp B2 = wrap 20dp + inner 16dp (aire vertical 2dp W2 S2 intacto).
+        assertEquals(dp(context, 36), slots.paddingStart)
+        assertEquals(dp(context, 36), slots.paddingEnd)
         assertEquals(dp(context, 2), slots.paddingTop)
         assertEquals(dp(context, 2), slots.paddingBottom)
         val ids = listOf(
@@ -70,7 +70,7 @@ class ChannelBrowserZ2SlotsTest {
 
     @Test
     @Config(qualifiers = "land-television")
-    fun `Z2 escudo slots 6 celdas a peso sin spacer ni HSV padding 14dp`() {
+    fun `Z2 escudo slots 6 celdas a peso sin spacer ni HSV padding 36dp B2`() {
         // Escudo land-TV: réplica exacta (diff solo comentario).
         val context = ApplicationProvider.getApplicationContext<Context>()
         val root = tvRoot(context)
@@ -78,8 +78,8 @@ class ChannelBrowserZ2SlotsTest {
         assertEquals(6, slots.childCount)
         assertEquals(R.id.browser_slot_0, slots.getChildAt(0).id)
         assertTrue(slots.parent !is HorizontalScrollView)
-        assertEquals(dp(context, 16), slots.paddingStart)
-        assertEquals(dp(context, 16), slots.paddingEnd)
+        assertEquals(dp(context, 36), slots.paddingStart)
+        assertEquals(dp(context, 36), slots.paddingEnd)
         for (i in 0..5) {
             val lp = slots.getChildAt(i).layoutParams as LinearLayout.LayoutParams
             assertEquals(0, lp.width)

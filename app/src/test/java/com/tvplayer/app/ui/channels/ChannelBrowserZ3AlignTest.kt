@@ -56,19 +56,20 @@ class ChannelBrowserZ3AlignTest {
 
     @Test
     @Config(qualifiers = "television")
-    fun `Z3 tv insets wrap0 slots16 inner32 alinean sin spacer`() {
+    fun `Z3 tv insets wrap20 slots36 inner32 alinean sin spacer`() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val root = tvRoot(context)
         val slots = root.findViewById<LinearLayout>(R.id.browser_slots)
         val wrap = root.findViewById<View>(R.id.browser_grid_wrap)
-        // Relación geométrica A1/A2: wrap(0) + raíz(0); slots(16) == inner(16).
-        assertEquals(0, wrap.paddingStart)
-        assertEquals(dp(context, 16), slots.paddingStart)
+        // Relación geométrica B2: slots(36) == wrap(20) + inner(16);
+        // la raíz del item no aporta insets (margen 0 + padding 0h).
+        assertEquals(dp(context, 20), wrap.paddingStart)
+        assertEquals(dp(context, 36), slots.paddingStart)
         assertEquals(0, itemInsetsPx(context))
         assertEquals(dp(context, 16 + 16), innerInsetsPx(context))
         assertEquals(
             slots.paddingStart + slots.paddingEnd,
-            innerInsetsPx(context),
+            wrap.paddingStart + wrap.paddingEnd + innerInsetsPx(context),
         )
         // Sin spacer ni HSV por ids.
         assertEquals(6, slots.childCount)
@@ -123,11 +124,11 @@ class ChannelBrowserZ3AlignTest {
         root.layout(0, 0, 1920, 1080)
         val slots = root.findViewById<LinearLayout>(R.id.browser_slots)
         val wrap = root.findViewById<View>(R.id.browser_grid_wrap)
-        assertEquals(0, wrap.paddingStart)
-        assertEquals(dp(context, 16), slots.paddingStart)
+        assertEquals(dp(context, 20), wrap.paddingStart)
+        assertEquals(dp(context, 36), slots.paddingStart)
         assertEquals(
             slots.paddingStart + slots.paddingEnd,
-            innerInsetsPx(context),
+            wrap.paddingStart + wrap.paddingEnd + innerInsetsPx(context),
         )
         assertEquals(6, slots.childCount)
         assertEquals(R.id.browser_slot_0, slots.getChildAt(0).id)

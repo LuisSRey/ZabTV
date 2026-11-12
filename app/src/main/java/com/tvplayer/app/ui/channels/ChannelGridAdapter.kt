@@ -110,13 +110,9 @@ class ChannelGridAdapter(
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): Holder {
         val v = LayoutInflater.from(parent.context).inflate(R.layout.item_channel, parent, false)
         val holder = Holder(v)
-        // A1/A2 TV: el foco vive en la raíz y el inner anima (attachInner);
-        // sin inner (móvil) se conserva el attach clásico en la raíz.
-        if (holder.inner != null) {
-            FocusScaleHelper.attachInner(v, holder.inner)
-        } else {
-            FocusScaleHelper.attach(v)
-        }
+        // B1: foco y escala en la raíz (attach clásico unificado TV/móvil;
+        // el inner del item TV solo pinta el tile, sin animación).
+        FocusScaleHelper.attach(v)
         // Solo el layout con tira lleva celdas (TV sin timeline = 0 celdas).
         if (holder.timeline != null) {
             val inflater = LayoutInflater.from(parent.context)
@@ -190,8 +186,14 @@ class ChannelGridAdapter(
         }
     }
 
-    /** Reciclado: inner sin escala fantasma + logo sin fantasma ni tag rancio (el próximo bind decide). */
+    /** Reciclado: raíz sin escala fantasma + logo sin fantasma ni tag rancio (el próximo bind decide). */
     override fun onViewRecycled(holder: Holder) {
+        holder.itemView.animate().cancel()
+        holder.itemView.scaleX = 1.0f
+        holder.itemView.scaleY = 1.0f
+        holder.itemView.translationZ = 0f
+        // Legado A1/A2: el inner ya no anima (B1), pero se deja en 1.0 por
+        // seguridad ante holders reciclados de la geometría anterior.
         holder.inner?.let {
             it.animate().cancel()
             it.scaleX = 1.0f

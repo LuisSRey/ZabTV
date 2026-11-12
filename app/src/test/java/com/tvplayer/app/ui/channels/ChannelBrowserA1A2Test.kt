@@ -20,10 +20,10 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
 /**
- * A1/A2 TV (S1+S2): la fila TV mueve el fondo al tile interno
+ * A1/A2 TV (S1+S2) + B1/B2: la fila TV mueve el fondo al tile interno
  * (raíz transparente sin margen, aire en el inner 16h/8v) y el browser
- * alinea slots (16dp) con el inner (wrap 0). Solo layout-television
- * (+ réplica land-television); móvil intacto.
+ * alinea slots (36dp = wrap 20dp + inner 16dp) con el tile. Solo
+ * layout-television (+ réplica land-television); móvil intacto.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34])
@@ -132,12 +132,13 @@ class ChannelBrowserA1A2Test {
 
     @Test
     @Config(qualifiers = "television")
-    fun `S2 tv wrap sin aire lateral resto matriz intacta`() {
+    fun `S2 tv wrap aire lateral 20dp resto matriz intacta`() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val root = browserRoot(context)
         val wrap = root.findViewById<ViewGroup>(R.id.browser_grid_wrap)
-        assertEquals(0, wrap.paddingStart)
-        assertEquals(0, wrap.paddingEnd)
+        // B2: aire lateral 20dp (los slots suman 20+16=36).
+        assertEquals(dp(context, 20), wrap.paddingStart)
+        assertEquals(dp(context, 20), wrap.paddingEnd)
         // Resto matriz intacta (contención + halo + peso + minHeight).
         assertTrue(wrap.clipChildren)
         assertFalse(wrap.clipToPadding)
@@ -158,12 +159,13 @@ class ChannelBrowserA1A2Test {
 
     @Test
     @Config(qualifiers = "television")
-    fun `S2 tv slots aire lateral 16dp celdas intactas`() {
+    fun `S2 tv slots aire lateral 36dp celdas intactas`() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val root = browserRoot(context)
         val slots = root.findViewById<LinearLayout>(R.id.browser_slots)
-        assertEquals(dp(context, 16), slots.paddingStart)
-        assertEquals(dp(context, 16), slots.paddingEnd)
+        // B2: 36dp = wrap 20dp + inner 16dp (alineado con el tile).
+        assertEquals(dp(context, 36), slots.paddingStart)
+        assertEquals(dp(context, 36), slots.paddingEnd)
         // Celdas intactas: 6 a peso, sin spacer ni HSV.
         assertEquals(6, slots.childCount)
         assertEquals(R.id.browser_slot_0, slots.getChildAt(0).id)
@@ -179,17 +181,17 @@ class ChannelBrowserA1A2Test {
 
     @Test
     @Config(qualifiers = "land-television")
-    fun `S2 escudo replica wrap 0 y slots 16`() {
+    fun `S2 escudo replica wrap 20 y slots 36`() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val root = browserRoot(context)
         val wrap = root.findViewById<ViewGroup>(R.id.browser_grid_wrap)
-        assertEquals(0, wrap.paddingStart)
-        assertEquals(0, wrap.paddingEnd)
+        assertEquals(dp(context, 20), wrap.paddingStart)
+        assertEquals(dp(context, 20), wrap.paddingEnd)
         assertTrue(wrap.clipChildren)
         assertFalse(wrap.clipToPadding)
         val slots = root.findViewById<LinearLayout>(R.id.browser_slots)
-        assertEquals(dp(context, 16), slots.paddingStart)
-        assertEquals(dp(context, 16), slots.paddingEnd)
+        assertEquals(dp(context, 36), slots.paddingStart)
+        assertEquals(dp(context, 36), slots.paddingEnd)
         assertEquals(6, slots.childCount)
         assertEquals(R.id.browser_slot_0, slots.getChildAt(0).id)
         assertTrue(slots.parent !is android.widget.HorizontalScrollView)
@@ -256,20 +258,22 @@ class ChannelBrowserA1A2Test {
 
     @Test
     @Config(qualifiers = "television")
-    fun `S4 tv holder cablea attachInner foco en raiz anima inner`() {
+    fun `S4 tv holder cablea attach en raiz anima raiz inner quieto`() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val holder = tvHolder(context)
         val inner = holder.inner
         assertNotNull(inner)
-        // Foco en la raíz (attach(root) 0: la raíz no escala).
+        // B1: attach clásico en la raíz (unificado TV/móvil): la raíz
+        // escala, el inner no.
         assertTrue(holder.itemView.isFocusable)
         assertNotNull(holder.itemView.onFocusChangeListener)
         assertNull(inner?.onFocusChangeListener)
         holder.itemView.onFocusChangeListener.onFocusChange(holder.itemView, true)
         idleMain()
-        assertEquals(1.1f, inner!!.scaleX, 0.001f)
-        assertEquals(1.1f, inner.scaleY, 0.001f)
-        assertEquals(1.0f, holder.itemView.scaleX, 0.001f)
+        assertEquals(1.1f, holder.itemView.scaleX, 0.001f)
+        assertEquals(1.1f, holder.itemView.scaleY, 0.001f)
+        assertEquals(1.0f, inner!!.scaleX, 0.001f)
+        assertEquals(1.0f, inner.scaleY, 0.001f)
         // Sin inner: el logo sigue cableado (celdas intactas).
         assertEquals(6, holder.timeline?.childCount)
     }

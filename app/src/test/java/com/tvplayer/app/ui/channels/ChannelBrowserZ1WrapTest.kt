@@ -38,12 +38,12 @@ class ChannelBrowserZ1WrapTest {
 
     @Test
     @Config(qualifiers = "television")
-    fun `Z1 tv wrap aire lateral 28dp resto matriz intacta`() {
+    fun `Z1 tv wrap aire lateral 20dp B2 resto matriz intacta`() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val root = tvRoot(context)
         val wrap = root.findViewById<ViewGroup>(R.id.browser_grid_wrap)
-        assertEquals(0, wrap.paddingStart)
-        assertEquals(0, wrap.paddingEnd)
+        assertEquals(dp(context, 20), wrap.paddingStart)
+        assertEquals(dp(context, 20), wrap.paddingEnd)
         // Resto matriz intacta.
         assertTrue(wrap.clipChildren)
         assertFalse(wrap.clipToPadding)
@@ -75,13 +75,13 @@ class ChannelBrowserZ1WrapTest {
 
     @Test
     @Config(qualifiers = "land-television")
-    fun `Z1 escudo wrap 28dp y grid intacta`() {
+    fun `Z1 escudo wrap 20dp B2 y grid intacta`() {
         // Escudo land-TV: réplica exacta (diff solo comentario).
         val context = ApplicationProvider.getApplicationContext<Context>()
         val root = tvRoot(context)
         val wrap = root.findViewById<ViewGroup>(R.id.browser_grid_wrap)
-        assertEquals(0, wrap.paddingStart)
-        assertEquals(0, wrap.paddingEnd)
+        assertEquals(dp(context, 20), wrap.paddingStart)
+        assertEquals(dp(context, 20), wrap.paddingEnd)
         assertTrue(wrap.clipChildren)
         assertFalse(wrap.clipToPadding)
         assertEquals(0, wrap.paddingTop)
