@@ -206,16 +206,27 @@
 
             </LinearLayout>
 
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/browser_grid"
+            <!-- Contención S1: el wrap porta el peso 1 + minHeight 192dp (el
+                 hero GONE ya no colapsa la zona); la grid vive dentro en
+                 match_parent sin peso ni minHeight. -->
+            <FrameLayout
+                android:id="@+id/browser_grid_wrap"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
-                android:layout_marginTop="12dp"
                 android:layout_weight="1"
-                android:clipToPadding="false"
-                android:minHeight="192dp"
-                android:nextFocusLeft="@id/browser_sidebar"
-                android:nextFocusUp="@id/browser_list_selector" />
+                android:focusable="false"
+                android:minHeight="192dp">
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/browser_grid"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_marginTop="12dp"
+                    android:clipToPadding="false"
+                    android:nextFocusLeft="@id/browser_sidebar"
+                    android:nextFocusUp="@id/browser_list_selector" />
+
+            </FrameLayout>
 
             <TextView
                 android:id="@+id/browser_empty"
