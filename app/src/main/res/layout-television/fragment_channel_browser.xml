@@ -231,17 +231,19 @@
 
             </LinearLayout>
 
-            <!-- Sin frontera Y1 S4 + Z1 + A1/A2 + B2 + CA3: el wrap porta el
-                 peso 1 + minHeight 192dp (el hero GONE ya no colapsa la zona)
-                 con aire lateral 20dp (los slots suman 20+16=36 alineados con
-                 el inner del item) + marginTop 0. El wrap DEJA de ser frontera
-                 de clip: clipChildren false (CA3: aire 20+16+16=52dp >
-                 desborde d1.5 44.8dp; el halo 1.1 de las filas desborda el
-                 aire sin recortarse) conservando clipToPadding=false; la grid
-                 vive dentro en match_parent sin peso ni minHeight, con el
-                 halo (clipChildren false + clipToPadding false + paddingTop
-                 12) y marginTop 0 para pegar slots.bottom == wrap.top. -->
-            <FrameLayout
+            <!-- Clip vertical custom (FRENTE B S2): el wrap es
+                 VerticalClipFrameLayout. Recorta en canvas 0..height (no pinta
+                 sobre slots/toprow, no sangra bajo la safe area 56dp) con
+                 holgura lateral 10000px (halo 1.1 de ±44.8dp a d1.5 intacto) e
+                 inmune al unclip de flags (flags ≠ clip de canvas). Matriz
+                 intacta: peso 1 + minHeight 192dp (el hero GONE ya no colapsa
+                 la zona) + aire lateral 20dp (los slots suman 20+16=36
+                 alineados con el inner del item) + marginTop 0 (slots.bottom ==
+                 wrap.top); clipChildren/clipToPadding false se conservan; la
+                 grid vive dentro en match_parent sin peso ni minHeight, con el
+                 halo (paddingTop 12) y marginTop 0 (el recorte vertical del
+                 wrap lo contiene). -->
+            <com.tvplayer.app.ui.common.VerticalClipFrameLayout
                 android:id="@+id/browser_grid_wrap"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
@@ -267,7 +269,7 @@
                     android:nextFocusUp="@id/browser_list_selector"
                     android:paddingTop="12dp" />
 
-            </FrameLayout>
+            </com.tvplayer.app.ui.common.VerticalClipFrameLayout>
 
             <TextView
                 android:id="@+id/browser_empty"
