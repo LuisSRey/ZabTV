@@ -1,5 +1,6 @@
 package com.tvplayer.app.ui.channels
 
+import android.app.Activity
 import android.content.Context
 import android.graphics.drawable.ColorDrawable
 import android.view.LayoutInflater
@@ -16,6 +17,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
@@ -79,6 +81,26 @@ class ChannelBrowserB1B2Test {
         assertEquals(dp(context, 8), inner.paddingTop)
         assertEquals(dp(context, 8), inner.paddingBottom)
         assertEquals(1, root.childCount)
+    }
+
+    @Test
+    @Config(qualifiers = "television")
+    fun `B1 tv inner duplica estado de la raiz (borde al focar)`() {
+        val activity = Robolectric.buildActivity(Activity::class.java).setup().get()
+        val root = LayoutInflater.from(activity)
+            .inflate(R.layout.item_channel, null) as LinearLayout
+        activity.setContentView(root)
+        // Nueva verdad (reskin B1): el foco vive en la raíz (attach clásico);
+        // el inner duplica el estado de la raíz para pintar el borde
+        // (tile_focus_bg) aunque él no sea focable.
+        val inner = root.findViewById<LinearLayout>(R.id.channel_tile_inner)
+        // Aserción primaria (R8: revertir el attr deja este test rojo).
+        assertTrue(inner.isDuplicateParentStateEnabled)
+        // Si el framework coopera en Robolectric, el estado del inner
+        // replica el de la raíz: focused al focar la raíz.
+        root.requestFocus()
+        assertTrue(root.isFocused)
+        assertTrue(inner.drawableState.contains(android.R.attr.state_focused))
     }
 
     @Test
