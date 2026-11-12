@@ -19,16 +19,19 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
 /**
- * Y1 S3 verificación (TV+escudo): la cabecera lleva 6 celdas a peso sin
- * spacer ni HSV y con padding lateral 0; la fila del timeline usa el mismo
+ * Y1 S3 + Z2 verificación (TV+escudo): la cabecera lleva 6 celdas a peso sin
+ * spacer ni HSV y con padding lateral 14dp; la fila del timeline usa el mismo
  * reparto (item match_parent con 6 celdas 0dp/weight1). Sin spacer
  * compensatorio: la deriva medida se explica por insets (wrap + margen y
  * padding del item) y queda como follow-up sin tocar (ver nota en el test
- * de deriva).
+ * de deriva y ChannelBrowserZ3AlignTest).
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34])
 class ChannelBrowserY3SlotsTest {
+
+    private fun dp(context: Context, value: Int): Int =
+        (value * context.resources.displayMetrics.density).toInt()
 
     private fun tvRoot(context: Context): View {
         val parent = FrameLayout(context)
@@ -38,7 +41,7 @@ class ChannelBrowserY3SlotsTest {
 
     @Test
     @Config(qualifiers = "television")
-    fun `Y1 S3 tv slots 6 celdas a peso sin spacer ni HSV padding lateral 0`() {
+    fun `Y1 S3 tv slots 6 celdas a peso sin spacer ni HSV padding lateral 14dp`() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val root = tvRoot(context)
         val slots = root.findViewById<LinearLayout>(R.id.browser_slots)
@@ -50,9 +53,9 @@ class ChannelBrowserY3SlotsTest {
         assertEquals(R.id.browser_slot_0, slots.getChildAt(0).id)
         // Sin HSV: el padre es la columna derecha, nunca un scroll.
         assertTrue(slots.parent !is HorizontalScrollView)
-        // Padding lateral 0 (solo aire vertical 2dp W2 S2).
-        assertEquals(0, slots.paddingStart)
-        assertEquals(0, slots.paddingEnd)
+        // Padding lateral 14dp Z2 (aire vertical 2dp W2 S2 intacto).
+        assertEquals(dp(context, 14), slots.paddingStart)
+        assertEquals(dp(context, 14), slots.paddingEnd)
         val ids = listOf(
             R.id.browser_slot_0, R.id.browser_slot_1, R.id.browser_slot_2,
             R.id.browser_slot_3, R.id.browser_slot_4, R.id.browser_slot_5,
@@ -77,8 +80,8 @@ class ChannelBrowserY3SlotsTest {
         assertEquals(6, slots.childCount)
         assertEquals(R.id.browser_slot_0, slots.getChildAt(0).id)
         assertTrue(slots.parent !is HorizontalScrollView)
-        assertEquals(0, slots.paddingStart)
-        assertEquals(0, slots.paddingEnd)
+        assertEquals(dp(context, 14), slots.paddingStart)
+        assertEquals(dp(context, 14), slots.paddingEnd)
         for (i in 0..5) {
             val lp = slots.getChildAt(i).layoutParams as LinearLayout.LayoutParams
             assertEquals(0, lp.width)
