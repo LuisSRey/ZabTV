@@ -74,16 +74,24 @@ class ChannelBrowserTvFocusChainTest {
     }
 
     @Test
-    fun `bindClipBoundary TV protege el wrap y restaura clips`() {
+    fun `bindClipBoundary TV protege y conserva true-false sin enforce`() {
+        // X1 S4 (motivo: el enforce restauraba clipToPadding true y rompía
+        // la matriz X1 S3): solo protect — conserva los clips del XML y
+        // protege aunque vengan forzados.
         val context = ApplicationProvider.getApplicationContext<Context>()
         val root = tvRoot(context)
         val wrap = root.findViewById<View>(R.id.browser_grid_wrap)
         wrap as android.view.ViewGroup
-        wrap.clipChildren = false
-        wrap.clipToPadding = false
+        assertTrue(wrap.clipChildren)
+        assertFalse(wrap.clipToPadding)
         fragment().bindClipBoundary(root, isTv = true)
         assertTrue(wrap.clipChildren)
-        assertTrue(wrap.clipToPadding)
+        assertFalse(wrap.clipToPadding)
+        assertTrue(FocusScaleHelper.isProtected(wrap))
+        wrap.clipChildren = false
+        fragment().bindClipBoundary(root, isTv = true)
+        assertFalse(wrap.clipChildren)
+        assertFalse(wrap.clipToPadding)
         assertTrue(FocusScaleHelper.isProtected(wrap))
     }
 
@@ -115,9 +123,10 @@ class ChannelBrowserTvFocusChainTest {
         val tile = View(activity)
         grid.addView(tile)
         FocusScaleHelper.attach(tile)
-        // Frontera intacta (contención), raíz abierta para el halo de foco.
+        // Frontera intacta (contención vertical + aire lateral X1 S3),
+        // raíz abierta para el halo de foco.
         assertTrue((wrap as android.view.ViewGroup).clipChildren)
-        assertTrue(wrap.clipToPadding)
+        assertFalse(wrap.clipToPadding)
         assertFalse((root as android.view.ViewGroup).clipChildren)
     }
 }

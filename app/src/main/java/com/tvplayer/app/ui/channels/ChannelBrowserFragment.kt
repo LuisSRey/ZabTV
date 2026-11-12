@@ -348,16 +348,16 @@ class ChannelBrowserFragment : Fragment() {
     }
 
     /**
-     * Frontera de clip del wrap (W1 S4): el wrap es contención (clips a true
-     * + protegido) para que el paseo de [FocusScaleHelper] de los tiles no
-     * lo abra. Solo TV; sin wrap (móvil) o fuera de TV es no-op.
+     * Frontera de clip del wrap (X1 S4): el wrap es contención y conserva los
+     * clips del XML (true/false + aire lateral). Solo protect, NUNCA enforce:
+     * enforce restauraría clipToPadding true y rompería la matriz X1 S3.
+     * Solo TV; sin wrap (móvil) o fuera de TV es no-op.
      */
     @VisibleForTesting
     internal fun bindClipBoundary(root: View, isTv: Boolean) {
         if (!isTv) return
         root.findViewById<View>(R.id.browser_grid_wrap)?.let { wrap ->
             FocusScaleHelper.protectClipBoundary(wrap)
-            FocusScaleHelper.enforceClipBoundary(wrap)
         }
     }
 
