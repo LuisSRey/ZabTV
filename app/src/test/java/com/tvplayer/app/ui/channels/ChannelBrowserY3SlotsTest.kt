@@ -19,12 +19,13 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
 /**
- * Y1 S3 + Z2 verificación (TV+escudo): la cabecera lleva 6 celdas a peso sin
- * spacer ni HSV y con padding lateral 14dp; la fila del timeline usa el mismo
- * reparto (item match_parent con 6 celdas 0dp/weight1). Sin spacer
- * compensatorio: la deriva medida se explica por insets (wrap + margen y
- * padding del item) y queda como follow-up sin tocar (ver nota en el test
- * de deriva y ChannelBrowserZ3AlignTest).
+ * Y1 S3 + Z2 + A1/A2 verificación (TV+escudo): la cabecera lleva 6 celdas
+ * a peso sin spacer ni HSV y con padding lateral 16dp (14→16, alineado con
+ * el inner del item); la fila del timeline usa el mismo reparto (item
+ * match_parent con 6 celdas 0dp/weight1). Sin spacer compensatorio: la
+ * deriva medida se explica por insets (inner del item) y queda como
+ * follow-up sin tocar (ver nota en el test de deriva y
+ * ChannelBrowserZ3AlignTest).
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34])
@@ -53,9 +54,9 @@ class ChannelBrowserY3SlotsTest {
         assertEquals(R.id.browser_slot_0, slots.getChildAt(0).id)
         // Sin HSV: el padre es la columna derecha, nunca un scroll.
         assertTrue(slots.parent !is HorizontalScrollView)
-        // Padding lateral 14dp Z2 (aire vertical 2dp W2 S2 intacto).
-        assertEquals(dp(context, 14), slots.paddingStart)
-        assertEquals(dp(context, 14), slots.paddingEnd)
+        // Padding lateral 16dp Z2+A1/A2 (aire vertical 2dp W2 S2 intacto).
+        assertEquals(dp(context, 16), slots.paddingStart)
+        assertEquals(dp(context, 16), slots.paddingEnd)
         val ids = listOf(
             R.id.browser_slot_0, R.id.browser_slot_1, R.id.browser_slot_2,
             R.id.browser_slot_3, R.id.browser_slot_4, R.id.browser_slot_5,
@@ -80,8 +81,8 @@ class ChannelBrowserY3SlotsTest {
         assertEquals(6, slots.childCount)
         assertEquals(R.id.browser_slot_0, slots.getChildAt(0).id)
         assertTrue(slots.parent !is HorizontalScrollView)
-        assertEquals(dp(context, 14), slots.paddingStart)
-        assertEquals(dp(context, 14), slots.paddingEnd)
+        assertEquals(dp(context, 16), slots.paddingStart)
+        assertEquals(dp(context, 16), slots.paddingEnd)
         for (i in 0..5) {
             val lp = slots.getChildAt(i).layoutParams as LinearLayout.LayoutParams
             assertEquals(0, lp.width)
@@ -121,10 +122,10 @@ class ChannelBrowserY3SlotsTest {
     fun `Y1 S3 tv deriva slots-timeline solo por insets sin spacer follow-up`() {
         // Medida a 1920x1080: las 6 celdas del header reparten igual entre
         // sí (deriva interna ≤1px). La deriva contra la fila se explica por
-        // insets (aire lateral del wrap + margen 6dp y padding 8dp del item)
-        // y NO se compensa con spacer (prohibido): si superase la tolerancia
-        // de insets se reporta como follow-up sin tocar. Hoy: follow-up
-        // abierto (ver nota de cierre), sin cambio de layout.
+        // el inner del item (aire lateral 16dp) y NO se compensa con spacer
+        // (prohibido): si superase la tolerancia de insets se reporta como
+        // follow-up sin tocar. Hoy: follow-up abierto (ver nota de cierre),
+        // sin cambio de layout.
         val context = ApplicationProvider.getApplicationContext<Context>()
         val root = tvRoot(context)
         root.measure(

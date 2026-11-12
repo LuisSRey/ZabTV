@@ -18,8 +18,9 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
 /**
- * Y1 S4 + Z1 (TV+escudo): el wrap abre el aire lateral de 16→28dp; el resto de
- * la matriz queda intacto (clips, pesos, minHeight, halo de la grid).
+ * Y1 S4 + Z1 + A1/A2 (TV+escudo): el wrap queda sin aire lateral
+ * (28→0dp, el lateral vive en los slots 16dp y en el inner del item);
+ * el resto de la matriz queda intacto (clips, pesos, minHeight, halo).
  * Solo layout-television (+ réplica); móvil intacto.
  */
 @RunWith(RobolectricTestRunner::class)
@@ -41,8 +42,8 @@ class ChannelBrowserY4WrapTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val root = tvRoot(context)
         val wrap = root.findViewById<ViewGroup>(R.id.browser_grid_wrap)
-        assertEquals(dp(context, 28), wrap.paddingStart)
-        assertEquals(dp(context, 28), wrap.paddingEnd)
+        assertEquals(0, wrap.paddingStart)
+        assertEquals(0, wrap.paddingEnd)
         // Resto matriz X1 S3 intacto.
         assertTrue(wrap.clipChildren)
         assertFalse(wrap.clipToPadding)
@@ -81,8 +82,8 @@ class ChannelBrowserY4WrapTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val root = tvRoot(context)
         val wrap = root.findViewById<ViewGroup>(R.id.browser_grid_wrap)
-        assertEquals(dp(context, 28), wrap.paddingStart)
-        assertEquals(dp(context, 28), wrap.paddingEnd)
+        assertEquals(0, wrap.paddingStart)
+        assertEquals(0, wrap.paddingEnd)
         assertTrue(wrap.clipChildren)
         assertFalse(wrap.clipToPadding)
         assertEquals(0, wrap.paddingTop)

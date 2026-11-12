@@ -19,7 +19,8 @@ import org.robolectric.annotation.Config
 
 /**
  * Z2 (TV+escudo): la cabecera lleva 6 celdas a peso sin spacer ni HSV y con
- * padding lateral 14dp. Solo layout-television (+ réplica); móvil intacto.
+ * padding lateral 16dp (A1/A2: 14→16, alineado con el inner del item).
+ * Solo layout-television (+ réplica); móvil intacto.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34])
@@ -48,9 +49,9 @@ class ChannelBrowserZ2SlotsTest {
         assertEquals(R.id.browser_slot_0, slots.getChildAt(0).id)
         // Sin HSV: el padre es la columna derecha, nunca un scroll.
         assertTrue(slots.parent !is HorizontalScrollView)
-        // Padding lateral 14dp (aire vertical 2dp W2 S2 intacto).
-        assertEquals(dp(context, 14), slots.paddingStart)
-        assertEquals(dp(context, 14), slots.paddingEnd)
+        // Padding lateral 16dp (aire vertical 2dp W2 S2 intacto).
+        assertEquals(dp(context, 16), slots.paddingStart)
+        assertEquals(dp(context, 16), slots.paddingEnd)
         assertEquals(dp(context, 2), slots.paddingTop)
         assertEquals(dp(context, 2), slots.paddingBottom)
         val ids = listOf(
@@ -77,8 +78,8 @@ class ChannelBrowserZ2SlotsTest {
         assertEquals(6, slots.childCount)
         assertEquals(R.id.browser_slot_0, slots.getChildAt(0).id)
         assertTrue(slots.parent !is HorizontalScrollView)
-        assertEquals(dp(context, 14), slots.paddingStart)
-        assertEquals(dp(context, 14), slots.paddingEnd)
+        assertEquals(dp(context, 16), slots.paddingStart)
+        assertEquals(dp(context, 16), slots.paddingEnd)
         for (i in 0..5) {
             val lp = slots.getChildAt(i).layoutParams as LinearLayout.LayoutParams
             assertEquals(0, lp.width)

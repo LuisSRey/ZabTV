@@ -109,8 +109,7 @@ class ChannelBrowserA1A2Test {
     }
 
     @Test
-    fun `S1 movil intacto sin inner`() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+    fun `S1 movil intacto sin inner`() {        val context = ApplicationProvider.getApplicationContext<Context>()
         val root = itemRoot(context)
         // Móvil: raíz 3dp con fondo tile y padding 6, sin inner.
         val lp = root.layoutParams as ViewGroup.MarginLayoutParams
@@ -121,5 +120,78 @@ class ChannelBrowserA1A2Test {
         assertNull(root.findViewById<View>(R.id.channel_tile_inner))
         assertTrue(root.findViewById<View>(R.id.channel_number) != null)
         assertTrue(root.findViewById<View>(R.id.channel_timeline) != null)
+    }
+
+    // ---- S2: browser TV + escudo ----
+
+    private fun browserRoot(context: Context): View {
+        val parent = FrameLayout(context)
+        return LayoutInflater.from(context)
+            .inflate(R.layout.fragment_channel_browser, parent, false)
+    }
+
+    @Test
+    @Config(qualifiers = "television")
+    fun `S2 tv wrap sin aire lateral resto matriz intacta`() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val root = browserRoot(context)
+        val wrap = root.findViewById<ViewGroup>(R.id.browser_grid_wrap)
+        assertEquals(0, wrap.paddingStart)
+        assertEquals(0, wrap.paddingEnd)
+        // Resto matriz intacta (contención + halo + peso + minHeight).
+        assertTrue(wrap.clipChildren)
+        assertFalse(wrap.clipToPadding)
+        assertEquals(0, wrap.paddingTop)
+        assertEquals(0, wrap.paddingBottom)
+        assertEquals(0, (wrap.layoutParams as ViewGroup.MarginLayoutParams).topMargin)
+        val wlp = wrap.layoutParams as LinearLayout.LayoutParams
+        assertEquals(1f, wlp.weight, 0.001f)
+        assertEquals(dp(context, 192), wrap.minimumHeight)
+        assertFalse(wrap.isFocusable)
+        val grid = root.findViewById<androidx.recyclerview.widget.RecyclerView>(R.id.browser_grid)
+        assertEquals(wrap, grid.parent as View)
+        assertFalse((grid as ViewGroup).clipChildren)
+        assertFalse(grid.clipToPadding)
+        assertEquals(dp(context, 12), grid.paddingTop)
+        assertEquals(0, (grid.layoutParams as ViewGroup.MarginLayoutParams).topMargin)
+    }
+
+    @Test
+    @Config(qualifiers = "television")
+    fun `S2 tv slots aire lateral 16dp celdas intactas`() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val root = browserRoot(context)
+        val slots = root.findViewById<LinearLayout>(R.id.browser_slots)
+        assertEquals(dp(context, 16), slots.paddingStart)
+        assertEquals(dp(context, 16), slots.paddingEnd)
+        // Celdas intactas: 6 a peso, sin spacer ni HSV.
+        assertEquals(6, slots.childCount)
+        assertEquals(R.id.browser_slot_0, slots.getChildAt(0).id)
+        assertTrue(slots.parent !is android.widget.HorizontalScrollView)
+        assertEquals(dp(context, 2), slots.paddingTop)
+        assertEquals(dp(context, 2), slots.paddingBottom)
+        for (i in 0..5) {
+            val lp = slots.getChildAt(i).layoutParams as LinearLayout.LayoutParams
+            assertEquals(0, lp.width)
+            assertEquals(1f, lp.weight, 0.001f)
+        }
+    }
+
+    @Test
+    @Config(qualifiers = "land-television")
+    fun `S2 escudo replica wrap 0 y slots 16`() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val root = browserRoot(context)
+        val wrap = root.findViewById<ViewGroup>(R.id.browser_grid_wrap)
+        assertEquals(0, wrap.paddingStart)
+        assertEquals(0, wrap.paddingEnd)
+        assertTrue(wrap.clipChildren)
+        assertFalse(wrap.clipToPadding)
+        val slots = root.findViewById<LinearLayout>(R.id.browser_slots)
+        assertEquals(dp(context, 16), slots.paddingStart)
+        assertEquals(dp(context, 16), slots.paddingEnd)
+        assertEquals(6, slots.childCount)
+        assertEquals(R.id.browser_slot_0, slots.getChildAt(0).id)
+        assertTrue(slots.parent !is android.widget.HorizontalScrollView)
     }
 }

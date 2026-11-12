@@ -17,10 +17,10 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
 /**
- * Z3 verificación geométrica (TV+escudo, sin tocar layouts): la deriva
- * slots-vs-timeline se explica solo por insets conocidos —
- * wrap 28dp = slots 14dp + item (margen 6dp + padding 8dp) — y queda como
- * follow-up sin tocar si supera la tolerancia. Prohibido spacer
+ * Z3 verificación geométrica (TV+escudo, sin tocar layouts): con A1/A2 el
+ * lateral vive en los slots (16dp) y en el inner del item (16dp), con wrap
+ * e item-raíz a 0 — slotsContent (W-32) == timeline (W-32): deriva 0.
+ * Queda como follow-up sin tocar si supera la tolerancia. Prohibido spacer
  * compensatorio (también en el escudo).
  */
 @RunWith(RobolectricTestRunner::class)
@@ -36,7 +36,7 @@ class ChannelBrowserZ3AlignTest {
             .inflate(R.layout.fragment_channel_browser, parent, false)
     }
 
-    /** Insets del item TV (margen + padding) leídos del layout, no a mano. */
+    /** Insets laterales de la raíz del item TV (margen + padding), leídos del layout, no a mano. */
     private fun itemInsetsPx(context: Context): Int {
         val parent = FrameLayout(context)
         val item = LayoutInflater.from(context)
@@ -45,20 +45,30 @@ class ChannelBrowserZ3AlignTest {
         return lp.leftMargin + lp.rightMargin + item.paddingStart + item.paddingEnd
     }
 
+    /** Insets laterales del inner del item TV (aire 16h), leídos del layout, no a mano. */
+    private fun innerInsetsPx(context: Context): Int {
+        val parent = FrameLayout(context)
+        val item = LayoutInflater.from(context)
+            .inflate(R.layout.item_channel, parent, false) as LinearLayout
+        val inner = item.findViewById<LinearLayout>(R.id.channel_tile_inner)
+        return inner.paddingStart + inner.paddingEnd
+    }
+
     @Test
     @Config(qualifiers = "television")
-    fun `Z3 tv insets wrap28 slots14 item14 explican deriva sin spacer`() {
+    fun `Z3 tv insets wrap0 slots16 inner32 alinean sin spacer`() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val root = tvRoot(context)
         val slots = root.findViewById<LinearLayout>(R.id.browser_slots)
         val wrap = root.findViewById<View>(R.id.browser_grid_wrap)
-        // Relación geométrica Z1+Z2: wrap(28) == slots(14) + item(6+8).
-        assertEquals(dp(context, 28), wrap.paddingStart)
-        assertEquals(dp(context, 14), slots.paddingStart)
-        assertEquals(dp(context, 6 + 8) * 2, itemInsetsPx(context))
+        // Relación geométrica A1/A2: wrap(0) + raíz(0); slots(16) == inner(16).
+        assertEquals(0, wrap.paddingStart)
+        assertEquals(dp(context, 16), slots.paddingStart)
+        assertEquals(0, itemInsetsPx(context))
+        assertEquals(dp(context, 16 + 16), innerInsetsPx(context))
         assertEquals(
-            wrap.paddingStart + wrap.paddingEnd,
-            slots.paddingStart + slots.paddingEnd + itemInsetsPx(context),
+            slots.paddingStart + slots.paddingEnd,
+            innerInsetsPx(context),
         )
         // Sin spacer ni HSV por ids.
         assertEquals(6, slots.childCount)
@@ -85,16 +95,16 @@ class ChannelBrowserZ3AlignTest {
         assertEquals(6, widths.size)
         assertTrue(widths.all { it > 0 })
         assertTrue("celdas slots desiguales: $widths", widths.max() - widths.min() <= 1)
-        // Deriva total contra la fila = 2*wrap (56dp): slotsContent(W-28) vs
-        // timeline(W-84). Tolerancia ±2px por redondeo de pesos; si supera,
-        // FOLLOW-UP sin tocar (prohibido spacer compensatorio).
+        // Deriva total contra la fila = 0 (W-32 vs W-32). Tolerancia ±2px
+        // por redondeo de pesos; si supera, FOLLOW-UP sin tocar (prohibido
+        // spacer compensatorio).
         val slotsContent = slots.width - slots.paddingStart - slots.paddingEnd
         val wrapContent = wrap.width - wrap.paddingStart - wrap.paddingEnd
-        val timelineWidth = wrapContent - itemInsetsPx(context)
+        val timelineWidth = wrapContent - itemInsetsPx(context) - innerInsetsPx(context)
         val drift = slotsContent - timelineWidth
         assertEquals(
             "deriva $drift px fuera de tolerancia de insets: FOLLOW-UP sin tocar, prohibido spacer",
-            dp(context, 56).toFloat(),
+            0f,
             drift.toFloat(),
             2f,
         )
@@ -113,11 +123,11 @@ class ChannelBrowserZ3AlignTest {
         root.layout(0, 0, 1920, 1080)
         val slots = root.findViewById<LinearLayout>(R.id.browser_slots)
         val wrap = root.findViewById<View>(R.id.browser_grid_wrap)
-        assertEquals(dp(context, 28), wrap.paddingStart)
-        assertEquals(dp(context, 14), slots.paddingStart)
+        assertEquals(0, wrap.paddingStart)
+        assertEquals(dp(context, 16), slots.paddingStart)
         assertEquals(
-            wrap.paddingStart + wrap.paddingEnd,
-            slots.paddingStart + slots.paddingEnd + itemInsetsPx(context),
+            slots.paddingStart + slots.paddingEnd,
+            innerInsetsPx(context),
         )
         assertEquals(6, slots.childCount)
         assertEquals(R.id.browser_slot_0, slots.getChildAt(0).id)
@@ -127,10 +137,10 @@ class ChannelBrowserZ3AlignTest {
         assertTrue(widths.all { it > 0 })
         assertTrue("celdas slots desiguales: $widths", widths.max() - widths.min() <= 1)
         val drift = (slots.width - slots.paddingStart - slots.paddingEnd) -
-            ((wrap.width - wrap.paddingStart - wrap.paddingEnd) - itemInsetsPx(context))
+            ((wrap.width - wrap.paddingStart - wrap.paddingEnd) - itemInsetsPx(context) - innerInsetsPx(context))
         assertEquals(
             "deriva $drift px fuera de tolerancia de insets: FOLLOW-UP sin tocar, prohibido spacer",
-            dp(context, 56).toFloat(),
+            0f,
             drift.toFloat(),
             2f,
         )
