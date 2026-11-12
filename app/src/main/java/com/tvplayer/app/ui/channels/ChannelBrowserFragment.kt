@@ -128,6 +128,13 @@ class ChannelBrowserFragment : Fragment() {
             refreshNotLoading && itemCount == 0
 
         /**
+         * Destino del nextFocusUp de la grid (W1 S4): VER con hero visible,
+         * selector con hero GONE. Puro para test directo.
+         */
+        fun heroGridUpTarget(heroVisible: Boolean): Int =
+            if (heroVisible) R.id.browser_hero_play else R.id.browser_list_selector
+
+        /**
          * Orientación del rail: vertical en TV y en apaisado móvil (panel
          * izquierdo de 320dp); horizontal solo en vertical táctil. Puro.
          */
@@ -341,12 +348,40 @@ class ChannelBrowserFragment : Fragment() {
     }
 
     /**
+     * Frontera de clip del wrap (W1 S4): el wrap es contención (clips a true
+     * + protegido) para que el paseo de [FocusScaleHelper] de los tiles no
+     * lo abra. Solo TV; sin wrap (móvil) o fuera de TV es no-op.
+     */
+    @VisibleForTesting
+    internal fun bindClipBoundary(root: View, isTv: Boolean) {
+        if (!isTv) return
+        root.findViewById<View>(R.id.browser_grid_wrap)?.let { wrap ->
+            FocusScaleHelper.protectClipBoundary(wrap)
+            FocusScaleHelper.enforceClipBoundary(wrap)
+        }
+    }
+
+    /**
+     * Destino del foco arriba desde la grid (W3 S4): VER con hero visible,
+     * selector con hero GONE. Solo TV; cubre el reinflate porque lo invoca
+     * [paintHero].
+     */
+    @VisibleForTesting
+    internal fun applyGridUpTarget(root: View, heroVisible: Boolean, isTv: Boolean) {
+        if (!isTv) return
+        root.findViewById<RecyclerView>(R.id.browser_grid)?.nextFocusUpId =
+            heroGridUpTarget(heroVisible)
+    }
+
+    /**
      * Cablea la jerarquía vigente a los colaboradores (S2): managers +
      * adapters reutilizados + runner nuevo (captura la grid vigente) +
      * listeners de la vista + selector + toggle + cap. Vale para el primer
      * bind y para el re-bind tras reinflar.
      */
     private fun bindBrowserViews(root: View, isTv: Boolean, orientation: Int) {
+        // W1 S4: el wrap contiene la grid (frontera de clip) en TV.
+        bindClipBoundary(root, isTv)
         val grid = root.findViewById<RecyclerView>(R.id.browser_grid)
         grid.layoutManager = GridLayoutManager(requireContext(), spanCount(isTv, orientation))
         grid.adapter = gridAdapter
@@ -592,6 +627,9 @@ class ChannelBrowserFragment : Fragment() {
         } else {
             heroBox.visibility = View.GONE
         }
+        // W3 S4: la grid sube al VER con hero visible o al selector con
+        // hero GONE (también tras reinflate: corre en cada paintHero).
+        applyGridUpTarget(view, hero != null, FocusScaleHelper.isTv(view))
     }
 
     /**
