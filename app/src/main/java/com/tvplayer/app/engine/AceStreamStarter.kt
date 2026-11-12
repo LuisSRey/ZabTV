@@ -6,6 +6,7 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.content.pm.PackageManager
 import android.os.IBinder
+import androidx.core.content.pm.PackageInfoCompat
 import java.util.concurrent.atomic.AtomicInteger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -81,7 +82,7 @@ object AceStreamStarter {
         val versions = (KNOWN_PACKAGES + dynamic).distinct().associateWith { pkg ->
             try {
                 val info = pm.getPackageInfo(pkg, 0)
-                if (android.os.Build.VERSION.SDK_INT >= 28) info.longVersionCode else info.versionCode.toLong()
+                PackageInfoCompat.getLongVersionCode(info)
             } catch (_: Exception) {
                 -1L
             }
