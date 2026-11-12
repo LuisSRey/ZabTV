@@ -194,4 +194,49 @@ class ChannelBrowserA1A2Test {
         assertEquals(R.id.browser_slot_0, slots.getChildAt(0).id)
         assertTrue(slots.parent !is android.widget.HorizontalScrollView)
     }
+
+    // ---- S3: FocusScaleHelper.attachInner ----
+
+    @Test
+    @Config(qualifiers = "television")
+    fun `S3 tv attachInner foco en host anima target 1-1 Z8`() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val host = LinearLayout(context).apply { isFocusable = false }
+        val target = View(context)
+        host.addView(target)
+        com.tvplayer.app.ui.common.FocusScaleHelper.attachInner(host, target)
+        // Foco en el host (no en el target).
+        assertTrue(host.isFocusable)
+        assertFalse(host.isFocusableInTouchMode)
+        assertNotNull(host.onFocusChangeListener)
+        assertNull(target.onFocusChangeListener)
+        // Foco: el target escala 1.1 + Z8; el host no escala.
+        host.onFocusChangeListener.onFocusChange(host, true)
+        org.robolectric.Shadows.shadowOf(android.os.Looper.getMainLooper())
+            .idleFor(java.time.Duration.ofMillis(300))
+        assertEquals(1.1f, target.scaleX, 0.001f)
+        assertEquals(1.1f, target.scaleY, 0.001f)
+        assertEquals(8f, target.translationZ, 0.001f)
+        assertEquals(1.0f, host.scaleX, 0.001f)
+        // Salida: el target vuelve a 1.0 + Z0.
+        host.onFocusChangeListener.onFocusChange(host, false)
+        org.robolectric.Shadows.shadowOf(android.os.Looper.getMainLooper())
+            .idleFor(java.time.Duration.ofMillis(300))
+        assertEquals(1.0f, target.scaleX, 0.001f)
+        assertEquals(1.0f, target.scaleY, 0.001f)
+        assertEquals(0f, target.translationZ, 0.001f)
+    }
+
+    @Test
+    fun `S3 attachInner no-op fuera de TV`() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val host = LinearLayout(context)
+        val target = View(context)
+        host.addView(target)
+        com.tvplayer.app.ui.common.FocusScaleHelper.attachInner(host, target)
+        assertNull(host.onFocusChangeListener)
+        assertFalse(host.isFocusable)
+        assertEquals(1.0f, target.scaleX, 0.001f)
+        assertEquals(0f, target.translationZ, 0.001f)
+    }
 }
