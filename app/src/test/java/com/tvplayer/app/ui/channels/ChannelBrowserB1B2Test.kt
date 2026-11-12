@@ -126,8 +126,8 @@ class ChannelBrowserB1B2Test {
         // B2: aire lateral 20dp (los slots suman 20+16=36).
         assertEquals(dp(context, 20), wrap.paddingStart)
         assertEquals(dp(context, 20), wrap.paddingEnd)
-        // Resto intacto: contención + halo + peso + minHeight.
-        assertTrue(wrap.clipChildren)
+        // Resto intacto: ya sin frontera + halo + peso + minHeight.
+        assertFalse(wrap.clipChildren)
         assertFalse(wrap.clipToPadding)
         assertEquals(0, wrap.paddingTop)
         assertEquals(0, wrap.paddingBottom)
@@ -173,7 +173,7 @@ class ChannelBrowserB1B2Test {
         val wrap = root.findViewById<ViewGroup>(R.id.browser_grid_wrap)
         assertEquals(dp(context, 20), wrap.paddingStart)
         assertEquals(dp(context, 20), wrap.paddingEnd)
-        assertTrue(wrap.clipChildren)
+        assertFalse(wrap.clipChildren)
         assertFalse(wrap.clipToPadding)
         val slots = root.findViewById<LinearLayout>(R.id.browser_slots)
         assertEquals(dp(context, 36), slots.paddingStart)

@@ -92,17 +92,18 @@ class ChannelBrowserGridContainTest {
 
     @Test
     fun `X1 S3 matriz clip wrap aire20 grid sin margen`() {
-        // Y1 S4 + Z1 + A1/A2 + B2 (motivo: el aire lateral del wrap pasa a
-        // 20dp; los slots suman 20+16=36 alineados con el inner del item; el
-        // resto de la matriz X1 S3 queda intacto): el wrap porta clipChildren
-        // true + clipToPadding false + aire lateral 20dp (el vertical lo
-        // pone la grid) + marginTop 0 + peso 1 + minHeight 192; la grid vive
-        // dentro en match_parent, clipChildren false, clipToPadding false,
-        // paddingTop 12, marginTop 0, sin peso.
+        // Y1 S4 + Z1 + A1/A2 + B2 + CA3 (motivo: el wrap deja de ser
+        // frontera de clip: el halo 1.1 de las filas desborda el aire 20dp;
+        // los slots siguen sumando 20+16=36 alineados con el inner del
+        // item): el wrap porta clipChildren false + clipToPadding false +
+        // aire lateral 20dp (el vertical lo pone la grid) + marginTop 0 +
+        // peso 1 + minHeight 192; la grid vive dentro en match_parent,
+        // clipChildren false, clipToPadding false, paddingTop 12,
+        // marginTop 0, sin peso.
         val context = ApplicationProvider.getApplicationContext<Context>()
         val root = tvRoot(context)
         val wrap = root.findViewById<ViewGroup>(R.id.browser_grid_wrap)
-        assertTrue(wrap.clipChildren)
+        assertFalse(wrap.clipChildren)
         assertFalse(wrap.clipToPadding)
         assertEquals(dp(context, 20), wrap.paddingStart)
         assertEquals(dp(context, 20), wrap.paddingEnd)
@@ -124,6 +125,34 @@ class ChannelBrowserGridContainTest {
     }
 
     @Test
+    fun `CA3 sin colision por numeros`() {
+        // Matriz de aire vs desborde 1.1 (0.05×tamaño por lado): vertical
+        // fila paddingV 6dp (12dp entre filas) + grid paddingTop 12dp >
+        // desborde vertical máx 6.6dp (fila ~132dp de alto); lateral aire
+        // wrap 20dp + inner 16+16dp (gap columnas) = 52dp > desborde d1.5
+        // 44.8dp/lado (fila ~896dp ancha). Matriz d1.5 ✓ / d2.0 ✓ / d1.0
+        // caveat follow-up ~25dp invasión zona filtros (no bloquea).
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val root = tvRoot(context)
+        val item = LayoutInflater.from(context)
+            .inflate(R.layout.item_channel, null) as ViewGroup
+        // La raíz del item no clipa (el halo desborda la fila).
+        assertFalse(item.clipChildren)
+        // Vertical: fila 6dp arriba/abajo + grid paddingTop 12dp.
+        assertEquals(dp(context, 6), item.paddingTop)
+        assertEquals(dp(context, 6), item.paddingBottom)
+        val grid = root.findViewById<RecyclerView>(R.id.browser_grid)
+        assertEquals(dp(context, 12), grid.paddingTop)
+        // Lateral: wrap 20dp + inner 16+16dp.
+        val wrap = root.findViewById<ViewGroup>(R.id.browser_grid_wrap)
+        assertEquals(dp(context, 20), wrap.paddingStart)
+        assertEquals(dp(context, 20), wrap.paddingEnd)
+        val inner = item.findViewById<View>(R.id.channel_tile_inner)
+        assertEquals(dp(context, 16), inner.paddingStart)
+        assertEquals(dp(context, 16), inner.paddingEnd)
+    }
+
+    @Test
     fun `X1 S3 slots pegados al wrap sin hueco`() {
         // X1 S3: sin márgenes entre slots y wrap, el wrap arranca donde
         // acaban los slots (slots.bottom == wrap.top) tras medir y tumbar.
@@ -141,10 +170,11 @@ class ChannelBrowserGridContainTest {
 
     @Test
     fun `X1 S3 halo grid sin clip aire12 reemplaza matriz anterior`() {
-        // Y1 S4 + Z1 + A1/A2 + B2 (motivo: el aire lateral del wrap pasa a
-        // 20dp y el vertical sigue en el paddingTop 12 de la grid): grid sin
-        // clips con paddingTop 12 + marginTop 0; wrap true/false con aire
-        // lateral 20dp.
+        // Y1 S4 + Z1 + A1/A2 + B2 + CA3 (motivo: el wrap deja de ser
+        // frontera de clip y el aire lateral sigue en el wrap 20dp con el
+        // vertical en el paddingTop 12 de la grid): grid sin clips con
+        // paddingTop 12 + marginTop 0; wrap false/false con aire lateral
+        // 20dp.
         val context = ApplicationProvider.getApplicationContext<Context>()
         val root = tvRoot(context)
         val grid = root.findViewById<RecyclerView>(R.id.browser_grid)
@@ -153,7 +183,7 @@ class ChannelBrowserGridContainTest {
         assertFalse((grid as ViewGroup).clipChildren)
         assertEquals(0, (grid.layoutParams as ViewGroup.MarginLayoutParams).topMargin)
         val wrap = root.findViewById<ViewGroup>(R.id.browser_grid_wrap)
-        assertTrue(wrap.clipChildren)
+        assertFalse(wrap.clipChildren)
         assertFalse(wrap.clipToPadding)
         assertEquals(dp(context, 20), wrap.paddingStart)
         assertEquals(dp(context, 20), wrap.paddingEnd)
