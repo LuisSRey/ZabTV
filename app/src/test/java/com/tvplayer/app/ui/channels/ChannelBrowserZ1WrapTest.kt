@@ -20,8 +20,9 @@ import org.robolectric.annotation.Config
 /**
  * Z1 (TV+escudo): el wrap queda sin aire lateral (A1/A2: 28→0dp, el
  * lateral vive en los slots 16dp y en el inner del item); el resto de la
- * matriz queda intacto (clips abiertos, peso 1, minHeight 192, marginTop
- * 0, halo de la grid). Solo layout-television (+ réplica); móvil intacto.
+ * matriz queda intacto (clip vertical custom en el wrap, peso 1, minHeight
+ * 192, marginTop 0, halo de la grid). Solo layout-television (+ réplica);
+ * móvil intacto.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34])
@@ -44,7 +45,7 @@ class ChannelBrowserZ1WrapTest {
         val wrap = root.findViewById<ViewGroup>(R.id.browser_grid_wrap)
         assertEquals(dp(context, 20), wrap.paddingStart)
         assertEquals(dp(context, 20), wrap.paddingEnd)
-        // Resto matriz intacta: ya sin frontera (el halo desborda el aire).
+        // Resto matriz intacta: clip vertical custom (el halo desborda el aire lateral).
         assertFalse(wrap.clipChildren)
         assertFalse(wrap.clipToPadding)
         assertEquals(0, wrap.paddingTop)

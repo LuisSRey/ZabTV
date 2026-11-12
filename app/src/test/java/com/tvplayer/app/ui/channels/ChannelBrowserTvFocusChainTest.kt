@@ -20,10 +20,10 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
 /**
- * Cadena de foco TV W3 S4 + reskin B1/B2: el wrap ya NO es frontera de clip
- * (XML abierto y sin protect: el attach de un tile abre la cadena entera) y
- * la grid apunta arriba al VER con hero visible o al selector con hero GONE.
- * Solo TV; móvil intacto.
+ * Cadena de foco TV W3 S4 + reskin B1/B2: el wrap porta clip vertical custom
+ * (VerticalClipFrameLayout: clip de canvas 0..height + slop lateral; XML sin
+ * protect: el attach de un tile abre la cadena entera) y la grid apunta arriba
+ * al VER con hero visible o al selector con hero GONE. Solo TV; móvil intacto.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34], qualifiers = "television")
@@ -76,10 +76,10 @@ class ChannelBrowserTvFocusChainTest {
     }
 
     @Test
-    fun `wrap sin clip en XML y sin protect`() {
-        // Nueva verdad B1/B2 (S3): el wrap ya no es frontera de clip. El
-        // XML lo deja abierto y nadie lo protege: sin llamadas, la cadena
-        // queda abierta de raíz.
+    fun `wrap con clip vertical custom en XML y sin protect`() {
+        // FRENTE B (S3): el wrap contiene en vertical por clip de canvas y
+        // nadie lo protege: el XML deja los flags abiertos y el clip vertical
+        // no depende de ellos.
         val context = ApplicationProvider.getApplicationContext<Context>()
         val root = tvRoot(context)
         val wrap = root.findViewById<ViewGroup>(R.id.browser_grid_wrap)
@@ -88,7 +88,7 @@ class ChannelBrowserTvFocusChainTest {
     }
 
     @Test
-    fun `wrap sin frontera (attach de un tile abre la cadena entera)`() {
+    fun `wrap con clip vertical custom (attach de un tile abre la cadena entera)`() {
         val activity = Robolectric.buildActivity(Activity::class.java).setup().get()
         val root = LayoutInflater.from(activity)
             .inflate(R.layout.fragment_channel_browser, null)
@@ -99,8 +99,9 @@ class ChannelBrowserTvFocusChainTest {
         grid.layoutManager = androidx.recyclerview.widget.LinearLayoutManager(activity)
         val tile = View(activity)
         grid.addView(tile)
-        // Sin frontera: el attach clásico abre la cadena entera (wrap y raíz
-        // sin clip); el halo 1.1 desborda hasta el aire lateral.
+        // Clip vertical custom: el attach clásico abre la cadena entera (wrap
+        // y raíz con flags abiertos); el halo 1.1 desborda hasta el aire
+        // lateral y el recorte vertical lo pone el canvas del wrap.
         FocusScaleHelper.attach(tile)
         assertFalse(wrap.clipChildren)
         assertFalse((root as ViewGroup).clipChildren)

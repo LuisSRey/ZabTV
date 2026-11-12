@@ -139,7 +139,7 @@ class ChannelBrowserA1A2Test {
         // B2: aire lateral 20dp (los slots suman 20+16=36).
         assertEquals(dp(context, 20), wrap.paddingStart)
         assertEquals(dp(context, 20), wrap.paddingEnd)
-        // Resto matriz intacta (ya sin frontera + halo + peso + minHeight).
+        // Resto matriz intacta (clip vertical custom + halo + peso + minHeight).
         assertFalse(wrap.clipChildren)
         assertFalse(wrap.clipToPadding)
         assertEquals(0, wrap.paddingTop)

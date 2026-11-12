@@ -23,7 +23,9 @@ import org.robolectric.annotation.Config
 
 /**
  * B1/B2 TV: halo sin recorte (la raíz del item no clipa: el foco 1.1
- * desborda sin cortarse) + alineación slots 36dp = wrap 20dp + inner
+ * desborda sin cortarse) + contención vertical del wrap con clip vertical
+ * custom ([com.tvplayer.app.ui.common.VerticalClipFrameLayout]: clip de canvas
+ * 0..height y slop lateral) + alineación slots 36dp = wrap 20dp + inner
  * 16dp; adapter unificado con attach en la raíz (TV y móvil igual).
  * Solo layout-television (+ réplica land-television); móvil intacto.
  */
@@ -51,11 +53,11 @@ class ChannelBrowserB1B2Test {
             .idleFor(java.time.Duration.ofMillis(300))
     }
 
-    // ---- B1: item TV sin clip ----
+    // ---- B1: item TV con halo abierto ----
 
     @Test
     @Config(qualifiers = "television")
-    fun `B1 tv item raiz sin clip resto intacto`() {
+    fun `B1 tv item raiz con halo abierto resto intacto`() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val root = itemRoot(context)
         // B1: la raíz no clipa (el halo 1.1 desborda sin cortarse).
@@ -126,7 +128,7 @@ class ChannelBrowserB1B2Test {
         // B2: aire lateral 20dp (los slots suman 20+16=36).
         assertEquals(dp(context, 20), wrap.paddingStart)
         assertEquals(dp(context, 20), wrap.paddingEnd)
-        // Resto intacto: ya sin frontera + halo + peso + minHeight.
+        // Resto intacto: clip vertical custom en el wrap + halo + peso + minHeight.
         assertFalse(wrap.clipChildren)
         assertFalse(wrap.clipToPadding)
         assertEquals(0, wrap.paddingTop)
@@ -235,11 +237,12 @@ class ChannelBrowserB1B2Test {
 
     @Test
     @Config(qualifiers = "television")
-    fun `B2 wrap sin frontera y raiz focable`() {
+    fun `B2 wrap sin protect y raiz focable`() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val root = browserRoot(context)
-        // Nueva verdad (S3): sin bindClipBoundary, el wrap no queda
-        // protegido — el attach de los tiles abre la cadena entera.
+        // Clip vertical custom (S3): sin bindClipBoundary el wrap no queda
+        // protegido — el attach de los tiles abre la cadena entera y la
+        // contención vertical la pone el clip de canvas del wrap.
         val wrap = root.findViewById<View>(R.id.browser_grid_wrap)
         assertFalse(com.tvplayer.app.ui.common.FocusScaleHelper.isProtected(wrap))
         // La raíz del item porta foco/click; el inner solo pinta.

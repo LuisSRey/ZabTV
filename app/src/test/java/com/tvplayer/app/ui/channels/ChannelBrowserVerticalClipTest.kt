@@ -23,7 +23,8 @@ import org.robolectric.annotation.Config
  * FRENTE B S2: el wrap `browser_grid_wrap` de TV pasa de `FrameLayout` a
  * [VerticalClipFrameLayout]: contención vertical por clip de canvas
  * (0..height, slop lateral 10000px) con la MISMA matriz de atributos de antes
- * (peso 1, 0dp, minHeight 192, aire 20/0, sin foco, sin clips de flags). El
+ * (peso 1, 0dp, minHeight 192, aire 20/0, sin foco, con flags de clip
+ * abiertos). El
  * escudo land-television replica la matriz y móvil no monta ningún wrap custom.
  */
 @RunWith(RobolectricTestRunner::class)

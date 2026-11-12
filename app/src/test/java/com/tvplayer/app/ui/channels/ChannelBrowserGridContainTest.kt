@@ -21,11 +21,13 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
 /**
- * Contención grid TV (S1-S6): el wrap `browser_grid_wrap` porta el peso 1 y
- * el minHeight 192dp; la grid vive dentro en match_parent sin peso ni
- * minHeight. Hero arriba (margin 0) con elevation 16, slots opacos con
- * elevation 12, halo con paddingTop 12 + clipToPadding true. Solo TV +
- * escudo land-television; móvil intacto.
+ * Contención grid TV (S1-S6 + FRENTE B): el wrap `browser_grid_wrap` es un
+ * [com.tvplayer.app.ui.common.VerticalClipFrameLayout] (clip vertical custom:
+ * canvas 0..height + slop lateral 10000px) que porta el peso 1 y el minHeight
+ * 192dp; la grid vive dentro en match_parent sin peso ni minHeight. Hero
+ * arriba (margin 0) con elevation 16, slots opacos con elevation 12, halo con
+ * paddingTop 12 y clips de flags abiertos. Solo TV + escudo land-television;
+ * móvil intacto.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34], qualifiers = "television")
@@ -92,14 +94,14 @@ class ChannelBrowserGridContainTest {
 
     @Test
     fun `X1 S3 matriz clip wrap aire20 grid sin margen`() {
-        // Y1 S4 + Z1 + A1/A2 + B2 + CA3 (motivo: el wrap deja de ser
-        // frontera de clip: el halo 1.1 de las filas desborda el aire 20dp;
-        // los slots siguen sumando 20+16=36 alineados con el inner del
-        // item): el wrap porta clipChildren false + clipToPadding false +
-        // aire lateral 20dp (el vertical lo pone la grid) + marginTop 0 +
-        // peso 1 + minHeight 192; la grid vive dentro en match_parent,
-        // clipChildren false, clipToPadding false, paddingTop 12,
-        // marginTop 0, sin peso.
+        // Y1 S4 + Z1 + A1/A2 + B2 + CA3 (motivo: el wrap contiene en vertical
+        // con clip vertical custom —canvas 0..height + slop lateral—; el halo
+        // 1.1 de las filas desborda el aire 20dp; los slots siguen sumando
+        // 20+16=36 alineados con el inner del item): el wrap porta clipChildren
+        // false + clipToPadding false + aire lateral 20dp (el vertical lo pone
+        // la grid) + marginTop 0 + peso 1 + minHeight 192; la grid vive dentro
+        // en match_parent, clipChildren false, clipToPadding false, paddingTop
+        // 12, marginTop 0, sin peso.
         val context = ApplicationProvider.getApplicationContext<Context>()
         val root = tvRoot(context)
         val wrap = root.findViewById<ViewGroup>(R.id.browser_grid_wrap)
@@ -169,11 +171,11 @@ class ChannelBrowserGridContainTest {
     }
 
     @Test
-    fun `X1 S3 halo grid sin clip aire12 reemplaza matriz anterior`() {
-        // Y1 S4 + Z1 + A1/A2 + B2 + CA3 (motivo: el wrap deja de ser
-        // frontera de clip y el aire lateral sigue en el wrap 20dp con el
-        // vertical en el paddingTop 12 de la grid): grid sin clips con
-        // paddingTop 12 + marginTop 0; wrap false/false con aire lateral
+    fun `X1 S3 halo grid abierto aire12 reemplaza matriz anterior`() {
+        // Y1 S4 + Z1 + A1/A2 + B2 + CA3 (motivo: el wrap contiene en vertical
+        // con clip vertical custom y el aire lateral sigue en el wrap 20dp con
+        // el vertical en el paddingTop 12 de la grid): grid con flags de clip
+        // abiertos con paddingTop 12 + marginTop 0; wrap false/false con aire lateral
         // 20dp.
         val context = ApplicationProvider.getApplicationContext<Context>()
         val root = tvRoot(context)
