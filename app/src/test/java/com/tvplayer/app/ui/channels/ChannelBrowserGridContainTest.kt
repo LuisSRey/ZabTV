@@ -69,14 +69,20 @@ class ChannelBrowserGridContainTest {
     }
 
     @Test
-    fun `S2 hero elevation16 y slots elevation12 con fondo opaco`() {
+    fun `S2 hero elevation16 y strip sin fondo con padding 2dp`() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val root = tvRoot(context)
         val hero = root.findViewById<View>(R.id.browser_hero)
         assertEquals(dp(context, 16).toFloat(), hero.elevation, 1f)
+        // W2 S2: tira sin fondo ni elevación, solo aire vertical 2dp; resto
+        // (6 cortes, marginTop 12) intacto.
         val slots = root.findViewById<LinearLayout>(R.id.browser_slots)
-        assertEquals(dp(context, 12).toFloat(), slots.elevation, 1f)
-        assertTrue(slots.background != null)
+        assertEquals(0f, slots.elevation, 0.1f)
+        assertTrue(slots.background == null)
+        assertEquals(dp(context, 2), slots.paddingTop)
+        assertEquals(dp(context, 2), slots.paddingBottom)
+        assertEquals(dp(context, 12), (slots.layoutParams as ViewGroup.MarginLayoutParams).topMargin)
+        assertEquals(6, slots.childCount)
     }
 
     @Test

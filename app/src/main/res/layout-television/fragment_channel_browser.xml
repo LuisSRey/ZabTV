@@ -132,15 +132,17 @@
 
             <!-- Cabecera del timeline: 6 cortes de 30 min ([GuideWindow])
                  en 6 celdas a peso (el fragment pinta por tipo: ViewGroup
-                 → corte a corte). Sin HSV ni spacer: la fila TV es fija. -->
+                 → corte a corte). Sin HSV ni spacer: la fila TV es fija.
+                 W2 S2: tira sin fondo ni elevación, solo aire vertical 2dp
+                 (paddingTop/Bottom = paddingVertical, compatible API 23). -->
             <LinearLayout
                 android:id="@+id/browser_slots"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
-                android:background="@color/tp_surface"
-                android:elevation="12dp"
-                android:orientation="horizontal">
+                android:orientation="horizontal"
+                android:paddingTop="2dp"
+                android:paddingBottom="2dp">
 
                 <TextView
                     android:id="@+id/browser_slot_0"

@@ -197,7 +197,11 @@ class ChannelBrowserLandTest {
         val slots = root.findViewById<LinearLayout>(R.id.browser_slots)
         assertTrue(slots != null)
         assertEquals(LinearLayout.HORIZONTAL, slots.orientation)
-        assertEquals(dp(context, 12).toFloat(), slots.elevation, 1f)
+        // W2 S2: tira sin fondo ni elevación, solo aire vertical 2dp.
+        assertEquals(0f, slots.elevation, 0.1f)
+        assertTrue(slots.background == null)
+        assertEquals(dp(context, 2), slots.paddingTop)
+        assertEquals(dp(context, 2), slots.paddingBottom)
         assertEquals(6, slots.childCount)
         val slotIds = listOf(
             R.id.browser_slot_0, R.id.browser_slot_1, R.id.browser_slot_2,
