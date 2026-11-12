@@ -159,15 +159,16 @@
                  → corte a corte). Sin HSV ni spacer: la fila TV es fija.
                  A1/A2: tira sin fondo ni elevación, aire vertical 2dp
                  (paddingTop/Bottom = paddingVertical, compatible API 23) +
-                 aire lateral 16dp (alineado con el inner del item, wrap 0). -->
+                 aire lateral 36dp = wrap 20dp + inner 16dp del item
+                 (B2, alineado con el tile). -->
             <LinearLayout
                 android:id="@+id/browser_slots"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
                 android:orientation="horizontal"
-                android:paddingStart="16dp"
-                android:paddingEnd="16dp"
+                android:paddingStart="36dp"
+                android:paddingEnd="36dp"
                 android:paddingTop="2dp"
                 android:paddingBottom="2dp">
 
@@ -233,10 +234,10 @@
 
             </LinearLayout>
 
-            <!-- Contención Y1 S4 + Z1 + A1/A2: el wrap porta el peso 1 +
+            <!-- Contención Y1 S4 + Z1 + A1/A2 + B2: el wrap porta el peso 1 +
                  minHeight 192dp (el hero GONE ya no colapsa la zona) con
-                 clips true/false + aire lateral 0 (el lateral vive en los
-                 slots 16dp y en el inner del item) + marginTop 0; la grid
+                 clips true/false + aire lateral 20dp (los slots suman
+                 20+16=36 alineados con el inner del item) + marginTop 0; la grid
                  vive dentro en match_parent sin peso ni minHeight, con el
                  halo (clipChildren false + clipToPadding false + paddingTop
                  12) y marginTop 0 para pegar slots.bottom == wrap.top. -->
@@ -250,8 +251,8 @@
                 android:clipToPadding="false"
                 android:focusable="false"
                 android:minHeight="192dp"
-                android:paddingStart="0dp"
-                android:paddingEnd="0dp"
+                android:paddingStart="20dp"
+                android:paddingEnd="20dp"
                 android:paddingTop="0dp"
                 android:paddingBottom="0dp">
 
