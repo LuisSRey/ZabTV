@@ -190,9 +190,23 @@ class ChannelBrowserLandTest {
         val play = root.findViewById<View>(R.id.browser_hero_play)
         assertEquals(dp(context, 48), play.layoutParams.height)
         assertEquals(dp(context, 48), play.minimumHeight)
-        val slots = root.findViewById<TextView>(R.id.browser_slots)
+        val slots = root.findViewById<LinearLayout>(R.id.browser_slots)
+        assertTrue(slots != null)
+        assertEquals(LinearLayout.HORIZONTAL, slots.orientation)
         assertEquals(dp(context, 12).toFloat(), slots.elevation, 1f)
-        assertEquals(1, slots.maxLines)
+        assertEquals(6, slots.childCount)
+        val slotIds = listOf(
+            R.id.browser_slot_0, R.id.browser_slot_1, R.id.browser_slot_2,
+            R.id.browser_slot_3, R.id.browser_slot_4, R.id.browser_slot_5,
+        )
+        for (i in 0..5) {
+            val cell = slots.getChildAt(i) as TextView
+            assertEquals(slotIds[i], cell.id)
+            val lp = cell.layoutParams as LinearLayout.LayoutParams
+            assertEquals(0, lp.width)
+            assertEquals(1f, lp.weight, 0.001f)
+            assertEquals(1, cell.maxLines)
+        }
         val grid = root.findViewById<RecyclerView>(R.id.browser_grid)
         assertEquals(1f, (grid.layoutParams as LinearLayout.LayoutParams).weight, 0.001f)
     }

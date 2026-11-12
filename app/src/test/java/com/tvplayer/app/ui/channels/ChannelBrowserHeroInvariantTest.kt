@@ -3,6 +3,7 @@ package com.tvplayer.app.ui.channels
 import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.TextView
@@ -48,10 +49,12 @@ class ChannelBrowserHeroInvariantTest {
         assertNotNull(play.onFocusChangeListener)
         val hero = root.findViewById<View>(R.id.browser_hero)
         val title = root.findViewById<TextView>(R.id.browser_hero_title)
-        val slots = root.findViewById<TextView>(R.id.browser_slots)
+        val slots = root.findViewById<ViewGroup>(R.id.browser_slots)
+        fun slotTexts() = (0 until slots.childCount)
+            .map { (slots.getChildAt(it) as TextView).text.toString() }
         val heroVis = hero.visibility
         val titleText = title.text.toString()
-        val slotsText = slots.text.toString()
+        val before = slotTexts()
         repeat(20) { i ->
             val hasFocus = i % 2 == 0
             selector.onFocusChangeListener?.onFocusChange(selector, hasFocus)
@@ -61,7 +64,7 @@ class ChannelBrowserHeroInvariantTest {
         }
         assertEquals(heroVis, hero.visibility)
         assertEquals(titleText, title.text.toString())
-        assertEquals(slotsText, slots.text.toString())
+        assertEquals(before, slotTexts())
     }
 
     @Test

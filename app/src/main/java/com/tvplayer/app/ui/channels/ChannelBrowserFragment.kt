@@ -596,11 +596,10 @@ class ChannelBrowserFragment : Fragment() {
 
     /**
      * Cabecera de cortes de la [window] vigente (siempre visible). Por tipo:
-     * TextView (vertical/TV) → [slotsText] de una pieza; ViewGroup (land:
-     * LinearLayout con spacer + 6 cortes) → [slotsLabels] corte a corte por
-     * orden (el spacer no es TextView y se salta solo). Nunca
-     * findViewById<TextView> directo: en land browser_slots NO es un
-     * TextView y el cast rompería. El hero no toca esta cabecera (ni la
+     * TextView (vertical) → [slotsText] de una pieza; ViewGroup (land y TV:
+     * LinearLayout con 6 cortes) → [slotsLabels] corte a corte por orden.
+     * Nunca findViewById<TextView> directo: en land y TV browser_slots NO es
+     * un TextView y el cast rompería. El hero no toca esta cabecera (ni la
      * contiene ni la desplaza: van de hermanos en el layout).
      */
     private fun paintSlots() {

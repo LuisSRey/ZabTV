@@ -136,15 +136,45 @@ class ChannelBrowserTvParityTest {
     }
 
     @Test
-    fun `S2 tv slots elevation 12dp 1 linea y grid a peso intacta`() {
-        // U1 S2: slots con elevation 12dp a 1 línea; la grid conserva peso
-        // 1 + marginTop 12dp (misma altura de lista que antes).
+    fun `S2 tv slots 6 celdas 0dp peso 12sp sin HSV ni spacer`() {
+        // S2: browser_slots pasa a LinearLayout horizontal con 6 celdas
+        // (0dp/peso 1, 12sp secondary, 1 línea), sin HSV ni spacer, entre
+        // el hero y la grid; la grid conserva peso 1 + marginTop 12dp.
         val context = ApplicationProvider.getApplicationContext<Context>()
         val root = tvBrowserRoot(context)
-        val slots = root.findViewById<TextView>(R.id.browser_slots)
+        val slots = root.findViewById<LinearLayout>(R.id.browser_slots)
+        assertTrue(slots != null)
+        assertEquals(LinearLayout.HORIZONTAL, slots.orientation)
+        assertEquals(ViewGroup.LayoutParams.MATCH_PARENT, slots.layoutParams.width)
+        assertEquals(
+            dp(context, 12),
+            (slots.layoutParams as ViewGroup.MarginLayoutParams).topMargin,
+        )
         assertEquals(dp(context, 12).toFloat(), slots.elevation, 1f)
-        assertEquals(1, slots.maxLines)
+        assertTrue(slots.parent !is android.widget.HorizontalScrollView)
+        assertEquals(6, slots.childCount)
+        val ids = listOf(
+            R.id.browser_slot_0, R.id.browser_slot_1, R.id.browser_slot_2,
+            R.id.browser_slot_3, R.id.browser_slot_4, R.id.browser_slot_5,
+        )
+        val expectedSize = android.util.TypedValue.applyDimension(
+            android.util.TypedValue.COMPLEX_UNIT_SP, 12f, context.resources.displayMetrics,
+        )
+        for (i in 0..5) {
+            val cell = slots.getChildAt(i) as TextView
+            assertEquals(ids[i], cell.id)
+            val lp = cell.layoutParams as LinearLayout.LayoutParams
+            assertEquals(0, lp.width)
+            assertEquals(1f, lp.weight, 0.001f)
+            assertEquals(expectedSize, cell.textSize, 1.0f)
+            assertEquals(context.getColor(R.color.tp_text_secondary), cell.currentTextColor)
+            assertEquals(1, cell.maxLines)
+            assertEquals(android.text.TextUtils.TruncateAt.END, cell.ellipsize)
+        }
         val grid = root.findViewById<RecyclerView>(R.id.browser_grid)
+        val content = grid.parent as ViewGroup
+        assertTrue(content.indexOfChild(root.findViewById(R.id.browser_hero)) < content.indexOfChild(slots))
+        assertTrue(content.indexOfChild(slots) < content.indexOfChild(grid))
         val glp = grid.layoutParams as LinearLayout.LayoutParams
         assertEquals(1f, glp.weight, 0.001f)
         assertEquals(dp(context, 12), (glp as ViewGroup.MarginLayoutParams).topMargin)
