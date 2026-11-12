@@ -82,7 +82,7 @@ class VerticalClipFrameLayoutTest {
         val wrap = VerticalClipFrameLayout(context)
         val probe = ProbeView(context)
         wrap.addView(probe)
-        // Matriz de producción del wrap TV: sin clips de flags (el clip es de canvas).
+        // Matriz de producción del wrap TV: flags de clip abiertos (el clip es de canvas).
         wrap.clipChildren = false
         wrap.clipToPadding = false
         wrap.measure(exactly(SIZE), exactly(SIZE))
