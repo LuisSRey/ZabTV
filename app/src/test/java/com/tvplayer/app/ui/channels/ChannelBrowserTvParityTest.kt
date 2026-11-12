@@ -108,31 +108,46 @@ class ChannelBrowserTvParityTest {
     }
 
     @Test
-    fun `S2 tv hero compacto padding8 titulo18sp now13sp play48`() {
-        // U1 S2: hero TV 12→8dp + título 22→18sp 1 línea + now 16→13sp
-        // 1 línea + progreso intacto + play 48dp fijos (D-pad sin recortes
-        // en 720p). Grid a peso intacta.
+    fun `S2 tv hero mini padding4 titulo16sp now12sp VER96x48`() {
+        // W3 S3 (reemplaza U1 S2): hero mini apilado — padding 4 +
+        // título 16sp 1 línea + now 12sp 1 línea marginTop 2 + progreso
+        // 4dp marginTop 4 + VER wrap/minWidth 96 x 48 marginTop 4.
         val context = ApplicationProvider.getApplicationContext<Context>()
         val root = tvBrowserRoot(context)
         val hero = root.findViewById<View>(R.id.browser_hero)
-        assertEquals(dp(context, 8), hero.paddingLeft)
-        assertEquals(dp(context, 8), hero.paddingTop)
+        assertEquals(dp(context, 4), hero.paddingLeft)
+        assertEquals(dp(context, 4), hero.paddingTop)
         val title = root.findViewById<TextView>(R.id.browser_hero_title)
         val expectedTitle = android.util.TypedValue.applyDimension(
-            android.util.TypedValue.COMPLEX_UNIT_SP, 18f, context.resources.displayMetrics,
+            android.util.TypedValue.COMPLEX_UNIT_SP, 16f, context.resources.displayMetrics,
         )
         assertEquals(expectedTitle, title.textSize, 1.0f)
         assertEquals(1, title.maxLines)
         val now = root.findViewById<TextView>(R.id.browser_hero_now)
         val expectedNow = android.util.TypedValue.applyDimension(
-            android.util.TypedValue.COMPLEX_UNIT_SP, 13f, context.resources.displayMetrics,
+            android.util.TypedValue.COMPLEX_UNIT_SP, 12f, context.resources.displayMetrics,
         )
         assertEquals(expectedNow, now.textSize, 1.0f)
         assertEquals(1, now.maxLines)
-        assertTrue(root.findViewById<View>(R.id.browser_hero_progress) != null)
-        val play = root.findViewById<View>(R.id.browser_hero_play)
+        assertEquals(
+            dp(context, 2),
+            (now.layoutParams as ViewGroup.MarginLayoutParams).topMargin,
+        )
+        val progress = root.findViewById<android.widget.ProgressBar>(R.id.browser_hero_progress)
+        assertTrue(progress != null)
+        assertEquals(dp(context, 4), progress.minimumHeight)
+        assertEquals(
+            dp(context, 4),
+            (progress.layoutParams as ViewGroup.MarginLayoutParams).topMargin,
+        )
+        val play = root.findViewById<android.widget.Button>(R.id.browser_hero_play)
         assertEquals(dp(context, 48), play.layoutParams.height)
         assertEquals(dp(context, 48), play.minimumHeight)
+        assertEquals(dp(context, 96), play.minWidth)
+        assertEquals(
+            dp(context, 4),
+            (play.layoutParams as ViewGroup.MarginLayoutParams).topMargin,
+        )
     }
 
     @Test
@@ -150,7 +165,11 @@ class ChannelBrowserTvParityTest {
             dp(context, 12),
             (slots.layoutParams as ViewGroup.MarginLayoutParams).topMargin,
         )
-        assertEquals(dp(context, 12).toFloat(), slots.elevation, 1f)
+        // W2 S2: tira sin fondo ni elevación, solo aire vertical 2dp.
+        assertEquals(0f, slots.elevation, 0.1f)
+        assertTrue(slots.background == null)
+        assertEquals(dp(context, 2), slots.paddingTop)
+        assertEquals(dp(context, 2), slots.paddingBottom)
         assertTrue(slots.parent !is android.widget.HorizontalScrollView)
         assertEquals(6, slots.childCount)
         val ids = listOf(
