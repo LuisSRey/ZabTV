@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- TV (Task 11): safe area + alta URL/archivo + lista con abrir/actualizar/borrar. -->
+<!-- TV (Task 11 + FRENTE L S5): safe area + alta URL/archivo + lista con
+     abrir/actualizar/borrar. D-pad: add_url baja a la lista y va a la derecha
+     a add_file; add_file vuelve a add_url; la lista sube a add_url (nav_lists
+     del shell entra por la derecha a add_url). -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -25,6 +28,8 @@
             android:layout_width="280dp"
             android:layout_height="wrap_content"
             android:background="@drawable/btn_primary"
+            android:nextFocusDown="@id/lists_list"
+            android:nextFocusRight="@id/lists_add_file"
             android:text="@string/lists_add_url"
             android:textColor="@color/tp_text" />
 
@@ -34,6 +39,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
             android:background="@drawable/btn_ghost"
+            android:nextFocusLeft="@id/lists_add_url"
             android:text="@string/lists_add_file"
             android:textColor="@color/tp_text" />
 
@@ -56,6 +62,7 @@
         android:layout_height="0dp"
         android:layout_marginTop="16dp"
         android:layout_weight="1"
-        android:clipToPadding="false" />
+        android:clipToPadding="false"
+        android:nextFocusUp="@id/lists_add_url" />
 
 </LinearLayout>

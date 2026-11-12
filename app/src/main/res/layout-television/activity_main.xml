@@ -127,6 +127,7 @@
             android:background="@drawable/tile_focus_bg"
             android:focusable="true"
             android:gravity="center_vertical"
+            android:nextFocusRight="@id/lists_add_url"
             android:orientation="horizontal"
             android:paddingStart="16dp"
             android:paddingEnd="16dp">
