@@ -156,6 +156,34 @@ class ChannelBrowserTvParityTest {
     }
 
     @Test
+    fun `X1 S2 hero lateral compacto interior intacto VER y cap160`() {
+        // X1 S2 (motivo: el hero lateral conserva el interior mini W3 S3):
+        // padding 4, título 16sp 1L, now 12sp 1L mt2, progreso 4dp mt4,
+        // VER wrap/minW 96x48 mt4 con nextFocus intactos + cap TV 160.
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val root = tvBrowserRoot(context)
+        val hero = root.findViewById<View>(R.id.browser_hero)
+        assertEquals(root.findViewById<View>(R.id.browser_toprow), hero.parent as View)
+        assertEquals(ViewGroup.LayoutParams.WRAP_CONTENT, hero.layoutParams.width)
+        assertEquals(dp(context, 320), hero.minimumWidth)
+        assertEquals(ViewGroup.LayoutParams.WRAP_CONTENT, hero.layoutParams.height)
+        assertEquals(dp(context, 4), hero.paddingLeft)
+        assertEquals(dp(context, 4), hero.paddingTop)
+        assertEquals(dp(context, 4), hero.paddingRight)
+        assertEquals(dp(context, 4), hero.paddingBottom)
+        val play = root.findViewById<android.widget.Button>(R.id.browser_hero_play)
+        assertEquals(ViewGroup.LayoutParams.WRAP_CONTENT, play.layoutParams.width)
+        assertEquals(dp(context, 96), play.minWidth)
+        assertEquals(dp(context, 48), play.layoutParams.height)
+        assertEquals(dp(context, 48), play.minimumHeight)
+        assertEquals(dp(context, 4), (play.layoutParams as ViewGroup.MarginLayoutParams).topMargin)
+        assertEquals(R.id.browser_grid, play.nextFocusDownId)
+        assertEquals(R.id.browser_sidebar, play.nextFocusLeftId)
+        assertEquals(R.id.browser_list_selector, play.nextFocusUpId)
+        assertEquals(160, ChannelBrowserFragment.HERO_MAX_DP_TV)
+    }
+
+    @Test
     fun `S2 tv hero mini padding4 titulo16sp now12sp VER96x48`() {
         // W3 S3 (reemplaza U1 S2): hero mini apilado — padding 4 +
         // título 16sp 1 línea + now 12sp 1 línea marginTop 2 + progreso
