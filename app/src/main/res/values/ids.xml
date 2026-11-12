@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Frontera de clip de FocusScaleHelper (W1 S1): tag de protección para
+         que el paseo de unclip salte este contenedor (contención grid). -->
+    <item name="focus_clip_protected" type="id" />
+</resources>

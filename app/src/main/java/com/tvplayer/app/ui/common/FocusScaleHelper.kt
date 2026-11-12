@@ -3,6 +3,7 @@ package com.tvplayer.app.ui.common
 import android.content.res.Configuration
 import android.view.View
 import android.view.ViewGroup
+import com.tvplayer.app.R
 
 /**
  * Comportamiento TV del spec (§3/§5): focus visible siempre con scale 1.0→1.1 (+elevación).
@@ -41,13 +42,44 @@ object FocusScaleHelper {
         }
     }
 
+    /**
+     * Marca una frontera de clip (W1 S1): el paseo de [unclipAncestors] la
+     * salta y conserva sus clips (contención, p. ej. el wrap de la grid TV).
+     * Solo TV: fuera de TV es no-op (móvil intacto).
+     */
+    fun protectClipBoundary(view: View) {
+        if (!isTv(view)) return
+        view.setTag(R.id.focus_clip_protected, true)
+    }
+
+    /**
+     * Fija una frontera de clip (W1 S1): restaura clipChildren +
+     * clipToPadding (contención) y además la protege del paseo. Solo TV.
+     */
+    fun enforceClipBoundary(view: View) {
+        if (!isTv(view)) return
+        (view as? ViewGroup)?.let {
+            it.clipChildren = true
+            it.clipToPadding = true
+        }
+        view.setTag(R.id.focus_clip_protected, true)
+    }
+
+    /** La vista es frontera de clip (marcada con [protectClipBoundary]). */
+    internal fun isProtected(view: View): Boolean =
+        view.getTag(R.id.focus_clip_protected) == true
+
     private fun unclipAncestors(view: View) {
         // La escala 1.1 desborda los bordes del padre: sin esto el foco se
         // recorta (típico: lado izquierdo de botones y tiles en Fire TV).
+        // Las fronteras protegidas se saltan (conservan su contención) y el
+        // paseo sigue hacia arriba para el halo del resto.
         var parent = view.parent
         while (parent is ViewGroup) {
-            parent.clipChildren = false
-            parent.clipToPadding = false
+            if (!isProtected(parent)) {
+                parent.clipChildren = false
+                parent.clipToPadding = false
+            }
             parent = parent.parent
         }
     }
