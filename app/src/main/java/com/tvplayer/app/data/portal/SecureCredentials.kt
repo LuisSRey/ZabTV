@@ -2,8 +2,6 @@ package com.tvplayer.app.data.portal
 
 import android.content.Context
 import android.content.SharedPreferences
-import androidx.security.crypto.EncryptedSharedPreferences
-import androidx.security.crypto.MasterKey
 
 /**
  * Credenciales de portal Xtream (Task 12). La lógica de claves vive sobre un
@@ -44,16 +42,21 @@ class SecureCredentials(private val prefs: SharedPreferences) {
         const val FILE = "portal_creds"
 
         /** Constructor de producción: EncryptedSharedPreferences con Keystore. */
+        // W4: MasterKey/EncryptedSharedPreferences.create de security-crypto 1.1.0
+        // están deprecated sin sustituto que conserve el mismo Keystore + esquemas;
+        // se mantienen a propósito (sin migración, sin tocar esquemas/alias/FILE) y
+        // el aviso se suprime solo en esta función.
+        @Suppress("DEPRECATION")
         fun createEncrypted(appContext: Context): SecureCredentials {
-            val masterKey = MasterKey.Builder(appContext, MasterKey.DEFAULT_MASTER_KEY_ALIAS)
-                .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+            val masterKey = androidx.security.crypto.MasterKey.Builder(appContext, androidx.security.crypto.MasterKey.DEFAULT_MASTER_KEY_ALIAS)
+                .setKeyScheme(androidx.security.crypto.MasterKey.KeyScheme.AES256_GCM)
                 .build()
-            val prefs = EncryptedSharedPreferences.create(
+            val prefs = androidx.security.crypto.EncryptedSharedPreferences.create(
                 appContext,
                 FILE,
                 masterKey,
-                EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM,
+                androidx.security.crypto.EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+                androidx.security.crypto.EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM,
             )
             return SecureCredentials(prefs)
         }

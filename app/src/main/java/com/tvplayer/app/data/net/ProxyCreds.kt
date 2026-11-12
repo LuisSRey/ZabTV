@@ -2,8 +2,6 @@ package com.tvplayer.app.data.net
 
 import android.content.Context
 import android.content.SharedPreferences
-import androidx.security.crypto.EncryptedSharedPreferences
-import androidx.security.crypto.MasterKey
 
 /**
  * Credenciales del proxy (S1). Mismo patrón que SecureCredentials (Task 12):
@@ -39,16 +37,21 @@ class ProxyCreds(private val prefs: SharedPreferences) {
         private const val KEY_PASS = "proxy_pass"
 
         /** Constructor de producción: EncryptedSharedPreferences con Keystore. */
+        // W4: MasterKey/EncryptedSharedPreferences.create de security-crypto 1.1.0
+        // están deprecated sin sustituto que conserve el mismo Keystore + esquemas;
+        // se mantienen a propósito (sin migración, sin tocar esquemas/alias/FILE) y
+        // el aviso se suprime solo en esta función.
+        @Suppress("DEPRECATION")
         fun createEncrypted(appContext: Context): ProxyCreds {
-            val masterKey = MasterKey.Builder(appContext, MasterKey.DEFAULT_MASTER_KEY_ALIAS)
-                .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+            val masterKey = androidx.security.crypto.MasterKey.Builder(appContext, androidx.security.crypto.MasterKey.DEFAULT_MASTER_KEY_ALIAS)
+                .setKeyScheme(androidx.security.crypto.MasterKey.KeyScheme.AES256_GCM)
                 .build()
-            val prefs = EncryptedSharedPreferences.create(
+            val prefs = androidx.security.crypto.EncryptedSharedPreferences.create(
                 appContext,
                 FILE,
                 masterKey,
-                EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM,
+                androidx.security.crypto.EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+                androidx.security.crypto.EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM,
             )
             return ProxyCreds(prefs)
         }
