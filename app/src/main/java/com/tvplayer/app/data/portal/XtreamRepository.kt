@@ -192,7 +192,7 @@ class XtreamRepository(
             if (it.has("auth")) it.opt("auth")?.toString().orEmpty() else ""
         }.orEmpty()
         val ok = raw == "1" || raw.equals("true", ignoreCase = true)
-        val status = info?.optString("status", null)?.takeIf { it.isNotBlank() }
+        val status = info?.optString("status")?.takeIf { it.isNotBlank() }
         return XtreamAuth(authenticated = ok, status = status)
     }
 }
