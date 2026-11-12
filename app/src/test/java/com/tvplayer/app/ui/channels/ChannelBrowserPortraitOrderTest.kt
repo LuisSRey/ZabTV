@@ -124,12 +124,14 @@ class ChannelBrowserPortraitOrderTest {
         val root = LayoutInflater.from(context)
             .inflate(R.layout.fragment_channel_browser, FrameLayout(context), false)
         val grid = root.findViewById<RecyclerView>(R.id.browser_grid)
-        val rightPanel = grid.parent as ViewGroup
+        val wrap = root.findViewById<View>(R.id.browser_grid_wrap)
+        assertEquals(wrap, grid.parent as View)
+        val rightPanel = wrap.parent as ViewGroup
         val ids = (0 until rightPanel.childCount).map { rightPanel.getChildAt(it).id }
         assertEquals(
             listOf(
                 R.id.browser_hero, R.id.browser_slots,
-                R.id.browser_grid, R.id.browser_empty,
+                R.id.browser_grid_wrap, R.id.browser_empty,
             ),
             ids,
         )

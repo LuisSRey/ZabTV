@@ -97,7 +97,7 @@ class ChannelBrowserTvParityTest {
         val columnGroup = column as ViewGroup
         assertTrue(columnGroup.indexOfChild(selector) < columnGroup.indexOfChild(sidebar))
         val grid = root.findViewById<RecyclerView>(R.id.browser_grid)
-        assertEquals(dp(context, 32), (grid.parent as View).layoutParams.let {
+        assertEquals(dp(context, 32), (root.findViewById<View>(R.id.browser_grid_wrap).parent as View).layoutParams.let {
             (it as ViewGroup.MarginLayoutParams).marginStart
         })
         assertTrue(root.findViewById<View>(R.id.browser_hero) != null)
@@ -172,12 +172,13 @@ class ChannelBrowserTvParityTest {
             assertEquals(android.text.TextUtils.TruncateAt.END, cell.ellipsize)
         }
         val grid = root.findViewById<RecyclerView>(R.id.browser_grid)
-        val content = grid.parent as ViewGroup
+        val content = grid.parent.parent as ViewGroup
+        val wrap = root.findViewById<View>(R.id.browser_grid_wrap)
         assertTrue(content.indexOfChild(root.findViewById(R.id.browser_hero)) < content.indexOfChild(slots))
-        assertTrue(content.indexOfChild(slots) < content.indexOfChild(grid))
-        val glp = grid.layoutParams as LinearLayout.LayoutParams
-        assertEquals(1f, glp.weight, 0.001f)
-        assertEquals(dp(context, 12), (glp as ViewGroup.MarginLayoutParams).topMargin)
+        assertTrue(content.indexOfChild(slots) < content.indexOfChild(wrap))
+        val wlp = wrap.layoutParams as LinearLayout.LayoutParams
+        assertEquals(1f, wlp.weight, 0.001f)
+        assertEquals(dp(context, 12), (grid.layoutParams as ViewGroup.MarginLayoutParams).topMargin)
     }
 
     @Test
@@ -295,14 +296,18 @@ class ChannelBrowserTvParityTest {
 
     @Test
     fun `S1 tv grid minHeight 192dp peso intacto`() {
-        // S1: la grid gana minHeight 192dp; peso 1 + marginTop 12dp intactos.
+        // S1 contención: el wrap porta peso 1 + minHeight 192dp; la grid
+        // vive dentro en match_parent sin peso ni minHeight.
         val context = ApplicationProvider.getApplicationContext<Context>()
         val root = tvBrowserRoot(context)
+        val wrap = root.findViewById<View>(R.id.browser_grid_wrap)
+        assertEquals(dp(context, 192), wrap.minimumHeight)
+        val wlp = wrap.layoutParams as LinearLayout.LayoutParams
+        assertEquals(1f, wlp.weight, 0.001f)
         val grid = root.findViewById<RecyclerView>(R.id.browser_grid)
-        assertEquals(dp(context, 192), grid.minimumHeight)
-        val glp = grid.layoutParams as LinearLayout.LayoutParams
-        assertEquals(1f, glp.weight, 0.001f)
-        assertEquals(dp(context, 12), (glp as ViewGroup.MarginLayoutParams).topMargin)
+        assertEquals(wrap, grid.parent as View)
+        assertEquals(ViewGroup.LayoutParams.MATCH_PARENT, grid.layoutParams.height)
+        assertEquals(0, grid.minimumHeight)
     }
 
     @Test

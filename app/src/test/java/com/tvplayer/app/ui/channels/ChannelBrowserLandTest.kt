@@ -132,11 +132,15 @@ class ChannelBrowserLandTest {
     @Test
     @Config(qualifiers = "land-television")
     fun `S1 tv apaisado grid 192dp y progreso 4dp`() {
-        // Escudo S1: land-television réplica de TV (grid 192dp + progreso 4dp).
+        // Escudo S1 contención: el wrap porta minHeight 192dp, la grid vive
+        // dentro en match_parent; progreso 4dp intacto.
         val context = ApplicationProvider.getApplicationContext<Context>()
         val root = landRoot(context)
+        val wrap = root.findViewById<View>(R.id.browser_grid_wrap)
+        assertEquals(dp(context, 192), wrap.minimumHeight)
         val grid = root.findViewById<RecyclerView>(R.id.browser_grid)
-        assertEquals(dp(context, 192), grid.minimumHeight)
+        assertEquals(wrap, grid.parent as View)
+        assertEquals(ViewGroup.LayoutParams.MATCH_PARENT, grid.layoutParams.height)
         val progress = root.findViewById<android.widget.ProgressBar>(R.id.browser_hero_progress)
         assertEquals(dp(context, 4), progress.minimumHeight)
     }
@@ -208,7 +212,9 @@ class ChannelBrowserLandTest {
             assertEquals(1, cell.maxLines)
         }
         val grid = root.findViewById<RecyclerView>(R.id.browser_grid)
-        assertEquals(1f, (grid.layoutParams as LinearLayout.LayoutParams).weight, 0.001f)
+        val wrap = root.findViewById<View>(R.id.browser_grid_wrap)
+        assertEquals(wrap, grid.parent as View)
+        assertEquals(1f, (wrap.layoutParams as LinearLayout.LayoutParams).weight, 0.001f)
     }
 
     @Test
