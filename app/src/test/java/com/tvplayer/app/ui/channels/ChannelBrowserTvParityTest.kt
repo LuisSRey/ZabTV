@@ -161,21 +161,21 @@ class ChannelBrowserTvParityTest {
         assertEquals(android.text.TextUtils.TruncateAt.END, title.ellipsize)
         val hero = root.findViewById<View>(R.id.browser_hero)
         assertEquals(toprow, hero.parent as View)
-        assertEquals(ViewGroup.LayoutParams.WRAP_CONTENT, hero.layoutParams.width)
-        assertEquals(dp(context, 320), hero.minimumWidth)
+        assertEquals(ViewGroup.LayoutParams.MATCH_PARENT, hero.layoutParams.width)
+        assertEquals(0, hero.minimumWidth)
     }
 
     @Test
     fun `X1 S2 hero lateral compacto interior intacto VER y cap160`() {
-        // X1 S2 (motivo: el hero lateral conserva el interior mini W3 S3):
-        // padding 4, título 16sp 1L, now 12sp 1L mt2, progreso 4dp mt4,
-        // VER wrap/minW 96x48 mt4 con nextFocus intactos + cap TV 160.
+        // Y1 S2 (motivo: con el título en la media, el toprow queda con el
+        // hero como hijo único a ancho completo): hero match_parent sin
+        // minWidth; interior mini W3 S3 + VER + cap TV 160 intactos.
         val context = ApplicationProvider.getApplicationContext<Context>()
         val root = tvBrowserRoot(context)
         val hero = root.findViewById<View>(R.id.browser_hero)
         assertEquals(root.findViewById<View>(R.id.browser_toprow), hero.parent as View)
-        assertEquals(ViewGroup.LayoutParams.WRAP_CONTENT, hero.layoutParams.width)
-        assertEquals(dp(context, 320), hero.minimumWidth)
+        assertEquals(ViewGroup.LayoutParams.MATCH_PARENT, hero.layoutParams.width)
+        assertEquals(0, hero.minimumWidth)
         assertEquals(ViewGroup.LayoutParams.WRAP_CONTENT, hero.layoutParams.height)
         assertEquals(dp(context, 4), hero.paddingLeft)
         assertEquals(dp(context, 4), hero.paddingTop)

@@ -86,9 +86,8 @@
             android:layout_weight="1"
             android:orientation="vertical">
 
-            <!-- Y1 S1 toprow: hero hijo único (el título baja a la
-                 columna media; hero lateral compacto mismo id, interior
-                 W3 S3 intacto — S2 lo pone a match_parent). -->
+            <!-- Y1 S1 toprow: hero hijo único a ancho completo (el título
+                 baja a la columna media; interior W3 S3 intacto). -->
             <LinearLayout
                 android:id="@+id/browser_toprow"
                 android:layout_width="match_parent"
@@ -97,11 +96,10 @@
 
                 <LinearLayout
                     android:id="@+id/browser_hero"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:background="@drawable/tile_focus_bg"
                     android:elevation="16dp"
-                    android:minWidth="320dp"
                     android:orientation="vertical"
                     android:padding="4dp"
                     android:visibility="gone">
