@@ -226,26 +226,35 @@
 
             </LinearLayout>
 
-            <!-- Contención S1: el wrap porta el peso 1 + minHeight 192dp (el
-                 hero GONE ya no colapsa la zona); la grid vive dentro en
-                 match_parent sin peso ni minHeight. -->
+            <!-- Contención X1 S3: el wrap porta el peso 1 + minHeight
+                 192dp (el hero GONE ya no colapsa la zona) con clips
+                 true/false + aire lateral 12dp (el vertical lo pone la
+                 grid) + marginTop 0; la grid vive dentro en match_parent
+                 sin peso ni minHeight, con el halo (clipChildren false +
+                 clipToPadding false + paddingTop 12) y marginTop 0 para
+                 pegar slots.bottom == wrap.top. -->
             <FrameLayout
                 android:id="@+id/browser_grid_wrap"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
+                android:layout_marginTop="0dp"
                 android:layout_weight="1"
                 android:clipChildren="true"
-                android:clipToPadding="true"
+                android:clipToPadding="false"
                 android:focusable="false"
-                android:minHeight="192dp">
+                android:minHeight="192dp"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:paddingTop="0dp"
+                android:paddingBottom="0dp">
 
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/browser_grid"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:layout_marginTop="12dp"
+                    android:layout_marginTop="0dp"
                     android:clipChildren="false"
-                    android:clipToPadding="true"
+                    android:clipToPadding="false"
                     android:nextFocusLeft="@id/browser_sidebar"
                     android:nextFocusUp="@id/browser_list_selector"
                     android:paddingTop="12dp" />

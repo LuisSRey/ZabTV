@@ -278,7 +278,9 @@ class ChannelBrowserTvParityTest {
         assertTrue(content.indexOfChild(slots) < content.indexOfChild(wrap))
         val wlp = wrap.layoutParams as LinearLayout.LayoutParams
         assertEquals(1f, wlp.weight, 0.001f)
-        assertEquals(dp(context, 12), (grid.layoutParams as ViewGroup.MarginLayoutParams).topMargin)
+        // X1 S3 (motivo: el aire vertical vive en el paddingTop 12 de la
+        // grid, sin margen; pega slots.bottom == wrap.top).
+        assertEquals(0, (grid.layoutParams as ViewGroup.MarginLayoutParams).topMargin)
     }
 
     @Test
