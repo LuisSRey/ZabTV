@@ -1,14 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Fila de canal con timeline (TV, paridad D1+D2 + A1/A2 + B1/B2):
      raíz transparente sin margen (aire vertical 6dp; el lateral vive en
-     el inner) + clipChildren false (B1: el halo de foco 1.1 de la raíz
-     desborda sin recortarse) + channel_tile_inner (match_parent,
-     tile_focus_bg, aire 16h/8v, no focable) con cabecera nº + logo 96x56
-     + nombre/tira + tira channel_timeline horizontal de 60dp abajo con 6
-     celdas de item_channel_timeline (0dp/weight1, sin scroll: caben a
-     peso igual). La raíz porta el foco y la escala (attach clásico
-     unificado con móvil, B1); el adapter se reutiliza intacto (infla 6
-     vía DEFAULT_SLOT_COUNT) y pinta Sin datos sin guía. -->
+     el inner) focable con attach clásico: la raíz porta el foco y la
+     escala 1.0→1.1 (B1) y clipChildren false para que el halo desborde
+     sin recortarse. El inner (match_parent, tile_focus_bg, aire 16h/8v,
+     no focable) DUPLICA el estado de la raíz (duplicateParentState) para
+     pintar el borde de foco aunque el foco viva en la raíz. Tira
+     channel_timeline horizontal de 60dp abajo con 6 celdas de
+     item_channel_timeline (0dp/weight1, sin scroll: caben a peso igual);
+     el adapter se reutiliza intacto (infla 6 vía DEFAULT_SLOT_COUNT) y
+     pinta Sin datos sin guía. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
@@ -27,6 +28,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@drawable/tile_focus_bg"
+        android:duplicateParentState="true"
         android:focusable="false"
         android:orientation="vertical"
         android:paddingStart="16dp"
