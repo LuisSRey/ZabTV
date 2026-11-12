@@ -66,11 +66,7 @@ class SettingsFragment : Fragment() {
         wipeLogos.setOnClickListener {
             confirm(getString(R.string.settings_wipe_logos)) {
                 lifecycleScope.launch(kotlinx.coroutines.Dispatchers.IO) {
-                    runCatching {
-                        container().imageLoader.diskCache?.directory?.let { dir ->
-                            java.io.File(dir.toString()).deleteRecursively()
-                        }
-                    }
+                    clearCoilDiskCache(container().imageLoader)
                     toast(R.string.settings_wiped)
                 }
             }
@@ -471,6 +467,16 @@ class SettingsFragment : Fragment() {
             .setPositiveButton(R.string.lists_delete) { _, _ -> onYes() }
             .setNegativeButton(R.string.lists_cancel, null)
             .show()
+    }
+
+    /** Limpieza del diskCache de Coil (ExperimentalCoilApi: opt-in solo aquí). */
+    @OptIn(coil.annotation.ExperimentalCoilApi::class)
+    private fun clearCoilDiskCache(loader: coil.ImageLoader) {
+        runCatching {
+            loader.diskCache?.directory?.let { dir ->
+                java.io.File(dir.toString()).deleteRecursively()
+            }
+        }
     }
 
     private fun wipe(block: suspend () -> Unit) {
