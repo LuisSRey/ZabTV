@@ -80,7 +80,6 @@
                 android:id="@+id/browser_hero"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
                 android:background="@drawable/tile_focus_bg"
                 android:elevation="16dp"
                 android:orientation="vertical"
