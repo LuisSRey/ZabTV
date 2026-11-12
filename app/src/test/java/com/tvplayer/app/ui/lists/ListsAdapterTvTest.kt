@@ -100,6 +100,18 @@ class ListsAdapterTvTest {
     }
 
     @Test
+    fun `L tv cada boton dispara su callback una vez`() {
+        val activity = Robolectric.buildActivity(Activity::class.java).setup().get()
+        val calls = Calls()
+        val h = holder(activity, ListsAdapter.Row(3, "Lista", "ready", false), calls)
+        listOf(h.open, h.refresh, h.delete, h.activate, h.edit, h.epg).forEach { it.performClick() }
+        assertEquals(
+            listOf("open:3", "refresh:3", "delete:3", "activate:3", "edit:3", "epg:3"),
+            calls.log,
+        )
+    }
+
+    @Test
     @Config(sdk = [34], qualifiers = "w360dp-h640dp-port")
     fun `L movil tap de fila abre sin foco`() {
         val activity = Robolectric.buildActivity(Activity::class.java).setup().get()
