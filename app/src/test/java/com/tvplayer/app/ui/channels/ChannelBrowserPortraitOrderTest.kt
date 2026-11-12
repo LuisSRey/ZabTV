@@ -117,9 +117,10 @@ class ChannelBrowserPortraitOrderTest {
 
     @Test
     @Config(qualifiers = "television")
-    fun `tv orden intacto S3`() {
-        // S3 (motivo S6): el selector sube a la columna media encima de los
-        // filtros; la columna derecha queda hero→slots→grid→vacío.
+    fun `tv orden intacto X1`() {
+        // X1 S1 (motivo: el título raíz baja a la fila del hero y el hero
+        // pasa a lateral en el toprow): la columna derecha queda
+        // toprow→slots→wrap→vacío y el toprow lleva título-inline + hero.
         val context = ApplicationProvider.getApplicationContext<Context>()
         val root = LayoutInflater.from(context)
             .inflate(R.layout.fragment_channel_browser, FrameLayout(context), false)
@@ -130,11 +131,14 @@ class ChannelBrowserPortraitOrderTest {
         val ids = (0 until rightPanel.childCount).map { rightPanel.getChildAt(it).id }
         assertEquals(
             listOf(
-                R.id.browser_hero, R.id.browser_slots,
+                R.id.browser_toprow, R.id.browser_slots,
                 R.id.browser_grid_wrap, R.id.browser_empty,
             ),
             ids,
         )
+        val toprow = root.findViewById<LinearLayout>(R.id.browser_toprow)
+        val topIds = (0 until toprow.childCount).map { toprow.getChildAt(it).id }
+        assertEquals(listOf(R.id.browser_title_inline, R.id.browser_hero), topIds)
         val sidebar = root.findViewById<RecyclerView>(R.id.browser_sidebar)
         val column = sidebar.parent as ViewGroup
         val columnIds = (0 until column.childCount).map { column.getChildAt(it).id }

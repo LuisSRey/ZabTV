@@ -108,6 +108,54 @@ class ChannelBrowserTvParityTest {
     }
 
     @Test
+    fun `X1 tv columnas sin titulo raiz con toprow titulo-inline y hero lateral`() {
+        // X1 S1 (motivo: el título raíz robaba 1 fila en 720p; el título
+        // baja a la fila del hero y el hero pasa a lateral compacto):
+        // raíz → solo browser_columns (marginTop 0); derecha →
+        // [toprow, slots, wrap, empty]; toprow horizontal →
+        // [title_inline, hero]; hero mismo id en wrap_content + minWidth 320.
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val root = tvBrowserRoot(context) as ViewGroup
+        assertEquals(1, root.childCount)
+        val columns = root.getChildAt(0)
+        assertEquals(R.id.browser_columns, columns.id)
+        assertEquals(0, (columns.layoutParams as ViewGroup.MarginLayoutParams).topMargin)
+        val grid = root.findViewById<RecyclerView>(R.id.browser_grid)
+        val wrap = root.findViewById<View>(R.id.browser_grid_wrap)
+        assertEquals(wrap, grid.parent as View)
+        val rightPanel = wrap.parent as ViewGroup
+        val ids = (0 until rightPanel.childCount).map { rightPanel.getChildAt(it).id }
+        assertEquals(
+            listOf(
+                R.id.browser_toprow, R.id.browser_slots,
+                R.id.browser_grid_wrap, R.id.browser_empty,
+            ),
+            ids,
+        )
+        val toprow = root.findViewById<LinearLayout>(R.id.browser_toprow)
+        assertEquals(LinearLayout.HORIZONTAL, toprow.orientation)
+        val topIds = (0 until toprow.childCount).map { toprow.getChildAt(it).id }
+        assertEquals(listOf(R.id.browser_title_inline, R.id.browser_hero), topIds)
+        val title = root.findViewById<TextView>(R.id.browser_title_inline)
+        assertEquals(context.getString(R.string.browser_title), title.text.toString())
+        val tlp = title.layoutParams as LinearLayout.LayoutParams
+        assertEquals(0, tlp.width)
+        assertEquals(1f, tlp.weight, 0.001f)
+        assertTrue(title.gravity and android.view.Gravity.CENTER_VERTICAL != 0)
+        val expectedTitle = android.util.TypedValue.applyDimension(
+            android.util.TypedValue.COMPLEX_UNIT_SP, 30f, context.resources.displayMetrics,
+        )
+        assertEquals(expectedTitle, title.textSize, 1.0f)
+        assertEquals(context.getColor(R.color.tp_accent), title.currentTextColor)
+        assertEquals(1, title.maxLines)
+        assertEquals(android.text.TextUtils.TruncateAt.END, title.ellipsize)
+        val hero = root.findViewById<View>(R.id.browser_hero)
+        assertEquals(toprow, hero.parent as View)
+        assertEquals(ViewGroup.LayoutParams.WRAP_CONTENT, hero.layoutParams.width)
+        assertEquals(dp(context, 320), hero.minimumWidth)
+    }
+
+    @Test
     fun `S2 tv hero mini padding4 titulo16sp now12sp VER96x48`() {
         // W3 S3 (reemplaza U1 S2): hero mini apilado — padding 4 +
         // título 16sp 1 línea + now 12sp 1 línea marginTop 2 + progreso
@@ -192,8 +240,13 @@ class ChannelBrowserTvParityTest {
         }
         val grid = root.findViewById<RecyclerView>(R.id.browser_grid)
         val content = grid.parent.parent as ViewGroup
+        // X1 S1 (motivo: el hero baja al toprow lateral, ya no es hijo
+        // directo): el toprow precede a los slots y el hero vive dentro.
+        val toprow = root.findViewById<View>(R.id.browser_toprow)
+        assertEquals(content, toprow.parent as View)
+        assertTrue(content.indexOfChild(toprow) < content.indexOfChild(slots))
+        assertEquals(toprow, root.findViewById<View>(R.id.browser_hero).parent as View)
         val wrap = root.findViewById<View>(R.id.browser_grid_wrap)
-        assertTrue(content.indexOfChild(root.findViewById(R.id.browser_hero)) < content.indexOfChild(slots))
         assertTrue(content.indexOfChild(slots) < content.indexOfChild(wrap))
         val wlp = wrap.layoutParams as LinearLayout.LayoutParams
         assertEquals(1f, wlp.weight, 0.001f)

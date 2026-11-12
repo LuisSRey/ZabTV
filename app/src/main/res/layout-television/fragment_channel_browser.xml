@@ -1,29 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Browser fusionado TV (safe area 56dp, paridad D1+D2 + S3): título +
-     columna media 200dp (selector de playlist de 48dp encima de los
-     filtros) + contenido (hero + cortes + grid) a la derecha con gap 32dp.
-     Foco D-pad con nextFocus explícitos §F2 (nav_browse<->selector,
-     selector v sidebar, sidebar ^selector >grid <nav, grid ^selector
-     <sidebar, hero_play ^selector v grid <sidebar); ninguna salida apunta
-     al hero en exclusiva (puede estar GONE). -->
+<!-- Browser fusionado TV (safe area 56dp, paridad D1+D2 + S3): X1 S1 sin
+     título raíz (baja a la fila del hero) + browser_columns (media 200dp
+     con selector de 48dp encima de los filtros + derecha [toprow, slots,
+     wrap, empty] con gap 32dp). Foco D-pad con nextFocus explícitos §F2
+     (nav_browse<->selector, selector v sidebar, sidebar ^selector >grid
+     <nav, grid ^selector <sidebar, hero_play ^selector v grid <sidebar);
+     ninguna salida apunta al hero en exclusiva (puede estar GONE). -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:padding="56dp">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/browser_title"
-        android:textColor="@color/tp_accent"
-        android:textSize="30sp"
-        android:textStyle="bold" />
-
     <LinearLayout
+        android:id="@+id/browser_columns"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginTop="24dp"
+        android:layout_marginTop="0dp"
         android:orientation="horizontal">
 
         <!-- Columna media S3: selector encima de los filtros. -->
@@ -76,65 +69,85 @@
             android:layout_weight="1"
             android:orientation="vertical">
 
-            <!-- W3 S3: hero mini apilado: padding 4, título 16sp 1L bold end,
-                 now 12sp 1L end marginTop 2, progreso 4dp marginTop 4, VER
-                 wrap + minWidth 96 x 48 marginTop 4; nextFocus del VER
-                 intactos. Medido en Robolectric TV 152dp (>100 por métricas
-                 de fuente infladas; en dispositivo ~110dp): se aplica el
-                 ajuste previsto (padding 4 + VER margin 4). -->
+            <!-- X1 S1 toprow: título inline (peso 1, centro vertical,
+                 30sp acento, 1 línea end — hereda bold del título raíz) +
+                 hero lateral compacto (mismo id, wrap_content + minWidth
+                 320dp, interior W3 S3 intacto). -->
             <LinearLayout
-                android:id="@+id/browser_hero"
+                android:id="@+id/browser_toprow"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@drawable/tile_focus_bg"
-                android:elevation="16dp"
-                android:orientation="vertical"
-                android:padding="4dp"
-                android:visibility="gone">
+                android:orientation="horizontal">
 
                 <TextView
-                    android:id="@+id/browser_hero_title"
-                    android:layout_width="match_parent"
+                    android:id="@+id/browser_title_inline"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_weight="1"
                     android:ellipsize="end"
+                    android:gravity="center_vertical"
                     android:maxLines="1"
-                    android:textSize="16sp"
+                    android:text="@string/browser_title"
+                    android:textColor="@color/tp_accent"
+                    android:textSize="30sp"
                     android:textStyle="bold" />
 
-                <TextView
-                    android:id="@+id/browser_hero_now"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
-                    android:ellipsize="end"
-                    android:maxLines="1"
-                    android:textAppearance="@style/TextAppearance_TVPlayer_Meta"
-                    android:textSize="12sp" />
-
-                <ProgressBar
-                    android:id="@+id/browser_hero_progress"
-                    style="?android:attr/progressBarStyleHorizontal"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:max="100"
-                    android:maxHeight="4dp"
-                    android:minHeight="4dp" />
-
-                <Button
-                    android:id="@+id/browser_hero_play"
+                <LinearLayout
+                    android:id="@+id/browser_hero"
                     android:layout_width="wrap_content"
-                    android:layout_height="48dp"
-                    android:layout_marginTop="4dp"
-                    android:background="@drawable/btn_primary"
-                    android:focusable="true"
-                    android:minHeight="48dp"
-                    android:minWidth="96dp"
-                    android:nextFocusDown="@id/browser_grid"
-                    android:nextFocusLeft="@id/browser_sidebar"
-                    android:nextFocusUp="@id/browser_list_selector"
-                    android:text="@string/sheet_play"
-                    android:textColor="@color/tp_text" />
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/tile_focus_bg"
+                    android:elevation="16dp"
+                    android:minWidth="320dp"
+                    android:orientation="vertical"
+                    android:padding="4dp"
+                    android:visibility="gone">
+
+                    <TextView
+                        android:id="@+id/browser_hero_title"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:ellipsize="end"
+                        android:maxLines="1"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/browser_hero_now"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:ellipsize="end"
+                        android:maxLines="1"
+                        android:textAppearance="@style/TextAppearance_TVPlayer_Meta"
+                        android:textSize="12sp" />
+
+                    <ProgressBar
+                        android:id="@+id/browser_hero_progress"
+                        style="?android:attr/progressBarStyleHorizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:max="100"
+                        android:maxHeight="4dp"
+                        android:minHeight="4dp" />
+
+                    <Button
+                        android:id="@+id/browser_hero_play"
+                        android:layout_width="wrap_content"
+                        android:layout_height="48dp"
+                        android:layout_marginTop="4dp"
+                        android:background="@drawable/btn_primary"
+                        android:focusable="true"
+                        android:minHeight="48dp"
+                        android:minWidth="96dp"
+                        android:nextFocusDown="@id/browser_grid"
+                        android:nextFocusLeft="@id/browser_sidebar"
+                        android:nextFocusUp="@id/browser_list_selector"
+                        android:text="@string/sheet_play"
+                        android:textColor="@color/tp_text" />
+                </LinearLayout>
+
             </LinearLayout>
 
             <!-- Cabecera del timeline: 6 cortes de 30 min ([GuideWindow])
