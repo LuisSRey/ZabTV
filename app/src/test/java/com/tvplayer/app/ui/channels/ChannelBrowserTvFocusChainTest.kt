@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.core.app.ApplicationProvider
@@ -19,9 +20,10 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
 /**
- * Cadena de foco TV W1/W3 S4: el wrap es frontera de clip (protegido +
- * forzado, sobrevive al attach de tiles) y la grid apunta arriba al VER con
- * hero visible o al selector con hero GONE. Solo TV; móvil intacto.
+ * Cadena de foco TV W3 S4 + reskin B1/B2: el wrap ya NO es frontera de clip
+ * (XML abierto y sin protect: el attach de un tile abre la cadena entera) y
+ * la grid apunta arriba al VER con hero visible o al selector con hero GONE.
+ * Solo TV; móvil intacto.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34], qualifiers = "television")
@@ -74,59 +76,33 @@ class ChannelBrowserTvFocusChainTest {
     }
 
     @Test
-    fun `bindClipBoundary TV protege y conserva true-false sin enforce`() {
-        // X1 S4 (motivo: el enforce restauraba clipToPadding true y rompía
-        // la matriz X1 S3): solo protect — conserva los clips del XML y
-        // protege aunque vengan forzados.
+    fun `wrap sin clip en XML y sin protect`() {
+        // Nueva verdad B1/B2 (S3): el wrap ya no es frontera de clip. El
+        // XML lo deja abierto y nadie lo protege: sin llamadas, la cadena
+        // queda abierta de raíz.
         val context = ApplicationProvider.getApplicationContext<Context>()
         val root = tvRoot(context)
-        val wrap = root.findViewById<View>(R.id.browser_grid_wrap)
-        wrap as android.view.ViewGroup
-        assertTrue(wrap.clipChildren)
-        assertFalse(wrap.clipToPadding)
-        fragment().bindClipBoundary(root, isTv = true)
-        assertTrue(wrap.clipChildren)
-        assertFalse(wrap.clipToPadding)
-        assertTrue(FocusScaleHelper.isProtected(wrap))
-        wrap.clipChildren = false
-        fragment().bindClipBoundary(root, isTv = true)
+        val wrap = root.findViewById<ViewGroup>(R.id.browser_grid_wrap)
         assertFalse(wrap.clipChildren)
-        assertFalse(wrap.clipToPadding)
-        assertTrue(FocusScaleHelper.isProtected(wrap))
-    }
-
-    @Test
-    fun `bindClipBoundary no-TV no toca nada`() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val root = tvRoot(context)
-        val wrap = root.findViewById<View>(R.id.browser_grid_wrap)
-        wrap as android.view.ViewGroup
-        wrap.clipChildren = false
-        wrap.clipToPadding = false
-        fragment().bindClipBoundary(root, isTv = false)
-        assertFalse(wrap.clipChildren)
-        assertFalse(wrap.clipToPadding)
         assertFalse(FocusScaleHelper.isProtected(wrap))
     }
 
     @Test
-    fun `wrap protegido sobrevive al attach de un tile`() {
+    fun `wrap sin frontera (attach de un tile abre la cadena entera)`() {
         val activity = Robolectric.buildActivity(Activity::class.java).setup().get()
         val root = LayoutInflater.from(activity)
             .inflate(R.layout.fragment_channel_browser, null)
         activity.setContentView(root)
-        fragment().bindClipBoundary(root, isTv = true)
-        val wrap = root.findViewById<View>(R.id.browser_grid_wrap)
+        val wrap = root.findViewById<ViewGroup>(R.id.browser_grid_wrap)
         val grid = root.findViewById<RecyclerView>(R.id.browser_grid)
         // Como en bindBrowserViews: la grid tiene manager antes de los tiles.
         grid.layoutManager = androidx.recyclerview.widget.LinearLayoutManager(activity)
         val tile = View(activity)
         grid.addView(tile)
+        // Sin frontera: el attach clásico abre la cadena entera (wrap y raíz
+        // sin clip); el halo 1.1 desborda hasta el aire lateral.
         FocusScaleHelper.attach(tile)
-        // Frontera intacta (contención vertical + aire lateral X1 S3),
-        // raíz abierta para el halo de foco.
-        assertTrue((wrap as android.view.ViewGroup).clipChildren)
-        assertFalse(wrap.clipToPadding)
-        assertFalse((root as android.view.ViewGroup).clipChildren)
+        assertFalse(wrap.clipChildren)
+        assertFalse((root as ViewGroup).clipChildren)
     }
 }
