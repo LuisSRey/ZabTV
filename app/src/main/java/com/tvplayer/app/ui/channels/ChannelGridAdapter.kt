@@ -167,8 +167,12 @@ class ChannelGridAdapter(
             logo.setImageResource(R.drawable.tile_logo_placeholder)
             return
         }
-        if (logo.tag == clean) return
+        if (logo.tag == clean) {
+            BrowserPerfCounters.incCoilSkip()
+            return
+        }
         logo.tag = clean
+        BrowserPerfCounters.incCoilLoad()
         val radiusPx = 8f * logo.resources.displayMetrics.density
         logo.load(clean) {
             crossfade(false)

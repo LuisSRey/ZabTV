@@ -644,32 +644,28 @@ class ChannelBrowserFragment : Fragment() {
      * Lote del timeline sobre los visibles → líneas "▶ ahora · después" +
      * programas de la ventana por canal (clave: stableKey). La clave EPG por
      * canal la resuelve [BrowserEpgResolver] (exacta con programas crudos →
-     * fallback aproximado vía EpgMatcher → sin guía). La orquestación
-     * (ventana-primero, submitTimeline siempre, reintento acotado) vive en
-     * [BrowserTimelineRunner]; aquí solo el lote con DB + ViewModel.
+     * fallback aproximado vía EpgMatcher → sin guía). El lote va con caché
+     * por anchor ([EpgBatchLoader], S4: full-hit → cero DB/matcher). La
+     * orquestación (ventana-primero, submitTimeline siempre, reintento
+     * acotado) vive en [BrowserTimelineRunner]; aquí solo el lote con DB +
+     * ViewModel.
      */
     private suspend fun timelineBatch(
         visibles: List<ChannelEntity>,
     ): BrowserTimelineRunner.Batch {
         val db = (requireActivity().application as TpApp).container.db
+        val now = System.currentTimeMillis()
         val exactIds = visibles.mapNotNull { it.tvgId?.takeIf { t -> t.isNotBlank() } }
             .distinct()
-        val now = System.currentTimeMillis()
-        val nn = db.epgDao().nowNext(exactIds, now).toMutableMap()
-        val range = viewModel.timeline(exactIds, window).toMutableMap()
-        // Fallback aproximado SOLO en misses exactos (acota las queries).
-        val matcher = com.tvplayer.app.data.repo.EpgMatcher(db.epgDao())
-        val approxHit = mutableMapOf<String, String>()
-        for (ch in visibles) {
-            if (BrowserEpgResolver.resolveKey(ch.tvgId, range, null) != null) continue
-            val hit = matcher.match(ch) ?: continue
-            approxHit[ch.stableKey] = hit.tvgId
-        }
-        val approxIds = approxHit.values.distinct().filter { !range.containsKey(it) }
-        if (approxIds.isNotEmpty()) {
-            nn.putAll(db.epgDao().nowNext(approxIds, now))
-            range.putAll(viewModel.timeline(approxIds, window))
-        }
+        // S4: el loader acumula la unión por anchor; en full-hit no hay
+        // queries ni matcher y los submits salen de la caché.
+        val loaded = EpgBatchLoader(db.epgDao(), viewModel::timeline)
+            .load(visibles, window, now)
+        BrowserPerfCounters.incFills()
+        BrowserPerfCounters.addMatcherCalls(loaded.matcherCalls)
+        val nn = loaded.nn
+        val range = loaded.range
+        val approxHit = loaded.approx
         val lines = mutableMapOf<String, String>()
         val perChannel = mutableMapOf<String, List<EpgProgramEntity>>()
         for (ch in visibles) {
@@ -684,12 +680,13 @@ class ChannelBrowserFragment : Fragment() {
         }
         // Traza sin PII (G2 S5): contadores + tvgIds + ventana + visibilidades.
         TimelineDebug.logBatch(
-            tvgIds = exactIds + approxIds,
+            tvgIds = (exactIds + approxHit.values).distinct(),
             window = window,
             visibles = visibles.size,
             epg = lines.size,
             channels = perChannel.size,
             vis = visSnapshot(),
+            cacheHit = loaded.cacheHit,
         )
         return BrowserTimelineRunner.Batch(lines, perChannel)
     }

@@ -93,6 +93,25 @@ class TimelineDebugTest {
     }
 
     @Test
+    fun `batchMessage lleva cache hit-miss`() {
+        val base = TimelineDebug.batchMessage(
+            tvgIds = listOf("c1"),
+            anchorMillis = window.anchorMillis,
+            slotCount = window.slotCount,
+            visibles = 1, epg = 1, channels = 1, vis = vis,
+        )
+        assertTrue(base.contains("cache=miss"))
+        val hit = TimelineDebug.batchMessage(
+            tvgIds = listOf("c1"),
+            anchorMillis = window.anchorMillis,
+            slotCount = window.slotCount,
+            visibles = 1, epg = 1, channels = 1, vis = vis,
+            cacheHit = true,
+        )
+        assertTrue(hit.contains("cache=hit"))
+    }
+
+    @Test
     fun `logEmpty emite motivo e intento, y calla sin gates`() {
         val out = mutableListOf<String>()
         TimelineDebug.logEmpty(

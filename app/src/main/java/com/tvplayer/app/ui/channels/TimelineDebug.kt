@@ -23,8 +23,10 @@ object TimelineDebug {
         epg: Int,
         channels: Int,
         vis: String,
+        cacheHit: Boolean = false,
     ): String = "tvg=[${tvgIds.joinToString(",")}] anchor=$anchorMillis slots=$slotCount " +
         "visibles=$visibles epg=$epg canales=$channels vis=[$vis] " +
+        "cache=${if (cacheHit) "hit" else "miss"} " +
         "v=${BuildConfig.VERSION_NAME}(${BuildConfig.VERSION_CODE})"
 
     /** Mensaje de retorno vacío: motivo + intento + anchor + slots + versión. Puro. */
@@ -39,12 +41,13 @@ object TimelineDebug {
         epg: Int,
         channels: Int,
         vis: String,
+        cacheHit: Boolean = false,
         debug: Boolean = BuildConfig.DEBUG,
         isLoggable: () -> Boolean = { Log.isLoggable(TAG, Log.DEBUG) },
         emit: (String) -> Unit = { Log.d(TAG, it) },
     ) {
         if (!debug || !isLoggable()) return
-        emit(batchMessage(tvgIds, window.anchorMillis, window.slotCount, visibles, epg, channels, vis))
+        emit(batchMessage(tvgIds, window.anchorMillis, window.slotCount, visibles, epg, channels, vis, cacheHit))
     }
 
     fun logEmpty(
