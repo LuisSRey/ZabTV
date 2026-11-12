@@ -110,8 +110,9 @@ class ChannelGridAdapter(
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): Holder {
         val v = LayoutInflater.from(parent.context).inflate(R.layout.item_channel, parent, false)
         val holder = Holder(v)
-        // B1: foco y escala en la raíz (attach clásico unificado TV/móvil;
-        // el inner del item TV solo pinta el tile, sin animación).
+        // B1: foco y escala en la raíz (attach clásico unificado TV/móvil);
+        // el inner TV duplica el estado de la raíz para pintar el borde de
+        // foco, sin animación propia.
         FocusScaleHelper.attach(v)
         // Solo el layout con tira lleva celdas (TV sin timeline = 0 celdas).
         if (holder.timeline != null) {
