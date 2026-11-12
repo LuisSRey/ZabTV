@@ -174,26 +174,46 @@ class ChannelBrowserLandTest {
             (sidebar.layoutParams as ViewGroup.MarginLayoutParams).topMargin,
         )
         assertEquals(dp(context, 16).toFloat(), selector.elevation, 1f)
-        // Escudo réplica S2 (U1): hero compacto como la TV (padding 8 +
-        // título 18sp 1 línea + now 13sp 1 línea + play 48dp fijos) +
-        // slots elevation 12dp 1 línea + grid a peso intacta.
+        // Escudo réplica S2 (U1) + W3 S3: hero mini apilado (padding 4 +
+        // título 16sp 1 línea + now 12sp 1 línea marginTop 2 + progreso 4dp
+        // marginTop 4 + VER 96x48 marginTop 4, nextFocus intactos) + tira
+        // sin fondo (W2 S2) + grid a peso intacta.
         val hero = root.findViewById<View>(R.id.browser_hero)
-        assertEquals(dp(context, 8), hero.paddingLeft)
+        assertEquals(dp(context, 4), hero.paddingLeft)
+        assertEquals(dp(context, 4), hero.paddingTop)
         val title = root.findViewById<TextView>(R.id.browser_hero_title)
         val expected = android.util.TypedValue.applyDimension(
-            android.util.TypedValue.COMPLEX_UNIT_SP, 18f, context.resources.displayMetrics,
+            android.util.TypedValue.COMPLEX_UNIT_SP, 16f, context.resources.displayMetrics,
         )
         assertEquals(expected, title.textSize, 1.0f)
         assertEquals(1, title.maxLines)
         val now = root.findViewById<TextView>(R.id.browser_hero_now)
         val expectedNow = android.util.TypedValue.applyDimension(
-            android.util.TypedValue.COMPLEX_UNIT_SP, 13f, context.resources.displayMetrics,
+            android.util.TypedValue.COMPLEX_UNIT_SP, 12f, context.resources.displayMetrics,
         )
         assertEquals(expectedNow, now.textSize, 1.0f)
         assertEquals(1, now.maxLines)
+        assertEquals(
+            dp(context, 2),
+            (now.layoutParams as ViewGroup.MarginLayoutParams).topMargin,
+        )
+        val progress = root.findViewById<android.widget.ProgressBar>(R.id.browser_hero_progress)
+        assertEquals(dp(context, 4), progress.minimumHeight)
+        assertEquals(
+            dp(context, 4),
+            (progress.layoutParams as ViewGroup.MarginLayoutParams).topMargin,
+        )
         val play = root.findViewById<View>(R.id.browser_hero_play)
         assertEquals(dp(context, 48), play.layoutParams.height)
         assertEquals(dp(context, 48), play.minimumHeight)
+        assertEquals(dp(context, 96), (play as android.widget.Button).minWidth)
+        assertEquals(
+            dp(context, 4),
+            (play.layoutParams as ViewGroup.MarginLayoutParams).topMargin,
+        )
+        assertEquals(R.id.browser_grid, play.nextFocusDownId)
+        assertEquals(R.id.browser_sidebar, play.nextFocusLeftId)
+        assertEquals(R.id.browser_list_selector, play.nextFocusUpId)
         val slots = root.findViewById<LinearLayout>(R.id.browser_slots)
         assertTrue(slots != null)
         assertEquals(LinearLayout.HORIZONTAL, slots.orientation)

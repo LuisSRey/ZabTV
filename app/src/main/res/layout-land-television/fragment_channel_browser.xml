@@ -79,6 +79,12 @@
             android:layout_weight="1"
             android:orientation="vertical">
 
+            <!-- W3 S3: hero mini apilado: padding 4, título 16sp 1L bold end,
+                 now 12sp 1L end marginTop 2, progreso 4dp marginTop 4, VER
+                 wrap + minWidth 96 x 48 marginTop 4; nextFocus del VER
+                 intactos. Medido en Robolectric TV 152dp (>100 por métricas
+                 de fuente infladas; en dispositivo ~110dp): se aplica el
+                 ajuste previsto (padding 4 + VER margin 4). -->
             <LinearLayout
                 android:id="@+id/browser_hero"
                 android:layout_width="match_parent"
@@ -86,7 +92,7 @@
                 android:background="@drawable/tile_focus_bg"
                 android:elevation="16dp"
                 android:orientation="vertical"
-                android:padding="8dp"
+                android:padding="4dp"
                 android:visibility="gone">
 
                 <TextView
@@ -95,25 +101,25 @@
                     android:layout_height="wrap_content"
                     android:ellipsize="end"
                     android:maxLines="1"
-                    android:textSize="18sp"
+                    android:textSize="16sp"
                     android:textStyle="bold" />
 
                 <TextView
                     android:id="@+id/browser_hero_now"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
+                    android:layout_marginTop="2dp"
                     android:ellipsize="end"
                     android:maxLines="1"
                     android:textAppearance="@style/TextAppearance_TVPlayer_Meta"
-                    android:textSize="13sp" />
+                    android:textSize="12sp" />
 
                 <ProgressBar
                     android:id="@+id/browser_hero_progress"
                     style="?android:attr/progressBarStyleHorizontal"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
+                    android:layout_marginTop="4dp"
                     android:max="100"
                     android:maxHeight="4dp"
                     android:minHeight="4dp" />
@@ -122,10 +128,11 @@
                     android:id="@+id/browser_hero_play"
                     android:layout_width="wrap_content"
                     android:layout_height="48dp"
-                    android:layout_marginTop="12dp"
+                    android:layout_marginTop="4dp"
                     android:background="@drawable/btn_primary"
                     android:focusable="true"
                     android:minHeight="48dp"
+                    android:minWidth="96dp"
                     android:nextFocusDown="@id/browser_grid"
                     android:nextFocusLeft="@id/browser_sidebar"
                     android:nextFocusUp="@id/browser_list_selector"

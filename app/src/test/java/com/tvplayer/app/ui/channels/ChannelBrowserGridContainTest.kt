@@ -4,6 +4,7 @@ import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -99,23 +100,41 @@ class ChannelBrowserGridContainTest {
     }
 
     @Test
-    fun `S4 hero arriba marginTop0 y compacto intacto`() {
+    fun `S4 hero mini stacked TV con VER intacto`() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val root = tvRoot(context)
+        // W3 S3: hero mini apilado (ajuste previsto: padding 4 + VER
+        // margin 4 tras medir 152dp en Robolectric TV / ~110dp en
+        // dispositivo, por encima de ~100dp).
         val hero = root.findViewById<View>(R.id.browser_hero)
         assertEquals(0, (hero.layoutParams as ViewGroup.MarginLayoutParams).topMargin)
+        assertEquals(dp(context, 4), hero.paddingLeft)
+        assertEquals(dp(context, 4), hero.paddingTop)
         val title = root.findViewById<TextView>(R.id.browser_hero_title)
         val expectedTitle = android.util.TypedValue.applyDimension(
-            android.util.TypedValue.COMPLEX_UNIT_SP, 18f, context.resources.displayMetrics,
+            android.util.TypedValue.COMPLEX_UNIT_SP, 16f, context.resources.displayMetrics,
         )
         assertEquals(expectedTitle, title.textSize, 1.0f)
         assertEquals(1, title.maxLines)
         val now = root.findViewById<TextView>(R.id.browser_hero_now)
-        assertEquals(dp(context, 4), (now.layoutParams as ViewGroup.MarginLayoutParams).topMargin)
+        val expectedNow = android.util.TypedValue.applyDimension(
+            android.util.TypedValue.COMPLEX_UNIT_SP, 12f, context.resources.displayMetrics,
+        )
+        assertEquals(expectedNow, now.textSize, 1.0f)
+        assertEquals(1, now.maxLines)
+        assertEquals(dp(context, 2), (now.layoutParams as ViewGroup.MarginLayoutParams).topMargin)
         val progress = root.findViewById<android.widget.ProgressBar>(R.id.browser_hero_progress)
+        assertEquals(dp(context, 4), (progress.layoutParams as ViewGroup.MarginLayoutParams).topMargin)
         assertEquals(dp(context, 4), progress.minimumHeight)
-        val play = root.findViewById<View>(R.id.browser_hero_play)
+        val play = root.findViewById<Button>(R.id.browser_hero_play)
+        assertEquals(dp(context, 4), (play.layoutParams as ViewGroup.MarginLayoutParams).topMargin)
+        assertEquals(dp(context, 96), play.minWidth)
         assertEquals(dp(context, 48), play.layoutParams.height)
+        assertEquals(dp(context, 48), play.minimumHeight)
+        // nextFocus del VER intactos.
+        assertEquals(R.id.browser_grid, play.nextFocusDownId)
+        assertEquals(R.id.browser_sidebar, play.nextFocusLeftId)
+        assertEquals(R.id.browser_list_selector, play.nextFocusUpId)
         assertEquals(160, ChannelBrowserFragment.HERO_MAX_DP_TV)
     }
 
