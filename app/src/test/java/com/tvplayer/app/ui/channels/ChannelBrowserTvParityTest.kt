@@ -435,12 +435,13 @@ class ChannelBrowserTvParityTest {
     }
 
     @Test
-    fun `S1 hero cap TV 160dp y movil 140dp`() {
-        // S1: el cap aplica también en TV (160dp); móvil sigue en 140dp.
-        assertEquals(140, ChannelBrowserFragment.HERO_MAX_DP)
+    fun `S1 hero cap TV 160dp y movil 176dp`() {
+        // S1: el cap aplica también en TV (160dp); móvil sube a 176dp
+        // (el VER cabe sin recorte en retrato).
+        assertEquals(176, ChannelBrowserFragment.HERO_MAX_DP)
         assertEquals(160, ChannelBrowserFragment.HERO_MAX_DP_TV)
         assertEquals((2f * 160).toInt(), ChannelBrowserFragment.heroMaxPxFor(2f, true))
-        assertEquals((2f * 140).toInt(), ChannelBrowserFragment.heroMaxPxFor(2f, false))
+        assertEquals((2f * 176).toInt(), ChannelBrowserFragment.heroMaxPxFor(2f, false))
     }
 
     @Test
