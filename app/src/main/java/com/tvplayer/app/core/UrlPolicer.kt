@@ -28,8 +28,30 @@ object UrlPolicer {
     }
 
     fun requireAllowedHttpUrl(url: String?): String {
-        if (!isAllowedHttpUrl(url)) throw UrlPolicyException("URL no permitida (esquema/contenido no autorizado): ${url ?: "null"}")
+        if (!isAllowedHttpUrl(url)) throw UrlPolicyException("URL no permitida: ${describeForError(url)}")
         return url!!
+    }
+
+    /**
+     * T-F2 (security B-2): descriptor sanitizado para el mensaje de rechazo —
+     * SOLO esquema+host, NUNCA user-info ni URL completa (el mensaje llega al
+     * toast verbatim vía ImportService→safeMessage). Con credenciales
+     * incrustadas el mensaje lo dice explícito para seguir accionable.
+     * isAllowedHttpUrl NO se relaja: el user-info sigue vetado.
+     */
+    private fun describeForError(url: String?): String {
+        if (url.isNullOrBlank()) return "(vacía)"
+        return try {
+            val uri = URI(url.trim())
+            val scheme = uri.scheme?.lowercase(Locale.ROOT) ?: return "(ilegible)"
+            val host = uri.host ?: return "(ilegible)"
+            val port = if (uri.port > 0) ":${uri.port}" else ""
+            val base = "$scheme://$host$port"
+            if (uri.userInfo != null) "$base (la URL trae credenciales incrustadas: quítalas de la URL)"
+            else "$base (esquema/contenido no autorizado)"
+        } catch (_: URISyntaxException) {
+            "(ilegible)"
+        }
     }
 
     /**
