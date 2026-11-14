@@ -79,22 +79,36 @@ class AppContainer(private val appContext: Context) {
      * null = sin autenticación de proxy.
      */
     fun buildOkHttp(policy: NetPolicy, auth: Pair<String, String>?): OkHttpClient {
-        val proxySelector = selectProxy(policy)
-        // Bootstrap SIN dns propio para las consultas DoH (evita recursión);
-        // hereda proxy + gate para no fugar DNS fuera del túnel.
-        val bootstrap = OkHttpClient.Builder()
-            .addInterceptor(cleartextGate)
-            .proxySelector(proxySelector)
-            .build()
+        // Bootstrap DoH (SECCION-11 · A2-04): gate + proxySelector +
+        // proxyAuthenticator si hay credenciales — sin authenticator, el 407
+        // mata el resolver → outage silencioso de todo el transporte.
+        val bootstrap = buildBootstrap(policy, auth)
         val builder = OkHttpClient.Builder()
             .addInterceptor(cleartextGate)
-            .proxySelector(proxySelector)
+            .proxySelector(selectProxy(policy))
             .dns(DohProvider.buildDns(policy.doh, bootstrap))
             .connectTimeout(15, TimeUnit.SECONDS)
             .readTimeout(30, TimeUnit.SECONDS)
             .writeTimeout(30, TimeUnit.SECONDS)
             .callTimeout(0, TimeUnit.MILLISECONDS) // streams largos: sin cap de llamada aquí (los caps van por caso de uso)
             .followRedirects(true)
+        // El principal REUSA el mismo authenticator del bootstrap (un solo
+        // lambda, cero duplicación).
+        builder.proxyAuthenticator(bootstrap.proxyAuthenticator)
+        return builder.build()
+    }
+
+    /**
+     * Bootstrap para las consultas DoH (SECCION-11 · D10/A2-04): monta el
+     * gate, el selector de proxy y — si hay credenciales — el authenticator
+     * de proxy (el MISMO lambda que usa el cliente principal). Hereda el
+     * proxy para no fugar DNS fuera del túnel y autentica para que el 407 no
+     * mate el resolver.
+     */
+    internal fun buildBootstrap(policy: NetPolicy, auth: Pair<String, String>?): OkHttpClient {
+        val builder = OkHttpClient.Builder()
+            .addInterceptor(cleartextGate)
+            .proxySelector(selectProxy(policy))
         if (auth != null) {
             builder.proxyAuthenticator { _, response ->
                 if (response.request.header("Proxy-Authorization") != null) return@proxyAuthenticator null
