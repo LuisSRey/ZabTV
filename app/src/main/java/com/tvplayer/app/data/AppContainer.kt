@@ -113,7 +113,16 @@ class AppContainer(private val appContext: Context) {
             ProxySelector.getDefault()
         }
 
-    /** Reconstruye el cliente compartido (y el ImageLoader que lo envuelve) con la política en vigor. */
+    /**
+     * Reconstruye el cliente compartido (y el ImageLoader que lo envuelve) con la política en vigor.
+     *
+     * CONTRATO DE SESIÓN EN CURSO (SECCION-06 · A2-02, comportamiento aceptado):
+     * un Media3Engine (o servicio) que ya arrancó CONSERVA el cliente con el
+     * que se creó; los cambios de DNS/proxy/cleartext aplican a la SIGUIENTE
+     * preparación (prepareCurrent siguiente, nuevo Media3Engine al reabrir el
+     * player). Los consumidores leen `okHttp` en el momento de uso, así que
+     * cualquier consumo NUEVO usa la política recién reconstruida.
+     */
     fun rebuildOkHttp(auth: Pair<String, String>? = null) {
         okHttp = buildOkHttp(currentPolicy, auth)
         imageLoader = buildImageLoader(okHttp)

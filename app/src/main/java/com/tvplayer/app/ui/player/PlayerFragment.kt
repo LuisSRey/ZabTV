@@ -421,17 +421,22 @@ class PlayerFragment : Fragment() {
             val fresh = container.db.channelDao().channelByKey(channel.listId, channel.stableKey) ?: channel
             val proxy = com.tvplayer.app.data.AppContainer.DEFAULT_ACE_PROXY
             val engineTarget = AceStreamEngine.engineProxyFor(fresh.url, proxy)
+            // SECCION-06 (D11): política FRESCA del DAO (allowHttp, global,
+            // preferido) — NO container.allowHttp/currentPolicy. Una sola
+            // lectura; también sustituye el getPreferred duplicado.
+            val (allowHttpFresco, globalFresco, preferredFresco) =
+                com.tvplayer.app.engine.ExternalAutoRoute.freshPolicyForRoute(
+                    container.db.settingsDao(),
+                )
+            externalGlobal = globalFresco // coherencia con zap/onResume
             val source = try {
-                PlaybackSource.forUrl(fresh.url, allowCleartext = container.allowHttp, aceStreamProxy = proxy)
+                PlaybackSource.forUrl(fresh.url, allowCleartext = allowHttpFresco, aceStreamProxy = proxy)
             } catch (_: IllegalArgumentException) {
                 null
             }
-            val policy = container.currentPolicy
-            val preferred = com.tvplayer.app.engine.ExternalPlayers.getPreferred(
-                container.db.settingsDao(), com.tvplayer.app.data.AppContainer.KEY_EXTERNAL_PLAYER_PACKAGE,
-            )
+            val preferred = preferredFresco
             val veto = ExternalGate.vetoOf(
-                fresh.url, container.allowHttp, engineTarget, fresh.allowExternal, policy.externalGlobal,
+                fresh.url, allowHttpFresco, engineTarget, fresh.allowExternal, globalFresco,
             )
             val opened = when (veto) {
                 // Sin veto → export con CANDIDATOS (directo o chooser).
@@ -447,8 +452,8 @@ class PlayerFragment : Fragment() {
                         ).show()
                     }
                     ExternalOpener.openChannel(
-                        requireContext(), fresh.url, source, container.allowHttp,
-                        engineTarget, fresh.allowExternal, policy.externalGlobal,
+                        requireContext(), fresh.url, source, allowHttpFresco,
+                        engineTarget, fresh.allowExternal, globalFresco,
                         preferredPackage = preferred,
                     )
                 }
@@ -456,8 +461,8 @@ class PlayerFragment : Fragment() {
                 // openChannel); si el startActivity falla → aviso largo.
                 ExternalGate.Veto.ACESTREAM -> {
                     val ok = ExternalOpener.openChannel(
-                        requireContext(), fresh.url, source, container.allowHttp,
-                        engineTarget, fresh.allowExternal, policy.externalGlobal,
+                        requireContext(), fresh.url, source, allowHttpFresco,
+                        engineTarget, fresh.allowExternal, globalFresco,
                         preferredPackage = preferred,
                     )
                     if (!ok) {

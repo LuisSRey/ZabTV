@@ -23,6 +23,11 @@ import kotlinx.coroutines.flow.StateFlow
  * por el OkHttp compartido (AppContainer) — el único punto donde vive CleartextGate (Task 11).
  *
  * Buffer del spec (§6): back-buffer 8 s / min 15 s / max 30 s.
+ *
+ * CONTRATO DE SESIÓN EN CURSO (SECCION-06 · A2-02, comportamiento aceptado):
+ * el engine conserva el cliente con el que se creó; los cambios de
+ * DNS/proxy/cleartext aplican a la SIGUIENTE preparación (nuevo engine al
+ * reabrir el player), no a la sesión en marcha (ver AppContainer.rebuildOkHttp).
  */
 class Media3Engine(
     private val context: Context,

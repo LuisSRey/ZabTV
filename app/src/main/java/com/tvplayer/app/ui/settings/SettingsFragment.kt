@@ -30,12 +30,19 @@ class SettingsFragment : Fragment() {
         const val TAG = "settings"
     }
 
+    /** SECCION-06: refreshNetPolicy lanzado al entrar; las secciones lo esperan. */
+    private var policyRefresh: kotlinx.coroutines.Job? = null
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         return inflater.inflate(R.layout.fragment_settings, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         val container = (requireActivity().application as TpApp).container
+        // SECCION-06 (D11/A3-06): la política del transporte se sincroniza con
+        // el DAO ANTES de pintar cualquier sección; las corrutinas de wiring
+        // la esperan (idempotente y barato: rebuild del OkHttp único).
+        policyRefresh = lifecycleScope.launch { container.refreshNetPolicy() }
         val wipeFavs = view.findViewById<Button>(R.id.settings_wipe_favs)
         val wipeEpg = view.findViewById<Button>(R.id.settings_wipe_epg)
         val wipeLogos = view.findViewById<Button>(R.id.settings_wipe_logos)
@@ -157,6 +164,7 @@ class SettingsFragment : Fragment() {
         var players: List<com.tvplayer.app.engine.ExternalPlayerInfo> = emptyList()
         var loading = true
         lifecycleScope.launch {
+            policyRefresh?.join() // SECCION-06: currentPolicy ya es fresco aquí
             val dao = container.db.settingsDao()
             global.isChecked = container.currentPolicy.externalGlobal
             // Init desde DAO fresco (no currentPolicy): una escritura directa
@@ -304,6 +312,7 @@ class SettingsFragment : Fragment() {
         listOf(testBtn, saveBtn).forEach { FocusScaleHelper.attach(it) }
 
         lifecycleScope.launch {
+            policyRefresh?.join() // SECCION-06: currentPolicy ya es fresco aquí
             val policy = container.currentPolicy.proxy
             enable.isChecked = policy.enabled
             host.setText(policy.host)
