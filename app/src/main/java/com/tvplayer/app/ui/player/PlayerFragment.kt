@@ -683,7 +683,9 @@ class PlayerFragment : Fragment() {
         // proxificada en loopback (algunas listas la traen así): sin este
         // chequeo el motor caído acababa en error de red en la guía.
         val engineTarget = AceStreamEngine.engineProxyFor(channel.url, proxy)
-        android.util.Log.d("TvPlayer", "prepare ace=" + (engineTarget != null) + " url=" + channel.url.take(40))
+        // T-F1 (security B-1): el log JAMÁS lleva la URL (podría traer
+        // user:pass@) — solo longitud + stableKey para diagnosticar.
+        android.util.Log.d("TvPlayer", "prepare ace=" + (engineTarget != null) + " urlLen=" + channel.url.length + " stable=" + channel.stableKey)
         if (engineTarget != null) {
             val port = ensureEngineRunning(channel.url, engineTarget)
             if (port == 0) return
