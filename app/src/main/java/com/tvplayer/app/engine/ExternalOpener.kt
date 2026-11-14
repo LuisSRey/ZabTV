@@ -188,8 +188,16 @@ object ExternalOpener {
         preferredPackage: String? = null,
     ): Boolean {
         if (rawUrl.startsWith("acestream://", ignoreCase = true)) {
+            val intent = AceStreamEngine.startContentIntent(rawUrl)
+            // T-F4: sin receptor el startActivity falla; comprobarlo ANTES
+            // evita depender de la excepción (determinista en tests y en
+            // dispositivo). El filtro que resuelve este implícito trae
+            // DEFAULT por construcción (startActivity lo exige), así que el
+            // pre-check equivale al éxito del lanzamiento; runCatching queda
+            // como red ante carreras (desinstalación entre check y launch).
+            if (!canResolve(context.packageManager, intent)) return false
             return runCatching {
-                context.startActivity(AceStreamEngine.startContentIntent(rawUrl))
+                context.startActivity(intent)
                 true
             }.getOrDefault(false)
         }
