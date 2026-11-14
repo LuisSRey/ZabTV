@@ -72,6 +72,16 @@ class PlayerFragment : Fragment() {
         fun pipButtonVisibility(allowed: Boolean): Int =
             if (allowed) View.VISIBLE else View.GONE
 
+        /**
+         * SECCION-05 (D4/A3-05, A3-07): visibilidad del botón externo según la
+         * política. VISIBLE solo si effectiveAllow(override, global) — Global
+         * ON o override Siempre del canal; GONE en otro caso. Los vetos de URL
+         * NO ocultan el botón: el motivo del veto es justo lo que el usuario
+         * necesita leer (matriz 2.1.3).
+         */
+        fun externalButtonVisibility(override: Boolean?, global: Boolean): Int =
+            if (ExternalGate.effectiveAllow(override, global)) View.VISIBLE else View.GONE
+
         /** En PiP el overlay estorba a la ventana flotante: se oculta (el engine sigue). Pura. */
         fun shouldHideOverlayInPip(inPip: Boolean): Boolean = inPip
     }
@@ -86,6 +96,8 @@ class PlayerFragment : Fragment() {
     private lateinit var progress: ProgressBar
 
     private var current: ChannelEntity? = null
+    /** SECCION-05: global del DAO leído fresco en onViewCreated (sin re-lectura por zap). */
+    private var externalGlobal: Boolean = false
     /** True en ventana flotante (PiP): overlay oculto, engine en marcha. */
     private var inPip = false
     /** True si el canal aún no llegó a engine.prepare (motor sin arrancar o error). */
@@ -159,6 +171,11 @@ class PlayerFragment : Fragment() {
                 close()
                 return@launch
             }
+            // SECCION-05: global fresco del DAO (una lectura, no por zap) +
+            // visibilidad del botón externo para el canal inicial.
+            externalGlobal = container.db.settingsDao()
+                .get(com.tvplayer.app.data.AppContainer.KEY_EXTERNAL_GLOBAL, "false") == "true"
+            applyExternalButtonVisibility(current)
             title.text = current!!.displayName
             val lr = 8f * view.resources.displayMetrics.density
             current!!.logoUrl?.let { logo.load(it) {
@@ -322,6 +339,9 @@ class PlayerFragment : Fragment() {
         super.onResume()
         // Re-afirmar inmersivo al volver (diálogo del motor, PiP, etc.).
         applyImmersiveIfNeeded()
+        // SECCION-05: re-pintar la visibilidad al volver (vuelta del diálogo
+        // del motor / otra app).
+        applyExternalButtonVisibility(current)
         if (engineDialog?.isShowing == true) {
             val channel = current
             if (channel != null && ready()) lifecycleScope.launch { prepareCurrent(channel) }
@@ -330,6 +350,12 @@ class PlayerFragment : Fragment() {
 
     /** El engine se crea en corrutina (lee el buffer de DAO); teclas tempranas se ignoran. */
     private fun ready(): Boolean = ::engine.isInitialized
+
+    /** SECCION-05: pinta el botón externo con el global cacheado + el canal dado. */
+    private fun applyExternalButtonVisibility(channel: ChannelEntity?) {
+        val ext = view?.findViewById<ImageView>(R.id.player_external) ?: return
+        ext.visibility = externalButtonVisibility(channel?.allowExternal, externalGlobal)
+    }
 
     /**
      * S2: oculta las barras del sistema solo en móvil apaisado; en cualquier
@@ -512,6 +538,8 @@ class PlayerFragment : Fragment() {
         val channel: ChannelEntity = target ?: return
         current = channel
         title.text = channel.displayName
+        // SECCION-05: el canal nuevo puede tener otro override (Siempre/Nunca).
+        applyExternalButtonVisibility(channel)
         channel.logoUrl?.let { logo.load(it) }
         updateNowLine(channel)
         com.tvplayer.app.data.LastPlayed.save(container.db, channel.listId, channel.stableKey)
