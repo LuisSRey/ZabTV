@@ -222,9 +222,10 @@ class MainActivityAutoRouteTest {
         }
         activity.openPlayer(listId, 0)
         pumpUntil { containerTag() == PlayerFragment.TAG }
-        assertTrue(ShadowToast.showedToast(activity.getString(R.string.player_external_blocked)))
+        // SECCION-04 (D3): el veto CLEARTEXT tiene mensaje específico accionable.
+        assertTrue(ShadowToast.showedToast(activity.getString(R.string.player_ext_veto_cleartext)))
         assertEquals(
-            activity.getString(R.string.player_external_blocked),
+            activity.getString(R.string.player_ext_veto_cleartext),
             ShadowToast.getTextOfLatestToast(),
         )
         assertNull(shadowOf(activity).nextStartedActivity)

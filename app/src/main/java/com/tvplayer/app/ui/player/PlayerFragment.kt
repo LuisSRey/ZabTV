@@ -381,9 +381,13 @@ class PlayerFragment : Fragment() {
 
     /**
      * S4: abre el canal actual en reproductor externo (opt-in Global/Siempre/
-     * Nunca). Nunca lanza: vetado o sin receptor → toast. El externo NO hereda
-     * proxy/DNS (advertido en Settings y en la ficha del canal). Función
-     * separada del PiP (S3) aunque vivan en el mismo overlay.
+     * Nunca). Nunca lanza: vetado o sin receptor → toast ESPECÍFICO del veto
+     * (SECCION-04 · D3, matriz 2.1.3). El externo NO hereda proxy/DNS
+     * (advertido en Settings y en la ficha del canal). Vía acestream del
+     * botón = lanzar el intent de contenido del motor (lo que openChannel ya
+     * hace); si falla → player_external_ace_fail. POLICY_OFF no toast (el
+     * botón no debería estar visible: SECCION-05). El genérico
+     * player_external_blocked queda eliminado de esta vía.
      */
     private fun openExternal() {
         val channel = current ?: return
@@ -400,30 +404,63 @@ class PlayerFragment : Fragment() {
             val preferred = com.tvplayer.app.engine.ExternalPlayers.getPreferred(
                 container.db.settingsDao(), com.tvplayer.app.data.AppContainer.KEY_EXTERNAL_PLAYER_PACKAGE,
             )
-            val viewIntent = ExternalOpener.buildIntent(fresh.url, source?.mimeType())
-            if (!preferred.isNullOrBlank() &&
-                !com.tvplayer.app.engine.ExternalPlayers.isPreferredUsable(
-                    requireContext().packageManager, preferred, viewIntent,
-                )
-            ) {
-                Toast.makeText(
-                    requireContext(), R.string.settings_external_gone, Toast.LENGTH_LONG,
-                ).show()
-            }
-            val opened = ExternalOpener.openChannel(
-                requireContext(), fresh.url, source, container.allowHttp,
-                engineTarget, fresh.allowExternal, policy.externalGlobal,
-                preferredPackage = preferred,
+            val veto = ExternalGate.vetoOf(
+                fresh.url, container.allowHttp, engineTarget, fresh.allowExternal, policy.externalGlobal,
             )
-            if (!opened) {
-                val blocked = !ExternalGate.canExport(
-                    fresh.url, container.allowHttp, engineTarget,
-                    fresh.allowExternal, policy.externalGlobal,
-                ) && !fresh.url.startsWith("acestream://", ignoreCase = true)
+            val opened = when (veto) {
+                // Sin veto → export con CANDIDATOS (directo o chooser).
+                null -> {
+                    val candidates = ExternalOpener.exportCandidates(fresh.url, source?.mimeType())
+                    if (!preferred.isNullOrBlank() &&
+                        !ExternalOpener.isPreferredUsable(
+                            requireContext().packageManager, preferred, candidates,
+                        )
+                    ) {
+                        Toast.makeText(
+                            requireContext(), R.string.settings_external_gone, Toast.LENGTH_LONG,
+                        ).show()
+                    }
+                    ExternalOpener.openChannel(
+                        requireContext(), fresh.url, source, container.allowHttp,
+                        engineTarget, fresh.allowExternal, policy.externalGlobal,
+                        preferredPackage = preferred,
+                    )
+                }
+                // ACESTREAM: vía oficial del motor (startContentIntent, como
+                // openChannel); si el startActivity falla → aviso largo.
+                ExternalGate.Veto.ACESTREAM -> {
+                    val ok = ExternalOpener.openChannel(
+                        requireContext(), fresh.url, source, container.allowHttp,
+                        engineTarget, fresh.allowExternal, policy.externalGlobal,
+                        preferredPackage = preferred,
+                    )
+                    if (!ok) {
+                        Toast.makeText(
+                            requireContext(), R.string.player_external_ace_fail, Toast.LENGTH_LONG,
+                        ).show()
+                    }
+                    ok
+                }
+                // POLICY_OFF: el botón no debería estar visible (SECCION-05);
+                // silencioso, coherente con el INTERNAL silencioso del auto-route.
+                ExternalGate.Veto.POLICY_OFF -> false
+                // Resto de vetos: SU mensaje (sin abrir nada: ya está el interno).
+                else -> {
+                    Toast.makeText(
+                        requireContext(),
+                        com.tvplayer.app.engine.ExternalVetoUi.messageRes(veto),
+                        if (com.tvplayer.app.engine.ExternalVetoUi.longToast(veto)) {
+                            Toast.LENGTH_LONG
+                        } else {
+                            Toast.LENGTH_SHORT
+                        },
+                    ).show()
+                    false
+                }
+            }
+            if (!opened && veto == null) {
                 Toast.makeText(
-                    requireContext(),
-                    if (blocked) R.string.player_external_blocked else R.string.player_no_external,
-                    Toast.LENGTH_SHORT,
+                    requireContext(), R.string.player_no_external, Toast.LENGTH_SHORT,
                 ).show()
             }
         }

@@ -289,7 +289,20 @@ class MainActivity : AppCompatActivity(), TvNavigator.NavHost {
             ) {
                 com.tvplayer.app.engine.ExternalAutoRoute.Route.INTERNAL -> openInternal()
                 com.tvplayer.app.engine.ExternalAutoRoute.Route.BLOCKED -> {
-                    Toast.makeText(this, R.string.player_external_blocked, Toast.LENGTH_SHORT).show()
+                    // SECCION-04 (D3): cada veto SU mensaje accionable (matriz
+                    // 2.1.3); cleartext en largo (instrucciones de dos pasos).
+                    val veto = com.tvplayer.app.engine.ExternalGate.vetoOf(
+                        channel.url, allowHttp, engineTarget, channel.allowExternal, global,
+                    )
+                    Toast.makeText(
+                        this,
+                        com.tvplayer.app.engine.ExternalVetoUi.messageRes(veto),
+                        if (com.tvplayer.app.engine.ExternalVetoUi.longToast(veto)) {
+                            Toast.LENGTH_LONG
+                        } else {
+                            Toast.LENGTH_SHORT
+                        },
+                    ).show()
                     openInternal()
                 }
                 // La URL pasó el veto: recién aquí se construye el VIEW y se
@@ -297,12 +310,13 @@ class MainActivity : AppCompatActivity(), TvNavigator.NavHost {
                 com.tvplayer.app.engine.ExternalAutoRoute.Route.EXTERNAL_DIRECT,
                 com.tvplayer.app.engine.ExternalAutoRoute.Route.EXTERNAL_CHOOSER,
                 -> {
-                    val viewIntent = com.tvplayer.app.engine.ExternalOpener.buildIntent(
+                    // SECCION-03 (D2): export con CANDIDATOS (exacto + genérico).
+                    val candidates = com.tvplayer.app.engine.ExternalOpener.exportCandidates(
                         channel.url, source?.mimeType(),
                     )
                     val preferredUsable = !preferred.isNullOrBlank() &&
-                        com.tvplayer.app.engine.ExternalPlayers.isPreferredUsable(
-                            packageManager, preferred, viewIntent,
+                        com.tvplayer.app.engine.ExternalOpener.isPreferredUsable(
+                            packageManager, preferred, candidates,
                         )
                     when (
                         com.tvplayer.app.engine.ExternalAutoRoute.resolve(
@@ -312,7 +326,7 @@ class MainActivity : AppCompatActivity(), TvNavigator.NavHost {
                     ) {
                         com.tvplayer.app.engine.ExternalAutoRoute.Route.EXTERNAL_DIRECT -> {
                             val opened = com.tvplayer.app.engine.ExternalOpener.openDirect(
-                                this, viewIntent, requireNotNull(preferred),
+                                this, candidates, requireNotNull(preferred),
                             )
                             if (!opened) {
                                 Toast.makeText(this, R.string.player_no_external, Toast.LENGTH_SHORT).show()
@@ -326,7 +340,7 @@ class MainActivity : AppCompatActivity(), TvNavigator.NavHost {
                                 ).show()
                             }
                             val opened =
-                                com.tvplayer.app.engine.ExternalOpener.openWithChooser(this, viewIntent)
+                                com.tvplayer.app.engine.ExternalOpener.openWithChooser(this, candidates)
                             if (!opened) {
                                 Toast.makeText(this, R.string.player_no_external, Toast.LENGTH_SHORT).show()
                                 openInternal()
