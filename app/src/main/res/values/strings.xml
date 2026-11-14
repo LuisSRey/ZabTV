@@ -149,6 +149,12 @@
     <string name="player_pip">Ventana flotante</string>
     <string name="player_no_external">Ninguna app puede abrir este canal</string>
     <string name="player_external_blocked">Reproductor externo no permitido para este canal</string>
+    <!-- SECCION-01 (D3/A3-03): mensajes accionables por causa de veto (matriz 2.1.3). -->
+    <string name="player_ext_veto_cleartext">Canal http:// sin cifrar. Activa «Permitir HTTP sin cifrar» en Ajustes → Reproductor externo para abrirlo fuera de la app.</string>
+    <string name="player_ext_veto_loopback">Este canal ya pasa por el motor AceStream local: el reproductor externo no puede alcanzar ese proxy interno.</string>
+    <string name="player_ext_veto_url">La URL del canal no es http/https (o es inválida): TVPlayer solo abre enlaces http(s) fuera de la app.</string>
+    <string name="player_ext_veto_userinfo">La URL del canal incluye usuario y contraseña: TVPlayer no la abre fuera de la app por seguridad.</string>
+    <string name="player_external_ace_fail">No se pudo abrir AceStream: instálala, déjala en ejecución y vuelve a intentarlo.</string>
     <string name="sheet_external_title">Reproductor externo</string>
     <string name="sheet_ext_global">Global</string>
     <string name="sheet_ext_always">Siempre</string>

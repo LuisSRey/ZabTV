@@ -147,6 +147,12 @@
     <string name="player_pip">Floating window</string>
     <string name="player_no_external">No app can open this channel</string>
     <string name="player_external_blocked">External player not allowed for this channel</string>
+    <!-- SECCION-01 (D3/A3-03): actionable messages per veto cause (matrix 2.1.3). -->
+    <string name="player_ext_veto_cleartext">Unencrypted http:// channel. Turn on \"Allow unencrypted HTTP\" in Settings → External player to open it outside the app.</string>
+    <string name="player_ext_veto_loopback">This channel already goes through the local AceStream engine: the external player cannot reach that internal proxy.</string>
+    <string name="player_ext_veto_url">The channel URL is not http/https (or is invalid): TVPlayer only opens http(s) links outside the app.</string>
+    <string name="player_ext_veto_userinfo">The channel URL embeds a user and password: TVPlayer does not open it outside the app for security.</string>
+    <string name="player_external_ace_fail">Could not open AceStream: install it, keep it running and try again.</string>
     <string name="sheet_external_title">External player</string>
     <string name="sheet_ext_global">Global</string>
     <string name="sheet_ext_always">Always</string>

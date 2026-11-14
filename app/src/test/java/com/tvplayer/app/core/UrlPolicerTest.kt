@@ -39,4 +39,26 @@ class UrlPolicerTest {
         assertFalse(UrlPolicer.isAllowedHttpUrl("http://evil.com/a\u0000b"))
         assertFalse(UrlPolicer.isAllowedHttpUrl("http://evil.com/a\n"))
     }
+
+    // SECCION-01 (T-P0-1): clasificación USER_INFO — la descomposición de
+    // !isAllowedHttpUrl necesita saber SI la causa fue user-info.
+
+    @Test
+    fun `hasUserInfo true con usuario y contrasena`() {
+        assertTrue(UrlPolicer.hasUserInfo("http://u:p@h/"))
+        assertTrue(UrlPolicer.hasUserInfo("http://user:pass@evil.com/s.m3u8"))
+    }
+
+    @Test
+    fun `hasUserInfo false sin user info`() {
+        assertFalse(UrlPolicer.hasUserInfo("http://h/"))
+        assertFalse(UrlPolicer.hasUserInfo("https://host:8080/x?y=1"))
+    }
+
+    @Test
+    fun `hasUserInfo nula o blank es false`() {
+        assertFalse(UrlPolicer.hasUserInfo(null))
+        assertFalse(UrlPolicer.hasUserInfo(""))
+        assertFalse(UrlPolicer.hasUserInfo("   "))
+    }
 }

@@ -31,6 +31,22 @@ object UrlPolicer {
         if (!isAllowedHttpUrl(url)) throw UrlPolicyException("URL no permitida (esquema/contenido no autorizado): ${url ?: "null"}")
         return url!!
     }
+
+    /**
+     * SECCION-01 (D3): true si la URL trae user-info (user:pass@). Es la
+     * descomposición de !isAllowedHttpUrl que permite clasificar la causa:
+     * URL con user-info → veto USER_INFO (mensaje de seguridad), el resto de
+     * rechazos → BAD_SCHEME. Nula/blank/ilegible → false (será BAD_SCHEME).
+     */
+    fun hasUserInfo(url: String?): Boolean {
+        if (url.isNullOrBlank()) return false
+        val uri = try {
+            URI(url.trim())
+        } catch (_: URISyntaxException) {
+            return false
+        }
+        return uri.userInfo != null
+    }
 }
 
 class UrlPolicyException(message: String) : RuntimeException(message)

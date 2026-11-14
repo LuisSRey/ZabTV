@@ -21,6 +21,14 @@ import com.tvplayer.app.core.UrlPolicer
 object ExternalGate {
 
     /**
+     * CAUSA del veto (SECCION-01 · D3/A3-03): misma precedencia que
+     * [canExport], solo clasifica para que la UX muestre el mensaje
+     * accionable específico. El enrutado (ExternalAutoRoute.resolve) NO
+     * cambia de semántica: esto es la capa de diagnóstico sobre los vetos.
+     */
+    enum class Veto { ACESTREAM, ENGINE_LOOPBACK, BAD_SCHEME, USER_INFO, CLEARTEXT, POLICY_OFF }
+
+    /**
      * @param engineProxyFor resultado de `AceStreamEngine.engineProxyFor(url)` o null.
      * @param override override del canal: null = Global, true = Siempre, false = Nunca.
      */
@@ -36,6 +44,30 @@ object ExternalGate {
         if (!UrlPolicer.isAllowedHttpUrl(rawUrl)) return false
         if (rawUrl.startsWith("http://", ignoreCase = true) && !allowHttp) return false
         return effectiveAllow(override, global)
+    }
+
+    /**
+     * Clasifica la CAUSA del veto (null = sin veto, exportable). Primer match
+     * gana, mismo orden que [canExport]: acestream antes que todo (vía
+     * propia), loopback antes de la inspección de URL (es http válido),
+     * BAD_SCHEME/USER_INFO descomponen `!isAllowedHttpUrl`, CLEARTEXT y
+     * POLICY_OFF al final.
+     */
+    fun vetoOf(
+        rawUrl: String,
+        allowHttp: Boolean,
+        engineProxyFor: String?,
+        override: Boolean?,
+        global: Boolean,
+    ): Veto? {
+        if (rawUrl.startsWith("acestream://", ignoreCase = true)) return Veto.ACESTREAM
+        if (engineProxyFor != null) return Veto.ENGINE_LOOPBACK
+        if (!UrlPolicer.isAllowedHttpUrl(rawUrl)) {
+            return if (UrlPolicer.hasUserInfo(rawUrl)) Veto.USER_INFO else Veto.BAD_SCHEME
+        }
+        if (rawUrl.startsWith("http://", ignoreCase = true) && !allowHttp) return Veto.CLEARTEXT
+        if (!effectiveAllow(override, global)) return Veto.POLICY_OFF
+        return null
     }
 
     /** Resolución Global/Siempre/Nunca. */
