@@ -11,7 +11,7 @@ import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.paging.PagingData
-import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.tvplayer.app.R
 import com.tvplayer.app.TpApp
@@ -32,6 +32,14 @@ class SearchFragment : Fragment() {
     companion object {
         const val TAG = "search"
         const val ARG_LIST_ID = "listId"
+
+        /**
+         * SECCION-09 (D7/A1-01): Search = 1 columna con el ítem-fila del
+         * browser en móvil Y TV (el browser usa spanCount 1 en todos los
+         * formatos; el ítem es una fila de ancho completo). Costura pura de
+         * test: siempre 1.
+         */
+        fun columns(isTv: Boolean): Int = 1
 
         fun newInstance(listId: Long) = SearchFragment().apply {
             arguments = bundleOf(ARG_LIST_ID to listId)
@@ -66,7 +74,7 @@ class SearchFragment : Fragment() {
         gridAdapter = ChannelGridAdapter(onClick = { channel ->
             (activity as? TvNavigator.NavHost)?.openPlayer(channel.listId, channel.position)
         })
-        grid.layoutManager = GridLayoutManager(requireContext(), if (isTv) 4 else 3)
+        grid.layoutManager = LinearLayoutManager(requireContext())
         grid.adapter = gridAdapter
         emptyView.text = getString(R.string.search_hint)
 
