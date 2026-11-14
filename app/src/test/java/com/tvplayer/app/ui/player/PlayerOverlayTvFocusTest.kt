@@ -14,6 +14,7 @@ import com.tvplayer.app.data.db.ChannelEntity
 import com.tvplayer.app.data.db.ListEntity
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -214,5 +215,22 @@ class PlayerOverlayTvFocusTest {
         pumpUntil {
             activity.supportFragmentManager.findFragmentById(R.id.container) !is PlayerFragment
         }
+    }
+
+    /**
+     * T-F3 (hueco tester-1, S07): con foco en transporte, LEFT/RIGHT/CENTER
+     * NO se consumen (dispatch real por Activity, no focusSearch): la cadena
+     * XML mueve el foco y el framework hace el click. El listener ya devuelve
+     * false en `else -> false` — si pasa a la primera es verificación.
+     */
+    @Test
+    fun `b2 left right center no se consumen en transporte`() {
+        val (_, transport, _) = boot()
+        val play = transport[1]
+        play.requestFocus()
+        pumpUntil { play.hasFocus() }
+        assertFalse(activity.dispatchKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_DPAD_LEFT)))
+        assertFalse(activity.dispatchKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_DPAD_RIGHT)))
+        assertFalse(activity.dispatchKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_DPAD_CENTER)))
     }
 }
