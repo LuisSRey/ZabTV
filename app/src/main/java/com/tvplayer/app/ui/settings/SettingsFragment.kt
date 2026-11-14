@@ -20,7 +20,9 @@ import kotlinx.coroutines.launch
  * (favoritos / EPG / logos / todo, siempre con confirmación) y acerca-de con
  * el disclaimer exacto del spec §6.8.
  *
- * Nota: el gate de cleartext sigue activo (default OFF, sin interruptor).
+ * Nota: el gate de cleartext se controla desde esta pantalla (interruptor
+ * allow_http, default OFF; SECCION-02 · D1/A3-01). Un solo dato (KEY_ALLOW_HTTP)
+ * alimenta a CleartextGate (transporte) y a ExternalGate (ruta externa).
  */
 class SettingsFragment : Fragment() {
 
@@ -115,6 +117,12 @@ class SettingsFragment : Fragment() {
      * S4: toggle global del reproductor externo (key external_global, default
      * OFF) + advertencia de que el externo no hereda proxy/DNS.
      *
+     * SECCION-02 (D1/A3-01): encima del toggle va el interruptor
+     * «Permitir HTTP sin cifrar» (key allow_http, default OFF). Es el ÚNICO
+     * switch de http://: escribe KEY_ALLOW_HTTP y ese dato alimenta a
+     * CleartextGate (vía refreshNetPolicy) y a ExternalGate. El init lee el
+     * DAO FRESCO (no currentPolicy) para no arrastrar caché rancia.
+     *
      * Debajo del toggle va el selector de reproductor preferido
      * (key external_player_package, "" = Preguntar siempre): lista con
      * icono+nombre de cada app detectada. Con el global en OFF se oculta;
@@ -122,10 +130,13 @@ class SettingsFragment : Fragment() {
      * detectadas se muestra un texto informativo en vez de lista vacía.
      */
     private fun wireExternalSection(view: View, container: AppContainer) {
+        val allowHttp = view.findViewById<android.widget.Switch>(R.id.settings_allow_http)
+        val httpState = view.findViewById<TextView>(R.id.settings_http_state)
         val global = view.findViewById<android.widget.Switch>(R.id.settings_external_global)
         val label = view.findViewById<TextView>(R.id.settings_external_player_label)
         val spinner = view.findViewById<android.widget.Spinner>(R.id.settings_external_player)
         val empty = view.findViewById<TextView>(R.id.settings_external_player_empty)
+        FocusScaleHelper.attach(allowHttp)
         FocusScaleHelper.attach(spinner)
 
         fun paintSelector(enabled: Boolean, players: List<com.tvplayer.app.engine.ExternalPlayerInfo>) {
@@ -139,11 +150,20 @@ class SettingsFragment : Fragment() {
             empty.visibility = if (enabled && players.isEmpty()) View.VISIBLE else View.GONE
         }
 
+        fun paintHttpState(allowed: Boolean) {
+            httpState.setText(if (allowed) R.string.settings_http_on else R.string.settings_http_off)
+        }
+
         var players: List<com.tvplayer.app.engine.ExternalPlayerInfo> = emptyList()
         var loading = true
         lifecycleScope.launch {
             val dao = container.db.settingsDao()
             global.isChecked = container.currentPolicy.externalGlobal
+            // Init desde DAO fresco (no currentPolicy): una escritura directa
+            // al DAO sin refreshNetPolicy se refleja igual (SECCION-02).
+            val fresh = dao.get(AppContainer.KEY_ALLOW_HTTP, "false") == "true"
+            allowHttp.isChecked = fresh
+            paintHttpState(fresh)
             players = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
                 com.tvplayer.app.engine.ExternalPlayers.listVideoPlayers(requireContext())
             }
@@ -154,6 +174,13 @@ class SettingsFragment : Fragment() {
             spinner.setSelection(indexOfPackage(players, saved))
             paintSelector(global.isChecked, players)
             loading = false
+        }
+        allowHttp.setOnCheckedChangeListener { _, checked ->
+            lifecycleScope.launch {
+                container.db.settingsDao().put(AppContainer.KEY_ALLOW_HTTP, checked.toString())
+                container.refreshNetPolicy()
+                paintHttpState(checked)
+            }
         }
         global.setOnCheckedChangeListener { _, checked ->
             lifecycleScope.launch {

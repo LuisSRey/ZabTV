@@ -74,7 +74,7 @@
     <string name="portal_import_error">Error al importar. Revisa el host y las credenciales.</string>
     <string name="settings_title">Ajustes</string>
     <string name="settings_http">Permitir HTTP sin cifrar</string>
-    <string name="settings_http_warn">Las listas http:// viajan sin cifrar y cualquiera en la red puede verlas. Solo para redes de confianza.</string>
+    <string name="settings_http_warn">Las listas http:// viajan sin cifrar y cualquiera en la red puede verlas. Solo para redes de confianza. Afecta a toda la app: listas, guía (EPG), logos y reproducción.</string>
     <string name="settings_http_on">HTTP permitido</string>
     <string name="settings_http_off">HTTP bloqueado</string>
     <string name="settings_wipe_favs">Borrar favoritos</string>

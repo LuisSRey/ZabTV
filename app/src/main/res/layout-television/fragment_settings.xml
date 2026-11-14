@@ -361,6 +361,35 @@
             android:textSize="24sp"
             android:textStyle="bold" />
 
+        <!-- SECCION-02 (D1/A3-01): interruptor allow_http TV — focable (D-pad),
+             ancho de sección 400dp como el resto de la sección. -->
+        <Switch
+            android:id="@+id/settings_allow_http"
+            android:layout_width="400dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:focusable="true"
+            android:text="@string/settings_http"
+            android:textColor="@color/tp_text"
+            android:textSize="17sp" />
+
+        <TextView
+            android:id="@+id/settings_http_state"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:text="@string/settings_http_off"
+            android:textColor="@color/tp_text_secondary"
+            android:textSize="15sp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="@string/settings_http_warn"
+            android:textColor="@color/tp_text_secondary"
+            android:textSize="15sp" />
+
         <Switch
             android:id="@+id/settings_external_global"
             android:layout_width="400dp"

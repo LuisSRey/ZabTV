@@ -72,7 +72,7 @@
     <string name="portal_import_error">Import error. Check the host and credentials.</string>
     <string name="settings_title">Settings</string>
     <string name="settings_http">Allow unencrypted HTTP</string>
-    <string name="settings_http_warn">http:// playlists travel unencrypted and anyone on the network can see them. Trusted networks only.</string>
+    <string name="settings_http_warn">http:// playlists travel unencrypted and anyone on the network can see them. Trusted networks only. Affects the whole app: playlists, guide (EPG), logos and playback.</string>
     <string name="settings_http_on">HTTP allowed</string>
     <string name="settings_http_off">HTTP blocked</string>
     <string name="settings_wipe_favs">Clear favourites</string>
