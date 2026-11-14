@@ -81,7 +81,17 @@ class MainActivityAutoRouteTest {
         db.settingsDao().put(AppContainer.KEY_EXTERNAL_PLAYER_PACKAGE, preferred.orEmpty())
     }
 
+    /**
+     * SECCION-03 (D2): registra el handler TAMBIÉN para el chooserIntent
+     * (genérico de vídeo) — espejo de un intent-filter real, que trae el
+     * tipo genérico además del exacto. Los 6 casos previos no cambian.
+     */
     private fun registerPlayer(url: String, mime: String?, pkg: String) {
+        registerIntent(ExternalOpener.buildIntent(url, mime), pkg)
+        registerIntent(ExternalOpener.chooserIntent(url), pkg)
+    }
+
+    private fun registerIntent(intent: Intent, pkg: String) {
         val info = ResolveInfo().apply {
             activityInfo = ActivityInfo().apply {
                 packageName = pkg
@@ -89,9 +99,9 @@ class MainActivityAutoRouteTest {
             }
         }
         val shadowPm = shadowOf(activity.packageManager)
-        shadowPm.addResolveInfoForIntent(ExternalOpener.buildIntent(url, mime), info)
+        shadowPm.addResolveInfoForIntent(intent, info)
         shadowPm.addResolveInfoForIntent(
-            ExternalOpener.buildIntent(url, mime).apply { setPackage(pkg) },
+            Intent(intent).setPackage(pkg),
             info,
         )
     }
@@ -113,6 +123,24 @@ class MainActivityAutoRouteTest {
         assertEquals(Intent.ACTION_VIEW, started.action)
         assertEquals(fakePkg, started.`package`)
         // Sin fallback: el browser/home sigue al mando.
+        assertTrue(containerTag() != PlayerFragment.TAG)
+    }
+
+    @Test
+    fun `AUTO directo con preferido solo video`() {
+        setUp()
+        val listId = runBlocking {
+            setPolicy(global = true, preferred = fakePkg)
+            seedChannel(httpsUrl)
+        }
+        // App cuyo filter solo declara el genérico de vídeo (SECCION-03): el
+        // export con candidatos la resuelve igual (antes fallaba el MIME exacto).
+        registerIntent(ExternalOpener.chooserIntent(httpsUrl), fakePkg)
+        activity.openPlayer(listId, 0)
+        pumpUntil { shadowOf(activity).peekNextStartedActivity() != null }
+        val started = shadowOf(activity).nextStartedActivity
+        assertEquals(Intent.ACTION_VIEW, started.action)
+        assertEquals(fakePkg, started.`package`)
         assertTrue(containerTag() != PlayerFragment.TAG)
     }
 

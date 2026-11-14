@@ -77,6 +77,9 @@ object ExternalGate {
 /** Intents VIEW + resolución (necesita PackageManager; el gate puro está arriba). */
 object ExternalOpener {
 
+    /** Tipo genérico de vídeo (probe de Ajustes y chooser/export). */
+    private const val VIDEO_WILDCARD = "video/*"
+
     fun buildIntent(rawUrl: String, mimeType: String?): Intent {
         val uri = Uri.parse(rawUrl)
         return Intent(Intent.ACTION_VIEW, uri).apply {
@@ -85,8 +88,32 @@ object ExternalOpener {
         }
     }
 
+    /**
+     * SECCION-03 (D2/A3-02): candidatos de export coherentes con la detección
+     * (el probe de Ajustes usa el tipo genérico de vídeo). Con MIME exacto
+     * (HLS/DASH) → [exacto, genérico] (dedup si el exacto ya es el genérico);
+     * sin MIME (Progressive) → [genérico]. El preferido se abre con el PRIMER
+     * candidato que él resuelva: cubre a los players "solo-MIME-exacto" y a
+     * los "solo-genérico".
+     */
+    fun exportCandidates(rawUrl: String, mimeType: String?): List<Intent> {
+        val exact = if (mimeType == null) VIDEO_WILDCARD else mimeType
+        return if (exact == VIDEO_WILDCARD) {
+            listOf(buildIntent(rawUrl, VIDEO_WILDCARD))
+        } else {
+            listOf(buildIntent(rawUrl, exact), buildIntent(rawUrl, VIDEO_WILDCARD))
+        }
+    }
+
+    /** Chooser de export = genérico de vídeo SIEMPRE (mismo conjunto que el spinner). */
+    fun chooserIntent(rawUrl: String): Intent = buildIntent(rawUrl, VIDEO_WILDCARD)
+
     fun canResolve(pm: PackageManager, intent: Intent): Boolean =
         pm.queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY).isNotEmpty()
+
+    /** true si ALGÚN candidato resuelve implícitamente. */
+    fun canResolveAny(pm: PackageManager, intents: List<Intent>): Boolean =
+        intents.any { canResolve(pm, it) }
 
     /**
      * Abre con selector del sistema. Devuelve false si no hay app que lo
@@ -100,6 +127,16 @@ object ExternalOpener {
     }.getOrDefault(false)
 
     /**
+     * Chooser sobre CANDIDATOS: el intent base es SIEMPRE el genérico de
+     * vídeo (por construcción es el último de [exportCandidates]).
+     */
+    fun openWithChooser(context: Context, intents: List<Intent>): Boolean {
+        val base = intents.lastOrNull { it.type == VIDEO_WILDCARD } ?: intents.firstOrNull()
+            ?: return false
+        return openWithChooser(context, base)
+    }
+
+    /**
      * Abre directo en el paquete preferido (intent explícito, sin chooser).
      * Devuelve false si el paquete ya no resuelve (el caller cae al chooser).
      */
@@ -111,10 +148,33 @@ object ExternalOpener {
     }.getOrDefault(false)
 
     /**
+     * Directo sobre CANDIDATOS: usa el PRIMER candidato que el paquete
+     * resuelva (exacto antes que genérico); false si no resuelve ninguno.
+     */
+    fun openDirect(context: Context, intents: List<Intent>, packageName: String): Boolean {
+        for (intent in intents) {
+            if (ExternalPlayers.isPreferredUsable(context.packageManager, packageName, intent)) {
+                return openDirect(context, intent, packageName)
+            }
+        }
+        return false
+    }
+
+    /** true si el paquete resuelve ALGÚN candidato (el preferido sigue usable). */
+    fun isPreferredUsable(
+        pm: PackageManager,
+        packageName: String?,
+        intents: List<Intent>,
+    ): Boolean = packageName != null &&
+        !packageName.isBlank() &&
+        intents.any { ExternalPlayers.isPreferredUsable(pm, packageName, it) }
+
+    /**
      * Vía externa completa para un canal:
      * - `acestream://` → integración oficial (Ace Player, sin proxy): [AceStreamEngine.startContentIntent].
      * - http(s) permitido por [ExternalGate] → preferido directo si
-     *   [preferredPackage] sigue instalado, si no chooser como antes.
+     *   [preferredPackage] sigue instalado (sobre CANDIDATOS), si no chooser
+     *   con el genérico de vídeo como antes.
      * Devuelve false si está vetado o no hay receptor.
      */
     fun openChannel(
@@ -134,12 +194,12 @@ object ExternalOpener {
             }.getOrDefault(false)
         }
         if (!ExternalGate.canExport(rawUrl, allowHttp, engineProxyFor, override, global)) return false
-        val intent = buildIntent(rawUrl, source?.mimeType())
+        val candidates = exportCandidates(rawUrl, source?.mimeType())
         if (!preferredPackage.isNullOrBlank() &&
-            ExternalPlayers.isPreferredUsable(context.packageManager, preferredPackage, intent)
+            isPreferredUsable(context.packageManager, preferredPackage, candidates)
         ) {
-            return openDirect(context, intent, preferredPackage)
+            return openDirect(context, candidates, preferredPackage)
         }
-        return openWithChooser(context, intent)
+        return openWithChooser(context, candidates)
     }
 }
