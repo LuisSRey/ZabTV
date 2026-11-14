@@ -31,7 +31,10 @@ import kotlinx.coroutines.flow.StateFlow
  */
 class Media3Engine(
     private val context: Context,
-    private val client: okhttp3.OkHttpClient,
+    // SECCION-10 (D9): `internal` como costura de test — el E2E de propagación
+    // del DNS aserta que un engine recién creado usa la MISMA instancia del
+    // cliente compartido.
+    internal val client: okhttp3.OkHttpClient,
     private val buffer: BufferConfig = BufferConfig(),
 ) : PlaybackEngine {
 
