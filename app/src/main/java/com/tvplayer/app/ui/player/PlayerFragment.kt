@@ -98,6 +98,8 @@ class PlayerFragment : Fragment() {
     private var current: ChannelEntity? = null
     /** SECCION-05: global del DAO leído fresco en onViewCreated (sin re-lectura por zap). */
     private var externalGlobal: Boolean = false
+    /** SECCION-07: último botón de transporte focuseado (para re-focar el overlay). */
+    private var lastTransport: ImageView? = null
     /** True en ventana flotante (PiP): overlay oculto, engine en marcha. */
     private var inPip = false
     /** True si el canal aún no llegó a engine.prepare (motor sin arrancar o error). */
@@ -136,18 +138,27 @@ class PlayerFragment : Fragment() {
         ff?.setOnClickListener { if (ready()) engine.seekBy(10_000) }
         playPause?.setOnClickListener { togglePlay() }
         // S4: reproductor externo (opt-in Global/Siempre/Nunca; función separada de PiP).
-        view.findViewById<ImageView>(R.id.player_external)?.let { ext ->
-            ext.setOnClickListener { openExternal() }
-            if (isTv) FocusScaleHelper.attach(ext)
+        val external = view.findViewById<ImageView>(R.id.player_external)
+        external?.setOnClickListener { openExternal() }
+        if (isTv) {
+            listOfNotNull(rew, playPause, ff).forEach { FocusScaleHelper.attach(it) }
+            // SECCION-07 (D5/A1-02): modelo de dos zonas. Con el foco en el
+            // transporte (Zona B) un ÚNICO OnKeyListener comparte la matriz:
+            // LEFT/RIGHT no se consumen (la cadena XML mueve el foco), UP/DOWN
+            // se consumen y hacen zap SIN perder el foco, CENTER/ENTER no se
+            // consumen (click del botón), MEDIA_* se consumen (playback ±30 s).
+            listOfNotNull(rew, playPause, ff, external).forEach { btn ->
+                FocusScaleHelper.attach(btn) { v, hasFocus ->
+                    if (hasFocus) lastTransport = v as? ImageView
+                }
+                btn.setOnKeyListener(transportKeyListener)
+            }
         }
         // S3: PiP opt-in SOLO móvil (el layout TV no trae player_pip → null, no-op).
         // NUNCA auto-enter: solo este tap explícito llama a enterPip().
         view.findViewById<ImageView>(R.id.player_pip)?.let { pip ->
             pip.visibility = pipButtonVisibility(isPipSupported())
             pip.setOnClickListener { enterPip() }
-        }
-        if (isTv) {
-            listOfNotNull(rew, playPause, ff).forEach { FocusScaleHelper.attach(it) }
         }
         logo = view.findViewById(R.id.player_logo)
         title = view.findViewById(R.id.player_title)
@@ -358,6 +369,28 @@ class PlayerFragment : Fragment() {
     }
 
     /**
+     * SECCION-07 (D5 · Zona B): OnKeyListener compartido de los 4 botones de
+     * transporte. UP/DOWN → zap (consumido, foco intacto); MEDIA_* → playback
+     * (consumido); LEFT/RIGHT/CENTER/ENTER → false (foco por cadena XML y
+     * click del botón, respectivamente).
+     */
+    private val transportKeyListener = View.OnKeyListener { _, keyCode, event ->
+        if (event.action != android.view.KeyEvent.ACTION_DOWN) return@OnKeyListener false
+        when (keyCode) {
+            android.view.KeyEvent.KEYCODE_DPAD_UP -> { lifecycleScope.launch { zap(-1) }; true }
+            android.view.KeyEvent.KEYCODE_DPAD_DOWN -> { lifecycleScope.launch { zap(1) }; true }
+            android.view.KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE -> { togglePlay(); true }
+            android.view.KeyEvent.KEYCODE_MEDIA_PLAY -> { if (ready()) engine.play(); true }
+            android.view.KeyEvent.KEYCODE_MEDIA_PAUSE,
+            android.view.KeyEvent.KEYCODE_MEDIA_STOP,
+            -> { if (ready()) engine.pause(); true }
+            android.view.KeyEvent.KEYCODE_MEDIA_FAST_FORWARD -> { if (ready()) engine.seekBy(30_000); true }
+            android.view.KeyEvent.KEYCODE_MEDIA_REWIND -> { if (ready()) engine.seekBy(-30_000); true }
+            else -> false
+        }
+    }
+
+    /**
      * S2: oculta las barras del sistema solo en móvil apaisado; en cualquier
      * otro caso restaura el chrome (rotar a vertical saliendo del inmersivo).
      */
@@ -382,8 +415,19 @@ class PlayerFragment : Fragment() {
             .show(WindowInsetsCompat.Type.systemBars())
     }
 
-    private fun showOverlay() {
+    private fun showOverlay(focusTransport: Boolean = true) {
         overlay.visibility = View.VISIBLE
+        // SECCION-07 (D5): en TV, al re-mostrar el overlay el foco va al último
+        // botón de transporte (o play/pausa). `post` evita requestFocus sobre
+        // vista sin layout. El re-show por zap usa focusTransport=false.
+        if (focusTransport && FocusScaleHelper.isTv(overlay)) {
+            overlay.post {
+                if (overlay.visibility == View.VISIBLE) {
+                    (lastTransport ?: overlay.findViewById<ImageView>(R.id.player_playpause))
+                        ?.requestFocus()
+                }
+            }
+        }
         overlayJob?.cancel()
         overlayJob = lifecycleScope.launch {
             kotlinx.coroutines.delay(5_000)
@@ -549,8 +593,13 @@ class PlayerFragment : Fragment() {
         updateNowLine(channel)
         com.tvplayer.app.data.LastPlayed.save(container.db, channel.listId, channel.stableKey)
         container.db.recentDao().recordWatch(channel.listId, channel.stableKey)
+        // SECCION-07 (D5): el re-show NO re-foca (focusTransport=false), pero
+        // si el foco estaba en el transporte se PRESERVA su posición tras el
+        // ciclo hide/show.
+        val refocus = lastTransport?.hasFocus() == true
         hideOverlay()
-        showOverlay()
+        showOverlay(focusTransport = false)
+        if (refocus) lastTransport?.requestFocus()
         dismissEngineDialog()
         prepareCurrent(channel)
     }

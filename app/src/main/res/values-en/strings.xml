@@ -22,7 +22,7 @@
     <string name="player_seek_fwd">Forward 10 seconds</string>
     <string name="player_toggle">Play / Pause</string>
     <string name="player_zapping_hint">Up/Down to change channel</string>
-    <string name="player_zapping_hint_tv">D-pad Up/Down to change channel · BACK to exit</string>
+    <string name="player_zapping_hint_tv">OK shows the controls · ↑/↓ changes channel · BACK to exit</string>
     <string name="error_network">No connection or server not responding</string>
     <string name="error_server">Server returned an error</string>
     <string name="error_unsupported_format">Unsupported format</string>

@@ -24,7 +24,7 @@
     <string name="player_seek_fwd">Avanzar 10 segundos</string>
     <string name="player_toggle">Reproducir / Pausar</string>
     <string name="player_zapping_hint">↑/↓ cambiar canal</string>
-    <string name="player_zapping_hint_tv">D-pad arriba/abajo para cambiar de canal · BACK para salir</string>
+    <string name="player_zapping_hint_tv">OK muestra los controles · ↑/↓ cambia de canal · BACK para salir</string>
     <string name="error_network">Sin conexión o el servidor no responde</string>
     <string name="error_server">El servidor devolvió un error</string>
     <string name="error_unsupported_format">Formato no soportado</string>

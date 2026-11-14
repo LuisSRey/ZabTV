@@ -89,8 +89,10 @@
                 android:id="@+id/player_rew"
                 android:layout_width="56dp"
                 android:layout_height="56dp"
+                android:background="@drawable/tile_focus_bg"
                 android:contentDescription="@string/player_seek_back"
                 android:focusable="true"
+                android:nextFocusRight="@+id/player_playpause"
                 android:padding="10dp"
                 android:src="@drawable/ic_rew" />
 
@@ -103,6 +105,8 @@
                 android:background="@drawable/tile_focus_bg"
                 android:contentDescription="@string/player_toggle"
                 android:focusable="true"
+                android:nextFocusLeft="@+id/player_rew"
+                android:nextFocusRight="@+id/player_ff"
                 android:padding="12dp"
                 android:src="@drawable/ic_pause" />
 
@@ -110,8 +114,11 @@
                 android:id="@+id/player_ff"
                 android:layout_width="56dp"
                 android:layout_height="56dp"
+                android:background="@drawable/tile_focus_bg"
                 android:contentDescription="@string/player_seek_fwd"
                 android:focusable="true"
+                android:nextFocusLeft="@+id/player_playpause"
+                android:nextFocusRight="@+id/player_external"
                 android:padding="10dp"
                 android:src="@drawable/ic_ff" />
 
@@ -121,8 +128,10 @@
                 android:layout_width="56dp"
                 android:layout_height="56dp"
                 android:layout_marginStart="12dp"
+                android:background="@drawable/tile_focus_bg"
                 android:contentDescription="@string/player_external"
                 android:focusable="true"
+                android:nextFocusLeft="@+id/player_ff"
                 android:padding="10dp"
                 android:src="@drawable/ic_external" />
 
