@@ -54,16 +54,18 @@ class ListsTvFocusWiringTest {
     }
 
     @Test
-    fun `W2 tv nav_lists entra a add_url y nav_browse intacto`() {
+    fun `W2 tv nav_lists sin promesa muerta (SECCION-13)`() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val root = shellRoot(context)
+        // SECCION-13 (D12/A1-09): las promesas nextFocusRight a ids que solo
+        // existen dentro de fragmentos no montados son frágiles; el salto a
+        // contenido lo hace el algoritmo de foco (fallback geométrico).
         assertEquals(
-            R.id.lists_add_url,
+            View.NO_ID,
             root.findViewById<View>(R.id.nav_lists).nextFocusRightId,
         )
-        // Simetría: nav_browse ya apuntaba al selector del browser.
         assertEquals(
-            R.id.browser_list_selector,
+            View.NO_ID,
             root.findViewById<View>(R.id.nav_browse).nextFocusRightId,
         )
     }

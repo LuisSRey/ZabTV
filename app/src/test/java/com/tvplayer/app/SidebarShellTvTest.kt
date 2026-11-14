@@ -49,13 +49,15 @@ class SidebarShellTvTest {
     }
 
     @Test
-    fun `S3 tv nav_browse derecha al selector F2`() {
-        // §F2 (lado shell): nav_browse → browser_list_selector; el regreso
-        // selector → nav_browse vive en el layout del fragment.
+    fun `S3 tv nav_browse sin promesa muerta de foco`() {
+        // SECCION-13 (D12/A1-09): nextFocusRight a un id que solo existe dentro
+        // de un fragmento no montado es una promesa frágil y mentirosa; se
+        // elimina — el salto a contenido lo sigue haciendo el algoritmo de
+        // foco, que es lo que ya ocurre hoy.
         val context = ApplicationProvider.getApplicationContext<Context>()
         val root = shellRoot(context)
         val navBrowse = root.findViewById<View>(R.id.nav_browse)
-        assertEquals(R.id.browser_list_selector, navBrowse.nextFocusRightId)
+        assertEquals(View.NO_ID, navBrowse.nextFocusRightId)
     }
 
     @Test

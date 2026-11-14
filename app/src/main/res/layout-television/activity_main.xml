@@ -10,7 +10,7 @@
         android:id="@+id/sidebar"
         android:layout_width="200dp"
         android:layout_height="match_parent"
-        android:background="#E60F0F11"
+        android:background="@color/tp_sidebar_scrim"
         android:orientation="vertical"
         android:padding="16dp">
 
@@ -72,7 +72,6 @@
             android:background="@drawable/tile_focus_bg"
             android:focusable="true"
             android:gravity="center_vertical"
-            android:nextFocusRight="@id/browser_list_selector"
             android:orientation="horizontal"
             android:paddingStart="16dp"
             android:paddingEnd="16dp">
@@ -127,7 +126,6 @@
             android:background="@drawable/tile_focus_bg"
             android:focusable="true"
             android:gravity="center_vertical"
-            android:nextFocusRight="@id/lists_add_url"
             android:orientation="horizontal"
             android:paddingStart="16dp"
             android:paddingEnd="16dp">

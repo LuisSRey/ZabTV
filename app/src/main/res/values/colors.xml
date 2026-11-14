@@ -7,4 +7,10 @@
     <color name="tp_accent">#0A84FF</color>
     <color name="tp_text">#FFFFFF</color>
     <color name="tp_text_secondary">#98989D</color>
+    <!-- SECCION-13 (D12/A1-07): tokens para los hex que estaban fuera de tokens. -->
+    <color name="tp_focus_border">#FFFFFF</color>
+    <color name="tp_btn_primary_pressed">#0A6CD6</color>
+    <color name="tp_scrim_dark">#CC000000</color>
+    <color name="tp_shell_bg">#1F1F22</color>
+    <color name="tp_sidebar_scrim">#E60F0F11</color>
 </resources>
