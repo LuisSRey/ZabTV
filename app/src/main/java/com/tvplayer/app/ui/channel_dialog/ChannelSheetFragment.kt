@@ -58,8 +58,20 @@ class ChannelSheetFragment : DialogFragment() {
         val group = view.findViewById<TextView>(R.id.sheet_group)
         val approx = view.findViewById<TextView>(R.id.sheet_approx)
         val programs = view.findViewById<RecyclerView>(R.id.sheet_programs)
+        // SECCION-08 (D6/A1-03): findViewById de los 5 botones + attach de foco
+        // FUERA de la corrutina (aplica aunque el canal no se encuentre). En TV
+        // los botones ganan foco escalado; los listeners siguen dentro.
+        val isTv = com.tvplayer.app.ui.common.FocusScaleHelper.isTv(view)
         val play = view.findViewById<Button>(R.id.sheet_play)
         val fav = view.findViewById<Button>(R.id.sheet_fav)
+        val extGlobal = view.findViewById<Button>(R.id.sheet_ext_global)
+        val extAlways = view.findViewById<Button>(R.id.sheet_ext_always)
+        val extNever = view.findViewById<Button>(R.id.sheet_ext_never)
+        if (isTv) {
+            listOf(play, fav, extGlobal, extAlways, extNever).forEach {
+                com.tvplayer.app.ui.common.FocusScaleHelper.attach(it)
+            }
+        }
         programs.layoutManager = LinearLayoutManager(requireContext())
 
         lifecycleScope.launch {
@@ -88,6 +100,7 @@ class ChannelSheetFragment : DialogFragment() {
                 val fmt = SimpleDateFormat("HH:mm", Locale.getDefault())
                 val adapter = SheetProgramsAdapter(
                     rows.map { "${fmt.format(Date(it.startMillis))}  ${it.title}" },
+                    bigText = isTv,
                 )
                 programs.adapter = adapter
             }
@@ -97,9 +110,6 @@ class ChannelSheetFragment : DialogFragment() {
                 (activity as? TvNavigator.NavHost)?.openPlayer(channel.listId, channel.position)
             }
             // S4: override de reproductor externo (Global/Siempre/Nunca).
-            val extGlobal = view.findViewById<Button>(R.id.sheet_ext_global)
-            val extAlways = view.findViewById<Button>(R.id.sheet_ext_always)
-            val extNever = view.findViewById<Button>(R.id.sheet_ext_never)
             fun paintExtRow(value: Boolean?) {
                 extGlobal.alpha = if (value == null) 1f else 0.45f
                 extAlways.alpha = if (value == true) 1f else 0.45f
@@ -159,7 +169,11 @@ class ChannelSheetFragment : DialogFragment() {
         return cal.timeInMillis
     }
 
-    private class SheetProgramsAdapter(private val rows: List<String>) :
+    private class SheetProgramsAdapter(
+        private val rows: List<String>,
+        /** SECCION-08: fila de programas 16sp en TV (14sp móvil). */
+        private val bigText: Boolean = false,
+    ) :
         RecyclerView.Adapter<SheetProgramsAdapter.Holder>() {
 
         class Holder(root: View) : RecyclerView.ViewHolder(root) {
@@ -169,7 +183,7 @@ class ChannelSheetFragment : DialogFragment() {
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): Holder {
             val v = TextView(parent.context).apply {
                 setTextColor(parent.context.getColor(R.color.tp_text))
-                textSize = 14f
+                textSize = if (bigText) 16f else 14f
                 setPadding(0, 8, 0, 8)
             }
             return Holder(v)

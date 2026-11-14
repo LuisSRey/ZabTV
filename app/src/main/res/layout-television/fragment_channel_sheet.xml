@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- SECCION-08 (D6/A1-03): ficha de canal TV — misma estructura e ids que la
+     móvil, safe area 56dp (convención repo: padding del LinearLayout interior
+     bajo ScrollView fillViewport), tipografías 26/16/15sp y botones minHeight
+     56dp con foco escalado (FocusScaleHelper.attach en el fragment). -->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="56dp">
+
+        <ImageView
+            android:id="@+id/sheet_logo"
+            android:layout_width="96dp"
+            android:layout_height="56dp"
+            android:contentDescription="@string/browser_channel_logo"
+            android:scaleType="fitCenter" />
+
+        <TextView
+            android:id="@+id/sheet_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:textAppearance="@style/TextAppearance_TVPlayer_SectionTitle"
+            android:textSize="26sp" />
+
+        <TextView
+            android:id="@+id/sheet_group"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:textAppearance="@style/TextAppearance_TVPlayer_Meta"
+            android:textSize="16sp" />
+
+        <TextView
+            android:id="@+id/sheet_approx"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/tile_focus_bg"
+            android:paddingStart="10dp"
+            android:paddingEnd="10dp"
+            android:paddingTop="4dp"
+            android:paddingBottom="4dp"
+            android:text="@string/sheet_approx"
+            android:textColor="@color/tp_accent"
+            android:textSize="15sp"
+            android:visibility="gone" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/sheet_play"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:minHeight="56dp"
+                android:background="@drawable/btn_primary"
+                android:text="@string/sheet_play"
+                android:textColor="@color/tp_text"
+                android:textSize="16sp" />
+
+            <Button
+                android:id="@+id/sheet_fav"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:layout_weight="1"
+                android:minHeight="56dp"
+                android:background="@drawable/btn_ghost"
+                android:text="@string/sheet_fav"
+                android:textColor="@color/tp_text"
+                android:textSize="16sp" />
+
+        </LinearLayout>
+
+        <!-- S4: override de reproductor externo por canal. -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:text="@string/sheet_external_title"
+            android:textAppearance="@style/TextAppearance_TVPlayer_Meta"
+            android:textSize="16sp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/sheet_ext_global"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:minHeight="56dp"
+                android:background="@drawable/btn_ghost"
+                android:text="@string/sheet_ext_global"
+                android:textColor="@color/tp_text"
+                android:textSize="16sp" />
+
+            <Button
+                android:id="@+id/sheet_ext_always"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_weight="1"
+                android:minHeight="56dp"
+                android:background="@drawable/btn_ghost"
+                android:text="@string/sheet_ext_always"
+                android:textColor="@color/tp_text"
+                android:textSize="16sp" />
+
+            <Button
+                android:id="@+id/sheet_ext_never"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_weight="1"
+                android:minHeight="56dp"
+                android:background="@drawable/btn_ghost"
+                android:text="@string/sheet_ext_never"
+                android:textColor="@color/tp_text"
+                android:textSize="16sp" />
+
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="@string/external_nowarn"
+            android:textAppearance="@style/TextAppearance_TVPlayer_Meta"
+            android:textSize="15sp" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/sheet_programs"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:nestedScrollingEnabled="false" />
+
+    </LinearLayout>
+
+</ScrollView>
