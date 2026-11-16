@@ -78,7 +78,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:networkSecurityConfig="@xml/network_security_config"
         android:resizeableActivity="true"
-        android:theme="@style/Theme.TVPlayer">
+        android:theme="@style/Theme.ZabTV">
 
         <activity
             android:name=".MainActivity"

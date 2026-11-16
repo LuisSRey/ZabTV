@@ -112,7 +112,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
-                    android:textAppearance="@style/TextAppearance_TVPlayer_Meta"
+                    android:textAppearance="@style/TextAppearance_ZabTV_Meta"
                     android:textSize="13sp" />
 
                 <ProgressBar

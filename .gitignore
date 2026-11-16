@@ -11,6 +11,7 @@ captures/
 # Local env
 local.properties
 tools/gradle/
+tools/gradle-9.8.2/
 tools/jdk*/
 tools/*.zip
 tools/fixtures/

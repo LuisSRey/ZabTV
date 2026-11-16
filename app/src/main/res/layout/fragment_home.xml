@@ -40,7 +40,7 @@
                     android:layout_height="wrap_content"
                     android:ellipsize="end"
                     android:maxLines="1"
-                    android:textAppearance="@style/TextAppearance_TVPlayer_HeroTitle"
+                    android:textAppearance="@style/TextAppearance_ZabTV_HeroTitle"
                     android:textSize="24sp" />
 
                 <TextView
@@ -48,7 +48,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
-                    android:textAppearance="@style/TextAppearance_TVPlayer_Meta"
+                    android:textAppearance="@style/TextAppearance_ZabTV_Meta"
                     android:textSize="14sp" />
 
                 <Button
@@ -86,7 +86,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/fav_title"
-                android:textAppearance="@style/TextAppearance_TVPlayer_SectionTitle" />
+                android:textAppearance="@style/TextAppearance_ZabTV_SectionTitle" />
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/home_favs_rail"
@@ -109,7 +109,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/lists_title"
-                android:textAppearance="@style/TextAppearance_TVPlayer_SectionTitle" />
+                android:textAppearance="@style/TextAppearance_ZabTV_SectionTitle" />
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/home_lists_rail"

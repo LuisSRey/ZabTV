@@ -1,6 +1,6 @@
 <resources>
     <!-- Tema estilo Apple TV: negro puro, Inter, sin ActionBar. -->
-    <style name="Theme.TVPlayer" parent="Theme.AppCompat.NoActionBar">
+    <style name="Theme.ZabTV" parent="Theme.AppCompat.NoActionBar">
         <item name="colorPrimary">@color/tp_accent</item>
         <item name="colorAccent">@color/tp_accent</item>
         <item name="android:colorBackground">@color/tp_bg</item>
@@ -16,22 +16,22 @@
     </style>
 
     <!-- Escala tipo tvOS: titulares grandes y aireados. -->
-    <style name="TextAppearance_TVPlayer_HeroTitle">
+    <style name="TextAppearance_ZabTV_HeroTitle">
         <item name="android:fontFamily">@font/inter_bold</item>
         <item name="android:textSize">34sp</item>
         <item name="android:textColor">@color/tp_text</item>
     </style>
-    <style name="TextAppearance_TVPlayer_SectionTitle">
+    <style name="TextAppearance_ZabTV_SectionTitle">
         <item name="android:fontFamily">@font/inter_semibold</item>
         <item name="android:textSize">20sp</item>
         <item name="android:textColor">@color/tp_text</item>
     </style>
-    <style name="TextAppearance_TVPlayer_CardTitle">
+    <style name="TextAppearance_ZabTV_CardTitle">
         <item name="android:fontFamily">@font/inter_medium</item>
         <item name="android:textSize">14sp</item>
         <item name="android:textColor">@color/tp_text</item>
     </style>
-    <style name="TextAppearance_TVPlayer_Meta">
+    <style name="TextAppearance_ZabTV_Meta">
         <item name="android:fontFamily">@font/inter_regular</item>
         <item name="android:textSize">13sp</item>
         <item name="android:textColor">@color/tp_text_secondary</item>
@@ -39,12 +39,12 @@
 
     <!-- Selector de playlists (S4): superficies con tokens propios — fondo
          tp_surface, texto tp_text, radio 10dp (dialog_bg), elev 8dp. -->
-    <style name="ThemeOverlay.TVPlayer.ListPopup" parent="ThemeOverlay.AppCompat.Dark">
+    <style name="ThemeOverlay.ZabTV.ListPopup" parent="ThemeOverlay.AppCompat.Dark">
         <item name="android:popupBackground">@color/tp_surface</item>
         <item name="android:textColor">@color/tp_text</item>
         <item name="android:textColorPrimary">@color/tp_text</item>
     </style>
-    <style name="ThemeOverlay.TVPlayer.ListDialog" parent="Theme.AppCompat.Dialog.Alert">
+    <style name="ThemeOverlay.ZabTV.ListDialog" parent="Theme.AppCompat.Dialog.Alert">
         <item name="android:windowBackground">@drawable/dialog_bg</item>
         <item name="android:textColor">@color/tp_text</item>
         <item name="android:textColorPrimary">@color/tp_text</item>

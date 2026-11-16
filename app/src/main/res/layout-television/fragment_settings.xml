@@ -23,7 +23,7 @@
             android:id="@+id/settings_wipe_favs"
             android:background="@drawable/btn_ghost"
             android:textColor="@color/tp_text"
-            android:layout_width="400dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="32dp"
             android:text="@string/settings_wipe_favs" />
@@ -32,7 +32,7 @@
             android:id="@+id/settings_wipe_epg"
             android:background="@drawable/btn_ghost"
             android:textColor="@color/tp_text"
-            android:layout_width="400dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
             android:text="@string/settings_wipe_epg" />
@@ -41,7 +41,7 @@
             android:id="@+id/settings_wipe_logos"
             android:background="@drawable/btn_ghost"
             android:textColor="@color/tp_text"
-            android:layout_width="400dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
             android:text="@string/settings_wipe_logos" />
@@ -50,7 +50,7 @@
             android:id="@+id/settings_wipe_all"
             android:background="@drawable/btn_ghost"
             android:textColor="@color/tp_text"
-            android:layout_width="400dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
             android:text="@string/settings_wipe_all" />
@@ -161,7 +161,7 @@
             android:id="@+id/settings_buffer_save"
             android:background="@drawable/btn_primary"
             android:textColor="@color/tp_text"
-            android:layout_width="400dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
             android:text="@string/settings_buffer_save" />
@@ -177,7 +177,7 @@
 
         <Switch
             android:id="@+id/settings_proxy_enable"
-            android:layout_width="400dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:focusable="true"
@@ -217,7 +217,7 @@
 
         <Spinner
             android:id="@+id/settings_proxy_type"
-            android:layout_width="400dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:entries="@array/proxy_types"
@@ -272,7 +272,7 @@
             android:id="@+id/settings_proxy_test"
             android:background="@drawable/btn_ghost"
             android:textColor="@color/tp_text"
-            android:layout_width="400dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:text="@string/settings_proxy_test" />
@@ -290,7 +290,7 @@
             android:id="@+id/settings_proxy_save"
             android:background="@drawable/btn_primary"
             android:textColor="@color/tp_text"
-            android:layout_width="400dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:text="@string/settings_proxy_save" />
@@ -314,7 +314,7 @@
 
         <Spinner
             android:id="@+id/settings_doh_mode"
-            android:layout_width="400dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:entries="@array/doh_modes"
@@ -339,7 +339,7 @@
             android:id="@+id/settings_doh_save"
             android:background="@drawable/btn_primary"
             android:textColor="@color/tp_text"
-            android:layout_width="400dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:text="@string/settings_doh_save" />
@@ -362,10 +362,10 @@
             android:textStyle="bold" />
 
         <!-- SECCION-02 (D1/A3-01): interruptor allow_http TV — focable (D-pad),
-             ancho de sección 400dp como el resto de la sección. -->
+             ancho completo como el resto de la sección. -->
         <Switch
             android:id="@+id/settings_allow_http"
-            android:layout_width="400dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:focusable="true"
@@ -392,7 +392,7 @@
 
         <Switch
             android:id="@+id/settings_external_global"
-            android:layout_width="400dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:focusable="true"
@@ -411,7 +411,7 @@
 
         <Spinner
             android:id="@+id/settings_external_player"
-            android:layout_width="400dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:focusable="true" />

@@ -25,8 +25,9 @@
 
         <Button
             android:id="@+id/lists_add_url"
-            android:layout_width="280dp"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_weight="1"
             android:background="@drawable/btn_primary"
             android:nextFocusDown="@id/lists_list"
             android:nextFocusRight="@id/lists_add_file"
@@ -35,9 +36,10 @@
 
         <Button
             android:id="@+id/lists_add_file"
-            android:layout_width="280dp"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
+            android:layout_weight="1"
             android:background="@drawable/btn_ghost"
             android:nextFocusLeft="@id/lists_add_url"
             android:text="@string/lists_add_file"

@@ -65,7 +65,7 @@
                     android:layout_height="wrap_content"
                     android:ellipsize="end"
                     android:maxLines="1"
-                    android:textAppearance="@style/TextAppearance_TVPlayer_HeroTitle"
+                    android:textAppearance="@style/TextAppearance_ZabTV_HeroTitle"
                     android:textSize="28sp" />
 
                 <TextView
@@ -73,7 +73,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="6dp"
-                    android:textAppearance="@style/TextAppearance_TVPlayer_Meta"
+                    android:textAppearance="@style/TextAppearance_ZabTV_Meta"
                     android:textSize="16sp" />
             </LinearLayout>
         </LinearLayout>

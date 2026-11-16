@@ -22,7 +22,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:textAppearance="@style/TextAppearance_TVPlayer_SectionTitle"
+            android:textAppearance="@style/TextAppearance_ZabTV_SectionTitle"
             android:textSize="20sp" />
 
         <TextView
@@ -30,7 +30,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
-            android:textAppearance="@style/TextAppearance_TVPlayer_Meta"
+            android:textAppearance="@style/TextAppearance_ZabTV_Meta"
             android:textSize="14sp" />
 
         <TextView
@@ -81,7 +81,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:text="@string/sheet_external_title"
-            android:textAppearance="@style/TextAppearance_TVPlayer_Meta"
+            android:textAppearance="@style/TextAppearance_ZabTV_Meta"
             android:textSize="14sp" />
 
         <LinearLayout
@@ -126,7 +126,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
             android:text="@string/external_nowarn"
-            android:textAppearance="@style/TextAppearance_TVPlayer_Meta"
+            android:textAppearance="@style/TextAppearance_ZabTV_Meta"
             android:textSize="12sp" />
 
         <androidx.recyclerview.widget.RecyclerView

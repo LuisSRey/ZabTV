@@ -1,4 +1,4 @@
-# TVPlayer
+# ZabTV
 
 Reproductor de listas IPTV para Android TV / Fire TV y móvil.
 

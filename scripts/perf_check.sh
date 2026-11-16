@@ -1,11 +1,11 @@
 #!/bin/sh
-# Perf check de dispositivo para TVPlayer (Task 15, spec §6.7).
+# Perf check de dispositivo para ZabTV (Task 15, spec §6.7).
 # Requiere: adb en PATH, un dispositivo/fire stick conectado y el APK instalado.
-# Uso: sh scripts/perf_check.sh [package=com.tvplayer.app]
+# Uso: sh scripts/perf_check.sh [package=com.zabtv.app]
 # Guarda la tabla final en docs/perf_results/<fecha>.md (plantilla en README).
 set -eu
 
-PKG="${1:-com.tvplayer.app}"
+PKG="${1:-com.zabtv.app}"
 OUT="docs/perf_results/$(date +%F).md"
 ACTIVITY="$PKG/.MainActivity"
 

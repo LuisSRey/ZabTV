@@ -43,7 +43,7 @@
             android:layout_height="wrap_content"
             android:ellipsize="end"
             android:maxLines="2"
-            android:textAppearance="@style/TextAppearance_TVPlayer_CardTitle"
+            android:textAppearance="@style/TextAppearance_ZabTV_CardTitle"
             android:textSize="13sp" />
 
         <!-- Tira Ahora/Siguiente (Task 14): GONE sin guía para el canal. -->

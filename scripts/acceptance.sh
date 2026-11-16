@@ -1,5 +1,5 @@
 #!/bin/sh
-# Aceptación de seguridad F8 para TVPlayer (Task 16).
+# Aceptación de seguridad F8 para ZabTV (Task 16).
 # Uso: sh scripts/acceptance.sh [apk=app/build/outputs/apk/release/app-release-unsigned.apk]
 # Requiere: apkanalyzer en PATH (cmdline-tools) + unzip + grep.
 # Los checks de dex usan descriptores literales: el framework nunca se ofusca,
@@ -32,7 +32,7 @@ command -v apkanalyzer >/dev/null 2>&1 || [ "$(type -t apkanalyzer)" = "function
 echo "== 1. Permisos: INTERNET + WorkManager + READ_EXTERNAL_STORAGE(maxSdk 29, ruling navegador local), nada más =="
 # WorkManager inyecta estos 5 (ver Task 16 ledger); READ_EXTERNAL_STORAGE es
 # ruling de usuario (navegador .m3u en Fire TV, inútil en 30+); otro = fallo.
-ALLOWED="android.permission.INTERNET android.permission.FOREGROUND_SERVICE android.permission.ACCESS_NETWORK_STATE android.permission.WAKE_LOCK android.permission.RECEIVE_BOOT_COMPLETED com.tvplayer.app.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION android.permission.READ_EXTERNAL_STORAGE"
+ALLOWED="android.permission.INTERNET android.permission.FOREGROUND_SERVICE android.permission.ACCESS_NETWORK_STATE android.permission.WAKE_LOCK android.permission.RECEIVE_BOOT_COMPLETED com.zabtv.app.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION android.permission.READ_EXTERNAL_STORAGE"
 # apkanalyzer nuevo imprime atributos inline (READ_EXTERNAL_STORAGE' maxSdkVersion='29): se recortan.
 perms=$(apkanalyzer manifest permissions "$APK" | grep "^android.permission\|^com.tvplayer" | sed "s/[ '].*//" || true)
 echo "$perms"
@@ -43,7 +43,7 @@ echo "$perms" | while read -r p; do
   esac
 done
 # subshell del while no propaga exit con set -e en todos los sh: doble check
-extra=$(echo "$perms" | grep -vxF -e "android.permission.INTERNET" -e "android.permission.FOREGROUND_SERVICE" -e "android.permission.ACCESS_NETWORK_STATE" -e "android.permission.WAKE_LOCK" -e "android.permission.RECEIVE_BOOT_COMPLETED" -e "com.tvplayer.app.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" -e "android.permission.READ_EXTERNAL_STORAGE" || true)
+extra=$(echo "$perms" | grep -vxF -e "android.permission.INTERNET" -e "android.permission.FOREGROUND_SERVICE" -e "android.permission.ACCESS_NETWORK_STATE" -e "android.permission.WAKE_LOCK" -e "android.permission.RECEIVE_BOOT_COMPLETED" -e "com.zabtv.app.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" -e "android.permission.READ_EXTERNAL_STORAGE" || true)
 [ -z "$extra" ] && pass "permisos dentro de la lista cerrada" || { fail "permisos extra: $extra"; }
 
 echo "== 2. Manifest: sin cleartext estático, allowBackup=false =="
@@ -57,7 +57,7 @@ extra=$(grep -o '<domain[^>]*>[^<]*</domain>' "$cfg" | grep -v -e "127.0.0.1" -e
 echo "$manifest" | grep -q 'allowBackup="true"' && fail "allowBackup=true" || pass "allowBackup=false"
 
 echo "== 3. Exported: ningún componente PROPIO salvo MainActivity (launcher) =="
-own_exported=$(echo "$manifest" | grep -B2 'android:exported="true"' | grep 'android:name="com.tvplayer.app' | grep -v "MainActivity" || true)
+own_exported=$(echo "$manifest" | grep -B2 'android:exported="true"' | grep 'android:name="com.zabtv.app' | grep -v "MainActivity" || true)
 [ -z "$own_exported" ] && pass "solo MainActivity exportado (librerías: diff manual)" || fail "exportado propio: $own_exported"
 
 echo "== 4. Dex: sin DexClassLoader; con CleartextGate; WebView solo transitiva =="

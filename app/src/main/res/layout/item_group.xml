@@ -18,7 +18,7 @@
         android:ellipsize="end"
         android:maxLines="1"
         android:maxWidth="160dp"
-        android:textAppearance="@style/TextAppearance_TVPlayer_CardTitle"
+        android:textAppearance="@style/TextAppearance_ZabTV_CardTitle"
         android:textSize="14sp" />
 
     <TextView

@@ -1,9 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">TVPlayer</string>
+    <string name="app_name">ZabTV</string>
     <string name="home_no_content">This app does not include, host or distribute any content. Add your own playlist to start.</string>
     <string name="nav_home">Home</string>
-    <string name="about_disclaimer_full">TVPlayer is a playlist player for Android TV, Fire TV and Android phones/tablets. It includes, hosts or distributes no content: it plays the channels and videos from the M3U/EPG lists you add (your own provider or playlist).</string>
+    <string name="about_disclaimer_full">ZabTV is a playlist player for Android TV, Fire TV and Android phones/tablets. It includes, hosts or distributes no content: it plays the channels and videos from the M3U/EPG lists you add (your own provider or playlist).</string>
     <string name="browser_title">Channels</string>
     <string name="browser_groups_all">All</string>
     <string name="browser_no_group">No group</string>
@@ -150,14 +150,14 @@
     <!-- SECCION-01 (D3/A3-03): actionable messages per veto cause (matrix 2.1.3). -->
     <string name="player_ext_veto_cleartext">Unencrypted http:// channel. Turn on \"Allow unencrypted HTTP\" in Settings → External player to open it outside the app.</string>
     <string name="player_ext_veto_loopback">This channel already goes through the local AceStream engine: the external player cannot reach that internal proxy.</string>
-    <string name="player_ext_veto_url">The channel URL is not http/https (or is invalid): TVPlayer only opens http(s) links outside the app.</string>
-    <string name="player_ext_veto_userinfo">The channel URL embeds a user and password: TVPlayer does not open it outside the app for security.</string>
+    <string name="player_ext_veto_url">The channel URL is not http/https (or is invalid): ZabTV only opens http(s) links outside the app.</string>
+    <string name="player_ext_veto_userinfo">The channel URL embeds a user and password: ZabTV does not open it outside the app for security.</string>
     <string name="player_external_ace_fail">Could not open AceStream: install it, keep it running and try again.</string>
     <string name="sheet_external_title">External player</string>
     <string name="sheet_ext_global">Global</string>
     <string name="sheet_ext_always">Always</string>
     <string name="sheet_ext_never">Never</string>
-    <string name="external_nowarn">The external player does not inherit TVPlayer proxy or DNS.</string>
+    <string name="external_nowarn">The external player does not inherit ZabTV proxy or DNS.</string>
     <string name="settings_external_title">External player</string>
     <string name="settings_external_global">Allow external player (global)</string>
     <string name="settings_external_player">Preferred player</string>

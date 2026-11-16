@@ -120,7 +120,7 @@
                         android:layout_marginTop="2dp"
                         android:ellipsize="end"
                         android:maxLines="1"
-                        android:textAppearance="@style/TextAppearance_TVPlayer_Meta"
+                        android:textAppearance="@style/TextAppearance_ZabTV_Meta"
                         android:textSize="12sp" />
 
                     <ProgressBar
@@ -243,7 +243,7 @@
                  grid vive dentro en match_parent sin peso ni minHeight, con el
                  halo (paddingTop 12) y marginTop 0 (el recorte vertical del
                  wrap lo contiene). -->
-            <com.tvplayer.app.ui.common.VerticalClipFrameLayout
+            <com.zabtv.app.ui.common.VerticalClipFrameLayout
                 android:id="@+id/browser_grid_wrap"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
@@ -269,7 +269,7 @@
                     android:nextFocusUp="@id/browser_list_selector"
                     android:paddingTop="12dp" />
 
-            </com.tvplayer.app.ui.common.VerticalClipFrameLayout>
+            </com.zabtv.app.ui.common.VerticalClipFrameLayout>
 
             <TextView
                 android:id="@+id/browser_empty"

@@ -1,4 +1,4 @@
-# AGENTS.md — TVPlayer
+# AGENTS.md — ZabTV
 
 Android TV / Fire TV / móvil media player. Player-only: la app no incluye, aloja ni distribuye contenido — el usuario provee listas M3U/Xtream. Spec vinculante: `docs/specs/2026-11-04-tvplayer-v1-design.md`. Plan de ejecución (16 tareas, fuente de verdad del alcance): `docs/superpowers/plans/2026-11-04-tvplayer-v01-core.md`. Ledger TDD con rulings: `.superpowers/sdd/2026-11-04-tvplayer-v01-core/progress.md`.
 
@@ -55,7 +55,7 @@ app/src/main/java/com/tvplayer/app/
 
 ## Diseño estilo Apple TV (reskin post-v0.1)
 - Tokens: fondo `#000000`, superficies `#1C1C1E`/`#2C2C2E`, acento `#0A84FF`, texto `#FFFFFF`/`#98989D`. Foco = borde blanco + escala 1.1 (`tile_focus_bg` + `FocusScaleHelper`); seleccionado = pastilla `surface2` (`state_activated`).
-- Inter empaquetada en `res/font/inter_*` (OTF estáticos v3.19 — los variables necesitan API 26+); estilos `TextAppearance_TVPlayer_*` en themes.xml (los nombres de estilo NO llevan puntos, AAPT los rechaza).
+- Inter empaquetada en `res/font/inter_*` (OTF estáticos v3.19 — los variables necesitan API 26+); estilos `TextAppearance_ZabTV_*` en themes.xml (los nombres de estilo NO llevan puntos, AAPT los rechaza).
 - Logo propio: `ic_logo_mark` (pastilla azul + play), adaptive icon + PNG legacy generados con `tools/gen_launcher_icon.py`, banner vector 320x180.
 - Shell en `MainActivity`: sidebar TV / barra inferior móvil (`activity_main` + variante television), selección sincronizada con el back stack; el player oculta el chrome.
 - Nombres de recursos con guion en TOML rompen Kotlin DSL: Media3 va como coordenadas string (también `media3-ui`).

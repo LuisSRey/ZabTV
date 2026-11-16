@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace = "com.tvplayer.app"
+    namespace = "com.zabtv.app"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.tvplayer.app"
+        applicationId = "com.zabtv.app"
         minSdk = 23
         targetSdk = 36
         // Subir a mano en cada release que cambie icono/banner (invalida

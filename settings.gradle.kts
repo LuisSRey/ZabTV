@@ -19,5 +19,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "TVPlayer"
+rootProject.name = "ZabTV"
 include(":app")

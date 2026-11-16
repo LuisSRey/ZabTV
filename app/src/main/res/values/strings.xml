@@ -1,9 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">TVPlayer</string>
+    <string name="app_name">ZabTV</string>
     <string name="home_no_content">Esta aplicación no incluye, aloja ni distribuye contenido. Añade tu propia lista para empezar.</string>
     <string name="nav_home">Inicio</string>
-    <string name="about_disclaimer_full">TVPlayer es un reproductor de listas multimedia para Android TV, Fire TV y móvil/tableta Android. No incluye, aloja ni distribuye contenido: reproduce los canales y vídeos de las listas M3U/EPG que tú añades (proveedor o playlist propia).</string>
+    <string name="about_disclaimer_full">ZabTV es un reproductor de listas multimedia para Android TV, Fire TV y móvil/tableta Android. No incluye, aloja ni distribuye contenido: reproduce los canales y vídeos de las listas M3U/EPG que tú añades (proveedor o playlist propia).</string>
     <string name="browser_title">Canales</string>
     <string name="browser_groups_all">Todos</string>
     <string name="browser_no_group">Sin grupo</string>
@@ -152,14 +152,14 @@
     <!-- SECCION-01 (D3/A3-03): mensajes accionables por causa de veto (matriz 2.1.3). -->
     <string name="player_ext_veto_cleartext">Canal http:// sin cifrar. Activa «Permitir HTTP sin cifrar» en Ajustes → Reproductor externo para abrirlo fuera de la app.</string>
     <string name="player_ext_veto_loopback">Este canal ya pasa por el motor AceStream local: el reproductor externo no puede alcanzar ese proxy interno.</string>
-    <string name="player_ext_veto_url">La URL del canal no es http/https (o es inválida): TVPlayer solo abre enlaces http(s) fuera de la app.</string>
-    <string name="player_ext_veto_userinfo">La URL del canal incluye usuario y contraseña: TVPlayer no la abre fuera de la app por seguridad.</string>
+    <string name="player_ext_veto_url">La URL del canal no es http/https (o es inválida): ZabTV solo abre enlaces http(s) fuera de la app.</string>
+    <string name="player_ext_veto_userinfo">La URL del canal incluye usuario y contraseña: ZabTV no la abre fuera de la app por seguridad.</string>
     <string name="player_external_ace_fail">No se pudo abrir AceStream: instálala, déjala en ejecución y vuelve a intentarlo.</string>
     <string name="sheet_external_title">Reproductor externo</string>
     <string name="sheet_ext_global">Global</string>
     <string name="sheet_ext_always">Siempre</string>
     <string name="sheet_ext_never">Nunca</string>
-    <string name="external_nowarn">El reproductor externo no hereda el proxy ni el DNS de TVPlayer.</string>
+    <string name="external_nowarn">El reproductor externo no hereda el proxy ni el DNS de ZabTV.</string>
     <string name="settings_external_title">Reproductor externo</string>
     <string name="settings_external_global">Permitir reproductor externo (global)</string>
     <string name="settings_external_player">Reproductor preferido</string>

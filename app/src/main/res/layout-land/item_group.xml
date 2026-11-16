@@ -21,7 +21,7 @@
         android:layout_weight="1"
         android:ellipsize="end"
         android:maxLines="1"
-        android:textAppearance="@style/TextAppearance_TVPlayer_CardTitle"
+        android:textAppearance="@style/TextAppearance_ZabTV_CardTitle"
         android:textSize="14sp" />
 
     <TextView

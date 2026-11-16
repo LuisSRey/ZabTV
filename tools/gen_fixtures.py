@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fixtures sintéticos deterministas para TVPlayer (Task 15).
+"""Fixtures sintéticos deterministas para ZabTV (Task 15).
 
 Genera en tools/fixtures/ (rutas estables):
 - m3u_10k.m3u   — 10 000 canales con attrs raros (BOM, attrs repetidos,
@@ -41,7 +41,7 @@ def gen_m3u(count: int, path: Path) -> None:
         )
         lines.append(extinf)
         if i % 251 == 0:
-            lines.append("#EXTVLCOPT:http-user-agent=TVPlayer/0.1")
+            lines.append("#EXTVLCOPT:http-user-agent=ZabTV/0.1")
         mod = i % 1000
         if mod == 7:
             lines.append(f"acestream://{i:040x}")  # se preserva verbatim

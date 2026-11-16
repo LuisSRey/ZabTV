@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Monograma TvP de TVPlayer como logo unico (legacy + foreground + banner).
+"""Monograma TvP de ZabTV como logo unico (legacy + foreground + banner).
 
 Spec (Brand Studio, viewBox 0 0 256 256):
 - Fondo: rect 256x256 rx64 fill #000000.
@@ -150,7 +150,7 @@ if __name__ == "__main__":
         print("fg", name, px)
 
     # Banner TV en 5 densidades: fondo negro + marca a la izquierda +
-    # texto "TVPlayer" blanco en negrita (Inter empaquetada). Si la fuente
+    # texto "ZabTV" blanco en negrita (Inter empaquetada). Si la fuente
     # falla, marca centrada sin texto.
     font_dir = os.path.join(out_root, "font")
     print("fonts:", sorted(os.listdir(font_dir)) if os.path.isdir(font_dir) else "SIN DIR FONT")
@@ -166,10 +166,10 @@ if __name__ == "__main__":
             draw_mark(d, ox, oy, side / 256, with_bg=True)
             gap = int(H * 0.08)
             avail = W - (ox + side + gap) - int(H * 0.06)
-            while font.getbbox("TVPlayer")[2] > avail and size > 8:
+            while font.getbbox("ZabTV")[2] > avail and size > 8:
                 size -= 1
                 font = ImageFont.truetype(fp, size)
-            d.text((ox + side + gap, H / 2), "TVPlayer", font=font,
+            d.text((ox + side + gap, H / 2), "ZabTV", font=font,
                    fill=WHITE, anchor="lm")
             print("banner", name, W, H, "font_size", size)
         except Exception as e:
