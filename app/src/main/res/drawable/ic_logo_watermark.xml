@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Derivado de ic_logo_mark.xml: misma geometria (viewport 256, pathData
-     verbatim salvo el hueco/play absolutos), sin rect de fondo; trazo y
-     rellenos con alfa #33. El negro del hueco/play queda opaco. -->
+<!-- Derivado de ic_logo_mark.xml: misma Z (viewport 256), sin pastilla;
+     tinta al 20% para usar como marca de agua sobre fondos oscuros. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="220dp"
     android:height="220dp"
@@ -9,19 +8,9 @@
     android:viewportHeight="256">
     <path
         android:fillColor="#00000000"
-        android:pathData="M68,57h120a33,33 0 0 1 33,33v76a33,33 0 0 1 -33,33H68a33,33 0 0 1 -33,-33V90a33,33 0 0 1 33,-33z"
-        android:strokeColor="#330A84FF"
-        android:strokeWidth="10" />
-    <path
-        android:fillColor="#3398989D"
-        android:pathData="M59 88h67v20h-22v63H81v-63H59V88Z" />
-    <path
-        android:fillColor="#3398989D"
-        android:pathData="M108,126 L126,126 L138,150 L150,126 L168,126 L146,169 L130,169 Z" />
-    <path
-        android:fillColor="#330A84FF"
-        android:pathData="M145 88h24c23 0 37 12 37 33.5 0 22-14 34.5-37 34.5h-1v15h-23V88Z" />
-    <path
-        android:fillColor="#FF000000"
-        android:pathData="M168 108v28h2c9 0 14-5 14-14.2 0-9-5-13.8-14-13.8h-2Z M168 112L184 122L168 132Z" />
+        android:pathData="M68,88 H188 L68,168 H188"
+        android:strokeColor="#33F7F9FC"
+        android:strokeWidth="46"
+        android:strokeLineJoin="round"
+        android:strokeLineCap="butt" />
 </vector>

@@ -13,4 +13,7 @@
     <color name="tp_scrim_dark">#CC000000</color>
     <color name="tp_shell_bg">#1F1F22</color>
     <color name="tp_sidebar_scrim">#E60F0F11</color>
+    <!-- Marca ZabTV (logo/ZabTV.svg): azul de marca y tinta del monograma. -->
+    <color name="zabtv_brand_blue">#0788FF</color>
+    <color name="zabtv_brand_ink">#F7F9FC</color>
 </resources>

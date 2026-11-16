@@ -2,4 +2,4 @@
 <!-- El shrinker del release eliminaba icono y banner (ruling logo Fire TV):
      se conservan explícitamente en todas las densidades. -->
 <resources xmlns:tools="http://schemas.android.com/tools"
-    tools:keep="@drawable/banner,@mipmap/ic_launcher,@mipmap/ic_launcher_round,@mipmap/ic_launcher_foreground" />
+    tools:keep="@drawable/banner,@mipmap/ic_launcher,@mipmap/ic_launcher_round,@drawable/ic_launcher_foreground" />

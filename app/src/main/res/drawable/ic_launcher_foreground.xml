@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Foreground del adaptive icon (viewport 108, zona segura centrada):
+     misma Z de ic_logo_mark escalada (256 -> 108). El fondo azul lo pone
+     @color/zabtv_brand_blue en mipmap-anydpi-v29. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M28.7,37.1 H79.3 L28.7,70.9 H79.3"
+        android:strokeColor="@color/zabtv_brand_ink"
+        android:strokeWidth="19.4"
+        android:strokeLineJoin="round"
+        android:strokeLineCap="butt" />
+</vector>

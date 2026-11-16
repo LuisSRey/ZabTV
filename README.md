@@ -25,7 +25,7 @@ sus propias listas (M3U) o cuentas (Xtream). Sin lista propia, la app no muestra
 
 ## Licencia
 
-Copyright (c) 2026. Todos los derechos reservados.
+Copyright (c) 2026 Luis Rey González. Todos los derechos reservados.
 
 Este repositorio es privado. Queda prohibida la copia, redistribución o uso del
 código sin autorización expresa del autor.
