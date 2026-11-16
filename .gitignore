@@ -24,6 +24,9 @@ skills-lock.json
 app/release/
 *.keystore.jks
 
+# Listas personales (contenido del usuario, nunca publicar)
+lista-*.m3u
+
 # OS
 .DS_Store
 Thumbs.db
