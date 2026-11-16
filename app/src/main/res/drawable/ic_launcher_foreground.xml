@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Foreground del adaptive icon (viewport 108, zona segura centrada):
-     misma Z de ic_logo_mark escalada (256 -> 108). El fondo azul lo pone
-     @color/zabtv_brand_blue en mipmap-anydpi-v29. -->
+<!-- Foreground del adaptive icon: misma Z de ic_logo_mark (viewport 256)
+     escalada a 108 mediante grupo (256 * 0.421875 = 108). El fondo azul
+     lo pone @color/zabtv_brand_blue en mipmap-anydpi-v29. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <path
-        android:fillColor="#00000000"
-        android:pathData="M28.7,37.1 H79.3 L28.7,70.9 H79.3"
-        android:strokeColor="@color/zabtv_brand_ink"
-        android:strokeWidth="19.4"
-        android:strokeLineJoin="round"
-        android:strokeLineCap="butt" />
+    <group
+        android:scaleX="0.421875"
+        android:scaleY="0.421875">
+        <path
+            android:fillColor="@color/zabtv_brand_ink"
+            android:pathData="M48,51.2H208C211.2,51.2 212.8,52.8 212.8,56V80.8C212.8,82.93 212,84.8 210.4,86.4L155.2,129.6H171.2C174.4,129.6 174.93,130.93 172.8,133.6L131.2,169.6H208C211.2,169.6 212.8,171.2 212.8,174.4V200C212.8,203.2 211.2,204.8 208,204.8H48C44.8,204.8 43.2,203.2 43.2,200V175.2C43.2,173.07 44,171.2 45.6,169.6L152,86.4H112V116C112,118.67 110.67,120 108,120H84C81.33,120 80,118.67 80,116V86.4H48C44.8,86.4 43.2,84.8 43.2,81.6V56C43.2,52.8 44.8,51.2 48,51.2Z" />
+    </group>
 </vector>
