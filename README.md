@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="logo/ZabTV.svg" width="640" alt="ZabTV — identidad de marca" />
+  <img src="logo/ZabTV-lockup.svg" width="600" alt="ZabTV" />
 </p>
 
 <h1 align="center">ZabTV</h1>
